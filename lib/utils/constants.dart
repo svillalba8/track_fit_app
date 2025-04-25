@@ -1,8 +1,3 @@
-import 'package:flutter/material.dart';
-
-const kPrimaryColor = Colors.blueAccent;
-const kBackgroundColor = Color(0xFFF5F5F5);
-
 // ICONOS / LOGO APLICACION
 const kLogoTrackFitBlancoMorado = 'assets/images/TrackFit_blanco_morado.png';
 const kLogoTrackFitBlancoNegro = 'assets/images/TrackFit_blanco_negro.png';

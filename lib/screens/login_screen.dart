@@ -45,6 +45,7 @@ class LoginScreen extends StatelessWidget {
             // Botón de "Entrar"
             CustomButton(
               text: 'Entrar',
+              colorTheme: Theme.of(context).primaryColor,
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
