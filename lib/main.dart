@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import 'screens/login_screen.dart';
-import 'utils/constants.dart';
+import 'themes/logo_type.dart';
+import 'themes/theme_notifier.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeNotifier(LogoType.rosaNegro),
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -11,12 +19,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Escucha el ThemeNotifier y obtiene el ThemeData actual
+    final theme = context.watch<ThemeNotifier>().themeData;
+
     return MaterialApp(
       title: 'Fitness App',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: kBackgroundColor,
-      ),
+      theme: theme,
       debugShowCheckedModeBanner: false,
       home: LoginScreen(),
     );

@@ -20,7 +20,7 @@ class LoginScreen extends StatelessWidget {
           children: [
             // Logo en la parte superior
             Image.asset(
-              kLogoTrackFitBlancoMorado,
+              kLogoTrackFitRosaNegro,
               width: 150,  // Tamaño ajustable del logo
             ),
             SizedBox(height: 32),
