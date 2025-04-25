@@ -49,6 +49,7 @@ class SignUpScreen extends StatelessWidget {
               // Botón para crear cuenta
               CustomButton(
                 text: 'Crear cuenta',
+                colorTheme: Theme.of(context).primaryColor,
                 onPressed: () {
                   // Aquí iría la lógica de registro
                   Navigator.pop(context); // Vuelve a Login al crear cuenta
