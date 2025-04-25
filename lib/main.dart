@@ -1,11 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'screens/login_screen.dart';
 import 'themes/logo_type.dart';
 import 'themes/theme_notifier.dart';
 
-void main() {
+Future<void> main() async {
+  // 1) Carga las variables del .env
+  await dotenv.load(fileName: '.env');
+
+  // 2) Inicializa Supabase con tus credenciales
+  final supabaseUrl = dotenv.get('SUPABASE_URL');
+  final supabaseAnonKey = dotenv.get('SUPABASE_ANON_KEY');
+  await Supabase.initialize(
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
+    authFlowType: AuthFlowType.pkce,
+  );
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeNotifier(LogoType.rosaNegro),

@@ -1,36 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:track_fit_app/screens/login_screen.dart';
 import 'package:track_fit_app/utils/constants.dart';
 import '../widgets/custom_button.dart';
 
 class SignUpScreen extends StatelessWidget {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   SignUpScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Crear Cuenta')),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // Logo en la parte superior
               Image.asset(
-                kLogoTrackFitBlancoMorado, 
-                width: 150,  // Tamaño ajustable del logo
+                kLogoTrackFitBlancoMorado,
+                width: 150,
               ),
               SizedBox(height: 32),
-              // Título
               Text(
-                'Regístrate', 
+                'Regístrate',
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 32),
-              // Campos de texto
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(labelText: 'Correo electrónico'),
@@ -55,6 +53,17 @@ class SignUpScreen extends StatelessWidget {
                   // Aquí iría la lógica de registro
                   Navigator.pop(context); // Vuelve a Login al crear cuenta
                 },
+              ),
+              SizedBox(height: 16),
+              // Enlace para volver al login
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginScreen()),
+                  );
+                },
+                child: Text("Ya tienes cuenta, ve a iniciar sesión."),
               ),
             ],
           ),
