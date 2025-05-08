@@ -64,15 +64,20 @@ class AuthSourceImpl implements AuthSource {
   Future<Either<Failure, void>> validateUniqueEmail(String email) async {
     try {
       final response = await supabaseClient
-          .rpc('email_exists', params: {'email_param': email})
+          .rpc('email_exists', params: {'email': email})
           .maybeSingle();
 
-      if (response?['exists'] == true) {
+      if (response == null) {
+        return Left(AuthFailure(message: "Error en la validación"));
+      }
+
+      if (response['exists'] == true) {
         return Left(AuthFailure(message: 'El correo ya está registrado'));
       }
+
       return const Right(null);
     } catch (e) {
-      return Left(AuthFailure(message: "Error validando email: ${e.toString()}"));
+      return Left(AuthFailure(message: "Error validando email: $e"));
     }
   }
 
