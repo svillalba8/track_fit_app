@@ -80,4 +80,36 @@ class Usuario {
     'id_progress': idProgress,
     'description': description,
   };
+
+  Usuario copyWith({
+    int? id,
+    String? authUserId,
+    String? mail,
+    String? name,
+    String? surnames,
+    int? age,
+    double? weight,
+    double? height,
+    String? gender,
+    String? userName,
+    String? status,
+    int? idProgress,
+    String? description,
+  }) {
+    return Usuario(
+      id: id ?? this.id,
+      authUserId: authUserId ?? this.authUserId,
+      mail: mail ?? this.mail,
+      name: name ?? this.name,
+      surnames: surnames ?? this.surnames,
+      age: age ?? this.age,
+      weight: weight ?? this.weight,
+      height: height ?? this.height,
+      gender: gender ?? this.gender,
+      userName: userName ?? this.userName,
+      status: status ?? this.status,
+      idProgress: idProgress ?? this.idProgress,
+      description: description ?? this.description,
+    );
+  }
 }

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:track_fit_app/blocs/auth_bloc.dart';
-import 'package:track_fit_app/services/validation_service.dart';
+import 'package:track_fit_app/routes/app_routes.dart';
 import 'package:track_fit_app/utils/constants.dart';
+import 'package:track_fit_app/services/validation_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   @override
@@ -21,18 +22,36 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? _selectedGender;
 
   @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _nameController.dispose();
+    _surnamesController.dispose();
+    _ageController.dispose();
+    _weightController.dispose();
+    _heightController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Crear Cuenta')),
+      appBar: AppBar(
+        title: const Text('Crear Cuenta'),
+        backgroundColor: kPrimaryColor,
+      ),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
+          if (state is AuthSuccessRegister) {
+            Navigator.pushReplacementNamed(context, AppRoutes.login);
+          }
           if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.failure.message)),
+              SnackBar(
+                content: Text(state.failure.message),
+                backgroundColor: Colors.red,
+              ),
             );
-          }
-          if (state is AuthSuccessRegister) {
-            Navigator.pushReplacementNamed(context, '/login');
           }
         },
         builder: (context, state) {
@@ -125,8 +144,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ),
           const SizedBox(height: 24),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kPrimaryColor,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
             onPressed: _submitForm,
-            child: const Text('Registrarse'),
+            child: const Text('Registrarse', style: TextStyle(fontSize: 16)),
           ),
         ],
       ),

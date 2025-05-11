@@ -9,7 +9,7 @@ class LoginUseCase {
   LoginUseCase({required this.repository});
 
   Future<Either<Failure, dynamic>> call(String email, String password) {
-    // CORREGIDO: usar argumentos nombrados
+
     return repository.login(email: email, password: password);
   }
 }

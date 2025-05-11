@@ -8,6 +8,8 @@ class RegisterUseCase {
 
   RegisterUseCase({required this.repository});
 
+
+  @override
   Future<Either<Failure, void>> call({
     required String email,
     required String password,
@@ -23,7 +25,7 @@ class RegisterUseCase {
     int? idProgress,
   }) async {
     final usuario = Usuario(
-      authUserId: '', // Supabase lo generará
+      authUserId: '', // Se actualizará después del registro en Auth
       mail: email,
       name: name,
       surnames: surnames,
@@ -38,24 +40,18 @@ class RegisterUseCase {
     );
 
     try {
-      // Intentamos registrar el usuario a través del repositorio
-      await repository.registerUser(
+      final result = await repository.registerUser(
         email: email,
         password: password,
         usuario: usuario,
       );
-      return const Right(null); // Retornamos un Right con null en caso de éxito
+
+      return result.fold(
+            (failure) => Left(failure),
+            (_) => const Right(null),
+      );
     } catch (e) {
-      // Dependiendo del tipo de error, lanzamos la subclase adecuada de Failure
-      if (e is AuthFailure) {
-        return Left(AuthFailure(message: e.message)); // Error de autenticación
-      } else if (e is ServerFailure) {
-        return Left(ServerFailure(message: e.message)); // Error del servidor
-      } else if (e is NetworkFailure) {
-        return Left(NetworkFailure(message: e.message)); // Error de red
-      } else {
-        return Left(ServerFailure(message: 'Error desconocido: ${e.toString()}')); // Error genérico del servidor
-      }
+      return Left(ServerFailure(message: 'Error durante el registro: $e'));
     }
   }
 }
