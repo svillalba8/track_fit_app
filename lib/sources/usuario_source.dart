@@ -19,6 +19,7 @@ class UsuarioSourceImpl implements UsuarioSource {
         .select()
         .eq('auth_user_id', id)
         .maybeSingle();
+
     return response != null ? Usuario.fromJson(response) : null;
   }
 

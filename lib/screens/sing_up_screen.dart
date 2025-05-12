@@ -1,10 +1,9 @@
-// sign_up_screen.dart
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../blocs/auth_bloc.dart';
-import '../services/validation_service.dart';
+import 'package:track_fit_app/blocs/auth_bloc.dart';
+import 'package:track_fit_app/routes/app_routes.dart';
+import 'package:track_fit_app/utils/constants.dart';
+import 'package:track_fit_app/services/validation_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   @override
@@ -23,97 +22,114 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? _selectedGender;
 
   @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _nameController.dispose();
+    _surnamesController.dispose();
+    _ageController.dispose();
+    _weightController.dispose();
+    _heightController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Crear Cuenta')),
+      appBar: AppBar(
+        title: const Text('Crear Cuenta'),
+        backgroundColor: kPrimaryColor,
+      ),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
+          if (state is AuthSuccessRegister) {
+            Navigator.pushReplacementNamed(context, AppRoutes.login);
+          }
           if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.failure.message)),
+              SnackBar(
+                content: Text(state.failure.message),
+                backgroundColor: Colors.red,
+              ),
             );
           }
-          if (state is AuthSuccessRegister) {
-            Navigator.pushReplacementNamed(context, '/login');
-          }
-
         },
         builder: (context, state) {
           if (state is AuthLoading) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
-          return _buildForm();
+          return _buildRegistrationForm();
         },
       ),
     );
   }
 
-  Widget _buildForm() {
+  Widget _buildRegistrationForm() {
     return Form(
       key: _formKey,
       child: ListView(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         children: [
           TextFormField(
             controller: _emailController,
-            validator: (value) => ValidationService.isCorrectFormat(value!, TextFormat.email)
+            validator: (value) => ValidationService.isCorrectFormat(
+                value!, TextFormat.email)
                 ? null
                 : 'Email inválido',
-            decoration: InputDecoration(labelText: 'Email'),
+            decoration: const InputDecoration(labelText: 'Email'),
+            keyboardType: TextInputType.emailAddress,
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           TextFormField(
             controller: _passwordController,
             obscureText: true,
             validator: (value) => value != null && value.length >= 6
                 ? null
-                : 'La contraseña debe tener al menos 6 caracteres',
-            decoration: InputDecoration(labelText: 'Contraseña'),
+                : 'Mínimo 6 caracteres',
+            decoration: const InputDecoration(labelText: 'Contraseña'),
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           TextFormField(
             controller: _nameController,
-            validator: (value) => value != null && value.isNotEmpty
-                ? null
-                : 'Introduce tu nombre',
-            decoration: InputDecoration(labelText: 'Nombre'),
+            validator: (value) =>
+            value!.isEmpty ? 'Campo obligatorio' : null,
+            decoration: const InputDecoration(labelText: 'Nombre'),
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           TextFormField(
             controller: _surnamesController,
-            validator: (value) => value != null && value.isNotEmpty
-                ? null
-                : 'Introduce tus apellidos',
-            decoration: InputDecoration(labelText: 'Apellidos'),
+            validator: (value) =>
+            value!.isEmpty ? 'Campo obligatorio' : null,
+            decoration: const InputDecoration(labelText: 'Apellidos'),
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           TextFormField(
             controller: _ageController,
             keyboardType: TextInputType.number,
-            validator: (value) => value != null && int.tryParse(value) != null
+            validator: (value) => value!.isNotEmpty && int.tryParse(value) != null
                 ? null
-                : 'Introduce tu edad correctamente',
-            decoration: InputDecoration(labelText: 'Edad'),
+                : 'Edad inválida',
+            decoration: const InputDecoration(labelText: 'Edad'),
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           TextFormField(
             controller: _weightController,
             keyboardType: TextInputType.number,
-            validator: (value) => value != null && double.tryParse(value) != null
+            validator: (value) => value!.isNotEmpty && double.tryParse(value) != null
                 ? null
-                : 'Introduce tu peso correctamente',
-            decoration: InputDecoration(labelText: 'Peso (kg)'),
+                : 'Peso inválido',
+            decoration: const InputDecoration(labelText: 'Peso (kg)'),
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           TextFormField(
             controller: _heightController,
             keyboardType: TextInputType.number,
-            validator: (value) => value != null && double.tryParse(value) != null
+            validator: (value) => value!.isNotEmpty && double.tryParse(value) != null
                 ? null
-                : 'Introduce tu altura correctamente',
-            decoration: InputDecoration(labelText: 'Altura (cm)'),
+                : 'Altura inválida',
+            decoration: const InputDecoration(labelText: 'Altura (cm)'),
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             value: _selectedGender,
             items: ['Masculino', 'Femenino', 'Otro'].map((gender) {
@@ -122,53 +138,39 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 child: Text(gender),
               );
             }).toList(),
-            onChanged: (value) {
-              setState(() {
-                _selectedGender = value;
-              });
-            },
-            validator: (value) => value != null
-                ? null
-                : 'Selecciona un género',
-            decoration: InputDecoration(labelText: 'Género'),
+            onChanged: (value) => setState(() => _selectedGender = value),
+            validator: (value) => value == null ? 'Selecciona un género' : null,
+            decoration: const InputDecoration(labelText: 'Género'),
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kPrimaryColor,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
             onPressed: _submitForm,
-            child: Text('Registrarse'),
+            child: const Text('Registrarse', style: TextStyle(fontSize: 16)),
           ),
         ],
       ),
     );
   }
 
-
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
-      if (_ageController.text.isEmpty ||
-          _weightController.text.isEmpty ||
-          _heightController.text.isEmpty ||
-          _selectedGender == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Por favor, rellena todos los campos')),
-        );
-        return;
-      }
-
       context.read<AuthBloc>().add(OnRegisterEvent(
-        userName: _nameController.text,
-        email: _emailController.text,
-        password: _passwordController.text,
-        name: _nameController.text,
-        surnames: _surnamesController.text,
-        age: int.tryParse(_ageController.text) ?? 0, // usa tryParse para evitar crash
-        weight: double.tryParse(_weightController.text) ?? 0.0,
-        height: double.tryParse(_heightController.text) ?? 0.0,
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+        name: _nameController.text.trim(),
+        surnames: _surnamesController.text.trim(),
+        age: int.parse(_ageController.text),
+        weight: double.parse(_weightController.text),
+        height: double.parse(_heightController.text),
         gender: _selectedGender!,
+        userName: _nameController.text.trim(),
         status: 'active',
         description: '',
       ));
     }
   }
-
 }

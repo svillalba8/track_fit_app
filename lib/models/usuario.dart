@@ -59,7 +59,7 @@ class Usuario {
       weight: (json['weight'] as num).toDouble(),
       height: (json['height'] as num).toDouble(),
       gender: json['gender'] as String,
-      userName: json['user_name'] as String,
+      userName: json['nombre_usuario'] as String,
       status: json['status'] as String,
       idProgress: json['id_progress'] as int?,
       description: json['description'] as String,
@@ -75,9 +75,41 @@ class Usuario {
     'weight': weight,
     'height': height,
     'gender': gender,
-    'user_name': userName,
+    'nombre_usuario': userName,
     'status': status,
     'id_progress': idProgress,
     'description': description,
   };
+
+  Usuario copyWith({
+    int? id,
+    String? authUserId,
+    String? mail,
+    String? name,
+    String? surnames,
+    int? age,
+    double? weight,
+    double? height,
+    String? gender,
+    String? userName,
+    String? status,
+    int? idProgress,
+    String? description,
+  }) {
+    return Usuario(
+      id: id ?? this.id,
+      authUserId: authUserId ?? this.authUserId,
+      mail: mail ?? this.mail,
+      name: name ?? this.name,
+      surnames: surnames ?? this.surnames,
+      age: age ?? this.age,
+      weight: weight ?? this.weight,
+      height: height ?? this.height,
+      gender: gender ?? this.gender,
+      userName: userName ?? this.userName,
+      status: status ?? this.status,
+      idProgress: idProgress ?? this.idProgress,
+      description: description ?? this.description,
+    );
+  }
 }
