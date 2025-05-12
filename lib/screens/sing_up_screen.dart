@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:track_fit_app/blocs/auth_bloc.dart';
 import 'package:track_fit_app/routes/app_routes.dart';
+=======
+import 'package:track_fit_app/screens/login_screen.dart';
+>>>>>>> origin/pantalla_login_singin
 import 'package:track_fit_app/utils/constants.dart';
 import 'package:track_fit_app/services/validation_service.dart';
 
@@ -14,6 +18,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+<<<<<<< HEAD
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _surnamesController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
@@ -32,10 +37,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _heightController.dispose();
     super.dispose();
   }
+=======
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+
+  SignUpScreen({super.key});
+>>>>>>> origin/pantalla_login_singin
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+<<<<<<< HEAD
       appBar: AppBar(
         title: const Text('Crear Cuenta'),
         backgroundColor: kPrimaryColor,
@@ -60,6 +72,63 @@ class _SignUpScreenState extends State<SignUpScreen> {
           }
           return _buildRegistrationForm();
         },
+=======
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Image.asset(
+                kLogoTrackFitBlancoMorado,
+                width: 150,
+              ),
+              SizedBox(height: 32),
+              Text(
+                'Regístrate',
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 32),
+              TextField(
+                controller: _emailController,
+                decoration: InputDecoration(labelText: 'Correo electrónico'),
+              ),
+              SizedBox(height: 16),
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: InputDecoration(labelText: 'Contraseña'),
+              ),
+              SizedBox(height: 16),
+              TextField(
+                controller: _confirmPasswordController,
+                obscureText: true,
+                decoration: InputDecoration(labelText: 'Confirmar contraseña'),
+              ),
+              SizedBox(height: 32),
+              // Botón para crear cuenta
+              CustomButton(
+                text: 'Crear cuenta',
+                colorTheme: Theme.of(context).primaryColor,
+                onPressed: () {
+                  // Aquí iría la lógica de registro
+                  Navigator.pop(context); // Vuelve a Login al crear cuenta
+                },
+              ),
+              SizedBox(height: 16),
+              // Enlace para volver al login
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginScreen()),
+                  );
+                },
+                child: Text("Ya tienes cuenta, ve a iniciar sesión."),
+              ),
+            ],
+          ),
+        ),
+>>>>>>> origin/pantalla_login_singin
       ),
     );
   }
