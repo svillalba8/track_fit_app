@@ -15,29 +15,6 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-<<<<<<< HEAD
-      body: BlocConsumer<AuthBloc, AuthState>(
-        listener: (context, state) {
-          if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.failure.message)),
-            );
-          }
-          if (state is AuthSuccessLogin) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => HomeScreen()),
-            );
-          }
-        },
-        builder: (context, state) {
-          if (state is AuthLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          return _buildLoginForm(context);
-        },
-=======
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -91,7 +68,6 @@ class LoginScreen extends StatelessWidget {
             ),
           ],
         ),
->>>>>>> origin/pantalla_login_singin
       ),
     );
   }
@@ -131,7 +107,7 @@ class LoginScreen extends StatelessWidget {
                 email: _emailController.text.trim(),
                 password: _passwordController.text.trim(),
               ));
-            },
+            }, colorTheme: Colors.black,  //CAMBIAR
           ),
           const SizedBox(height: 16),
           TextButton(

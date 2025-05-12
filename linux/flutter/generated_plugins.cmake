@@ -3,10 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-<<<<<<< HEAD
-=======
   file_selector_linux
->>>>>>> origin/pantalla_login_singin
   gtk
   url_launcher_linux
 )

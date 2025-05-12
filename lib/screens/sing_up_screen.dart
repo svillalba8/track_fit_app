@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:track_fit_app/blocs/auth_bloc.dart';
-import 'package:track_fit_app/routes/app_routes.dart';
-=======
 import 'package:track_fit_app/screens/login_screen.dart';
->>>>>>> origin/pantalla_login_singin
 import 'package:track_fit_app/utils/constants.dart';
 import 'package:track_fit_app/services/validation_service.dart';
+import 'package:track_fit_app/widgets/custom_button.dart';
 
 class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({super.key});
+
   @override
   _SignUpScreenState createState() => _SignUpScreenState();
 }
@@ -18,7 +15,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-<<<<<<< HEAD
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _surnamesController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
@@ -37,42 +33,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _heightController.dispose();
     super.dispose();
   }
-=======
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
-
-  SignUpScreen({super.key});
->>>>>>> origin/pantalla_login_singin
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-<<<<<<< HEAD
-      appBar: AppBar(
-        title: const Text('Crear Cuenta'),
-        backgroundColor: kPrimaryColor,
-      ),
-      body: BlocConsumer<AuthBloc, AuthState>(
-        listener: (context, state) {
-          if (state is AuthSuccessRegister) {
-            Navigator.pushReplacementNamed(context, AppRoutes.login);
-          }
-          if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.failure.message),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        },
-        builder: (context, state) {
-          if (state is AuthLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return _buildRegistrationForm();
-        },
-=======
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: SingleChildScrollView(
@@ -100,7 +64,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
               SizedBox(height: 16),
               TextField(
-                controller: _confirmPasswordController,
+                // controller: _confirmPasswordController,  OJO 
                 obscureText: true,
                 decoration: InputDecoration(labelText: 'Confirmar contraseña'),
               ),
@@ -128,7 +92,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ],
           ),
         ),
->>>>>>> origin/pantalla_login_singin
       ),
     );
   }
@@ -214,10 +177,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
           const SizedBox(height: 24),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: kPrimaryColor,
+              backgroundColor: Colors.black,  //OJO 
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
-            onPressed: _submitForm,
+            onPressed: /*_submitForm*/null, //OJO
             child: const Text('Registrarse', style: TextStyle(fontSize: 16)),
           ),
         ],
@@ -225,7 +188,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  void _submitForm() {
+  /*void _submitForm() {
     if (_formKey.currentState!.validate()) {
       context.read<AuthBloc>().add(OnRegisterEvent(
         email: _emailController.text.trim(),
@@ -241,5 +204,5 @@ class _SignUpScreenState extends State<SignUpScreen> {
         description: '',
       ));
     }
-  }
+  }*/
 }

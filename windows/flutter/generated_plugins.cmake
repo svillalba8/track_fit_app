@@ -4,10 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   app_links
-<<<<<<< HEAD
-=======
   file_selector_windows
->>>>>>> origin/pantalla_login_singin
   url_launcher_windows
 )
 
