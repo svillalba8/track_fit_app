@@ -1,38 +1,82 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:get_it/get_it.dart';
-import 'package:track_fit_app/routes/app_routes.dart';
-import 'package:track_fit_app/screens/sing_up_screen.dart';
-import 'blocs/auth_bloc.dart';
-import 'di.dart';
-import 'screens/login_screen.dart';
-import 'utils/constants.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() async {
+import 'auth/auth_page.dart';
+import 'auth/complete_profile_page.dart';
+import 'auth/home_page.dart';
+
+/// Clave global para navegar desde el listener de auth
+final GlobalKey<NavigatorState> _navKey = GlobalKey<NavigatorState>();
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load();
 
-  // Configurar dependencias
-  await setupDependencies(); // <-- Esto es lo importante
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_KEY']!,
+  );
 
-  runApp(MyApp());
+  Supabase.instance.client.auth.onAuthStateChange.listen((data) async {
+    final event = data.event;
+    final session = data.session;
+
+    if (event == AuthChangeEvent.signedIn && session != null) {
+      final user = session.user!;
+
+      // Aquí profile es directamente Map<String, dynamic>? o null
+      final profile = await Supabase.instance.client
+          .from('usuarios')
+          .select()
+          .eq('auth_user_id', user.id)
+          .maybeSingle();
+
+      // Comprueba si faltan campos obligatorios
+      bool needsProfile = false;
+      if (profile == null) {
+        needsProfile = true;
+      } else {
+        const required = ['nombre_usuario', 'nombre', 'apellidos'];
+        for (var field in required) {
+          if (profile[field] == null) {
+            needsProfile = true;
+            break;
+          }
+        }
+      }
+
+      // Redirige según corresponda
+      if (needsProfile) {
+        _navKey.currentState?.pushReplacementNamed('/complete-profile');
+      } else {
+        _navKey.currentState?.pushReplacementNamed('/home');
+      }
+    }
+    else if (event == AuthChangeEvent.signedOut) {
+      _navKey.currentState?.pushReplacementNamed('/login');
+    }
+  });
+
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [BlocProvider(create: (_) => GetIt.instance.get<AuthBloc>())],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: "TrackFit",
-        routes: {
-          AppRoutes.initial: (context) => LoginScreen(),
-          AppRoutes.register: (context) => SignUpScreen(),
-          AppRoutes.login: (context) => LoginScreen(),
-        },
-        initialRoute: AppRoutes.initial,
+    return MaterialApp(
+      title: 'Mi App con Supabase',
+      navigatorKey: _navKey,
+      initialRoute: '/login',
+      routes: {
+        '/login': (_)            => const AuthPage(),
+        '/complete-profile': (_) => const CompleteProfilePage(),
+        '/home': (_)             => const HomePage(),
+      },
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
       ),
     );
   }
