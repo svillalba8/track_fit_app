@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:track_fit_app/profile/screens/profile_page.dart';
+import 'package:track_fit_app/routines/screens/routine_page.dart';
+import 'package:track_fit_app/trainer/screens/trainer_page.dart';
 
 import 'auth/login_page.dart';
 import 'auth/register_page.dart';
 import 'auth/complete_profile_page.dart';
-import 'auth/home_page.dart';
+import 'home/screens/home_page.dart';
+import 'navigation/app_routes.dart';
 
 /// Clave global para navegar desde el listener de auth
 final GlobalKey<NavigatorState> _navKey = GlobalKey<NavigatorState>();
@@ -46,12 +50,12 @@ Future<void> main() async {
       }
 
       if (needsProfile) {
-        _navKey.currentState?.pushReplacementNamed('/complete-profile');
+        _navKey.currentState?.pushReplacementNamed(AppRoutes.completeProfile);
       } else {
-        _navKey.currentState?.pushReplacementNamed('/home');
+        _navKey.currentState?.pushReplacementNamed(AppRoutes.home);
       }
     } else if (event == AuthChangeEvent.signedOut) {
-      _navKey.currentState?.pushReplacementNamed('/login');
+      _navKey.currentState?.pushReplacementNamed(AppRoutes.login);
     }
   });
 
@@ -68,10 +72,13 @@ class MyApp extends StatelessWidget {
       navigatorKey: _navKey,
       initialRoute: '/login',
       routes: {
-        '/login': (_)             => const LoginPage(),
-        '/register': (_)          => const RegisterPage(), // Ruta añadida
-        '/complete-profile': (_)  => const CompleteProfilePage(),
-        '/home': (_)              => const HomePage(),
+        AppRoutes.login: (context) => const LoginPage(),
+        AppRoutes.register: (context) => const RegisterPage(),
+        AppRoutes.completeProfile: (context) => const CompleteProfilePage(),
+        AppRoutes.home: (context) => const HomePage(),
+        AppRoutes.routines: (context) => RoutinePage(),
+        AppRoutes.trainer: (context) => TrainerPage(),
+        AppRoutes.profile: (context) => ProfilePage(),
       },
       theme: ThemeData(
         primarySwatch: Colors.blue,

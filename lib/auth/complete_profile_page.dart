@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../utils/constants.dart';
+
 class CompleteProfilePage extends StatefulWidget {
   const CompleteProfilePage({Key? key}) : super(key: key);
 
@@ -155,8 +157,8 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 24),
                   child: Image.asset(
-                    'assets/logo.png', // Asegúrate de tener el logo en assets
-                    height: 80,
+                    kLogoTrackFitBlancoMorado,
+                    height: 120,
                   ),
                 ),
                 const Text(

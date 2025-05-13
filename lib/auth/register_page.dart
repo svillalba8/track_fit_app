@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/redirect_text_button.dart';
 import '../utils/constants.dart';
-import 'home_page.dart';
+import '../home/screens/home_page.dart';
 
 /// Página de registro optimizada con diseño elegante
 class RegisterPage extends StatefulWidget {

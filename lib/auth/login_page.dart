@@ -4,7 +4,7 @@ import 'package:track_fit_app/auth/register_page.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/redirect_text_button.dart';
 import '../utils/constants.dart';
-import 'home_page.dart';
+import '../home/screens/home_page.dart';
 
 /// Página de login optimizada con diseño elegante
 class LoginPage extends StatefulWidget {
