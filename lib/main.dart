@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'auth/auth_page.dart';
+import 'auth/login_page.dart';
+import 'auth/register_page.dart';
 import 'auth/complete_profile_page.dart';
 import 'auth/home_page.dart';
 
@@ -25,14 +26,12 @@ Future<void> main() async {
     if (event == AuthChangeEvent.signedIn && session != null) {
       final user = session.user!;
 
-      // Aquí profile es directamente Map<String, dynamic>? o null
       final profile = await Supabase.instance.client
           .from('usuarios')
           .select()
           .eq('auth_user_id', user.id)
           .maybeSingle();
 
-      // Comprueba si faltan campos obligatorios
       bool needsProfile = false;
       if (profile == null) {
         needsProfile = true;
@@ -46,14 +45,12 @@ Future<void> main() async {
         }
       }
 
-      // Redirige según corresponda
       if (needsProfile) {
         _navKey.currentState?.pushReplacementNamed('/complete-profile');
       } else {
         _navKey.currentState?.pushReplacementNamed('/home');
       }
-    }
-    else if (event == AuthChangeEvent.signedOut) {
+    } else if (event == AuthChangeEvent.signedOut) {
       _navKey.currentState?.pushReplacementNamed('/login');
     }
   });
@@ -71,9 +68,10 @@ class MyApp extends StatelessWidget {
       navigatorKey: _navKey,
       initialRoute: '/login',
       routes: {
-        '/login': (_)            => const AuthPage(),
-        '/complete-profile': (_) => const CompleteProfilePage(),
-        '/home': (_)             => const HomePage(),
+        '/login': (_)             => const LoginPage(),
+        '/register': (_)          => const RegisterPage(), // Ruta añadida
+        '/complete-profile': (_)  => const CompleteProfilePage(),
+        '/home': (_)              => const HomePage(),
       },
       theme: ThemeData(
         primarySwatch: Colors.blue,
