@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import '../utils/constants.dart';
 
 class CompleteProfilePage extends StatefulWidget {
-  const CompleteProfilePage({Key? key}) : super(key: key);
+  const CompleteProfilePage({super.key});
 
   @override
   _CompleteProfilePageState createState() => _CompleteProfilePageState();

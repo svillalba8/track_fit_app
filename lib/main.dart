@@ -3,6 +3,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/profile/screens/profile_page.dart';
 import 'package:track_fit_app/routines/screens/routine_page.dart';
+import 'package:track_fit_app/themes/app_themes.dart';
+import 'package:track_fit_app/themes/logo_type.dart';
 import 'package:track_fit_app/trainer/screens/trainer_page.dart';
 
 import 'auth/login_page.dart';
@@ -28,7 +30,7 @@ Future<void> main() async {
     final session = data.session;
 
     if (event == AuthChangeEvent.signedIn && session != null) {
-      final user = session.user!;
+      final user = session.user;
 
       final profile = await Supabase.instance.client
           .from('usuarios')
@@ -63,7 +65,7 @@ Future<void> main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -80,9 +82,10 @@ class MyApp extends StatelessWidget {
         AppRoutes.trainer: (context) => TrainerPage(),
         AppRoutes.profile: (context) => ProfilePage(),
       },
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: AppThemes.themeForLogo(LogoType.blancoMorado),
+      // opcionalmente podrías tener otro tema para darkMode:
+      // darkTheme: AppThemes.themeForLogo(LogoType.blancoNegro),
+      // themeMode: ThemeMode.system,
     );
   }
 }

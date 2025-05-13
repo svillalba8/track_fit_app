@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/auth/register_page.dart';
+import 'package:track_fit_app/widgets/link_text.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/redirect_text_button.dart';
 import '../utils/constants.dart';
@@ -8,7 +9,7 @@ import '../home/screens/home_page.dart';
 
 /// Página de login optimizada con diseño elegante
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+  const LoginPage({super.key});
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -19,17 +20,18 @@ class _LoginPageState extends State<LoginPage> {
   final _passController = TextEditingController();
   final supabase = Supabase.instance.client;
   bool _loading = false;
+  bool _obscureRepeat = true;
 
   Future<void> _signIn() async {
     setState(() => _loading = true);
     try {
       await supabase.auth.signInWithPassword(
         email: _emailController.text.trim(),
-        password: _passController.text,
+        password: _passController.text.trim(),
       );
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomePage()),
-      );
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage()));
     } on AuthException catch (error) {
       _showMessage(error.message);
     } catch (error) {
@@ -40,9 +42,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _showMessage(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -55,10 +55,7 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset(
-                kLogoTrackFitBlancoMorado,
-                height: 120,
-              ),
+              Image.asset(kLogoTrackFitBlancoMorado, height: 120),
               const SizedBox(height: 32),
               Card(
                 shape: RoundedRectangleBorder(
@@ -69,11 +66,10 @@ class _LoginPageState extends State<LoginPage> {
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
                     children: [
-                      Text(
-                        'Iniciar Sesión',
-                        style: theme.textTheme.titleLarge,
-                      ),
+                      Text('Iniciar Sesión', style: theme.textTheme.titleLarge),
+
                       const SizedBox(height: 16),
+
                       TextField(
                         controller: _emailController,
                         decoration: const InputDecoration(
@@ -82,33 +78,55 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         keyboardType: TextInputType.emailAddress,
                       ),
+
                       const SizedBox(height: 12),
+
                       TextField(
                         controller: _passController,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Contraseña',
-                          prefixIcon: Icon(Icons.lock),
+                          prefixIcon: const Icon(Icons.lock),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureRepeat
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscureRepeat = !_obscureRepeat;
+                              });
+                            },
+                          ),
                         ),
-                        obscureText: true,
+                        obscureText: _obscureRepeat,
                       ),
+
                       const SizedBox(height: 24),
+
                       CustomButton(
                         text: _loading ? 'Cargando...' : 'Ingresar',
+                        actualTheme: Theme.of(context),
                         onPressed: () {
                           if (!_loading) _signIn();
                         },
-                        colorTheme: theme.colorScheme.primary,
                       ),
-                      const SizedBox(height: 12),
-                      RedirectTextButton(
+
+                      const SizedBox(height: 36),
+
+                      LinkText(
                         text: '¿No tienes cuenta? Regístrate',
-                        function: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const RegisterPage(),
+                        underline: false,
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        onTap:
+                            () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const RegisterPage(),
+                              ),
                             ),
-                          );
-                        },
                       ),
                     ],
                   ),

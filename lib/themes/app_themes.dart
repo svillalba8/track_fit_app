@@ -24,7 +24,8 @@ class AppThemes {
           colorScheme: const ColorScheme.dark(
             primary: indigoDark,
             onPrimary: offWhite,
-            secondary: purpleGray,
+            secondary: offWhite,
+            tertiary: purpleGray,
             onSecondary: offWhite,
             surface: indigoDarker,
             onSurface: offWhite,
@@ -56,8 +57,9 @@ class AppThemes {
           colorScheme: const ColorScheme.dark(
             primary: blackBg,
             onPrimary: offWhite,
-            secondary: grayAccent,
+            secondary: offWhite,
             onSecondary: offWhite,
+            tertiary: darkSurface,
             surface: darkSurface,
             onSurface: offWhite,
             error: Colors.red,
@@ -71,10 +73,10 @@ class AppThemes {
 
       case LogoType.cremaAzulMarino:
         // Colores del logo cremaAzulMarino
-        const Color cream = Color(0xFFD9B79A); // #D9B79A (tono principal crema)
+        const Color cream = Color(0xFFD9B79A); // #D9B79A
         const Color tealDark = Color(0xFF022932); // #022932
         const Color teal = Color(0xFF0C3B40); // #0C3B40
-        // const Color sand = Color(0xFFF2CEAE);        // #F2CEAE
+        // const Color sand = Color(0xFFF2CEAE); // #F2CEAE
         const Color bronze = Color(0xFFA68568); // #A68568
 
         return ThemeData(
@@ -89,15 +91,16 @@ class AppThemes {
           colorScheme: const ColorScheme.light(
             primary: tealDark,
             onPrimary: cream,
-            secondary: bronze,
+            secondary: cream,
             onSecondary: cream,
+            tertiary: bronze,
             surface: teal,
             onSurface: cream,
             error: Colors.red,
             onError: Colors.white,
           ),
           textTheme: Typography.blackMountainView.apply(
-            bodyColor: tealDark,
+            bodyColor: cream,
             displayColor: tealDark,
           ),
         );
@@ -122,8 +125,9 @@ class AppThemes {
           colorScheme: const ColorScheme.light(
             primary: pinkLight,
             onPrimary: creamCr,
-            secondary: fuchsia,
+            secondary: creamCr,
             onSecondary: creamCr,
+            tertiary: fuchsia,
             surface: pink,
             onSurface: creamCr,
             error: Colors.red,
@@ -155,7 +159,7 @@ class AppThemes {
           colorScheme: const ColorScheme.dark(
             primary: roseBg,
             onPrimary: charcoal,
-            secondary: mauve,
+            secondary: black,
             onSecondary: charcoal,
             surface: charcoal,
             onSurface: roseBg,
