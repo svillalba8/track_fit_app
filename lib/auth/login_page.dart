@@ -3,7 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/auth/register_page.dart';
 import 'package:track_fit_app/widgets/link_text.dart';
 import '../widgets/custom_button.dart';
-import '../widgets/redirect_text_button.dart';
 import '../utils/constants.dart';
 import '../home/screens/home_page.dart';
 
@@ -70,36 +69,50 @@ class _LoginPageState extends State<LoginPage> {
 
                       const SizedBox(height: 16),
 
-                      TextField(
-                        controller: _emailController,
-                        decoration: const InputDecoration(
-                          labelText: 'Email',
-                          prefixIcon: Icon(Icons.email),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.tertiary,
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        keyboardType: TextInputType.emailAddress,
+                        child: TextField(
+                          controller: _emailController,
+                          decoration: const InputDecoration(
+                            labelText: 'Email',
+                            border: InputBorder.none,
+                            prefixIcon: Icon(Icons.email),
+                          ),
+                          keyboardType: TextInputType.emailAddress,
+                        ),
                       ),
 
                       const SizedBox(height: 12),
 
-                      TextField(
-                        controller: _passController,
-                        decoration: InputDecoration(
-                          labelText: 'Contraseña',
-                          prefixIcon: const Icon(Icons.lock),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscureRepeat
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _obscureRepeat = !_obscureRepeat;
-                              });
-                            },
-                          ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.tertiary,
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        obscureText: _obscureRepeat,
+                        child: TextField(
+                          controller: _passController,
+                          decoration: InputDecoration(
+                            labelText: 'Contraseña',
+                            border: InputBorder.none,
+                            prefixIcon: const Icon(Icons.lock),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureRepeat
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscureRepeat = !_obscureRepeat;
+                                });
+                              },
+                            ),
+                          ),
+                          obscureText: _obscureRepeat,
+                        ),
                       ),
 
                       const SizedBox(height: 24),

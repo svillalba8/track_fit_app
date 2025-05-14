@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:track_fit_app/widgets/custom_button.dart';
 import '../utils/constants.dart';
 
 class CompleteProfilePage extends StatefulWidget {
@@ -23,7 +24,6 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
   final TextEditingController _genderCtrl = TextEditingController();
   final TextEditingController _nameCtrl = TextEditingController();
   final TextEditingController _lastnameCtrl = TextEditingController();
-  final TextEditingController _emailCtrl = TextEditingController();
 
   @override
   void initState() {
@@ -34,11 +34,12 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
   Future<void> _loadProfile() async {
     final user = supabase.auth.currentUser!;
     try {
-      final data = await supabase
-          .from('usuarios')
-          .select()
-          .eq('auth_user_id', user.id)
-          .maybeSingle();
+      final data =
+          await supabase
+              .from('usuarios')
+              .select()
+              .eq('auth_user_id', user.id)
+              .maybeSingle();
 
       setState(() {
         _profile = data;
@@ -52,15 +53,14 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
           _genderCtrl.text = data?['genero'] ?? '';
           _nameCtrl.text = data?['nombre'] ?? '';
           _lastnameCtrl.text = data?['apellidos'] ?? '';
-          _emailCtrl.text = user.email ?? '';
           _selectedGender = _genderCtrl.text;
         }
       });
     } catch (error) {
       setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error cargando perfil: $error')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error cargando perfil: $error')));
     }
   }
 
@@ -78,7 +78,6 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
       'genero': _selectedGender,
       'nombre': _nameCtrl.text.trim(),
       'apellidos': _lastnameCtrl.text.trim(),
-      'mail': _emailCtrl.text.trim(),
       'updated_at': DateTime.now().toIso8601String(),
     };
 
@@ -88,9 +87,9 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
         await supabase.from('usuarios').insert(dataToSave);
         Navigator.of(context).pushReplacementNamed('/home');
       } catch (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al guardar: $error')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error al guardar: $error')));
       }
     } else {
       try {
@@ -100,9 +99,9 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
             .eq('auth_user_id', user.id);
         Navigator.of(context).pushReplacementNamed('/home');
       } catch (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al actualizar: $error')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error al actualizar: $error')));
       }
     }
 
@@ -110,25 +109,66 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
   }
 
   Widget _genderSelector() {
+    final actualTheme = Theme.of(context);
+    const hombreText = 'Hombre';
+    const mujerText = 'Mujer';
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         ChoiceChip(
-          label: const Text('Hombre'),
-          selected: _selectedGender == 'Hombre',
+          label: const Text(hombreText),
+          selected: _selectedGender == hombreText,
+          backgroundColor: actualTheme.colorScheme.tertiary,
+          selectedColor: actualTheme.colorScheme.primary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side:
+                _selectedGender == hombreText
+                    ? BorderSide(
+                      color: actualTheme.colorScheme.secondary,
+                      width: 2,
+                    )
+                    : BorderSide.none,
+          ),
+          labelStyle: TextStyle(
+            color:
+                _selectedGender == hombreText
+                    ? actualTheme.colorScheme.onPrimary
+                    : actualTheme.colorScheme.onSurface,
+          ),
           onSelected: (_) {
             setState(() {
-              _selectedGender = 'Hombre';
+              _selectedGender = hombreText;
             });
           },
         ),
         const SizedBox(width: 16),
+
         ChoiceChip(
-          label: const Text('Mujer'),
-          selected: _selectedGender == 'Mujer',
+          label: const Text(mujerText),
+          backgroundColor: actualTheme.colorScheme.tertiary,
+          selectedColor: actualTheme.colorScheme.primary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side:
+                _selectedGender == mujerText
+                    ? BorderSide(
+                      color: actualTheme.colorScheme.secondary,
+                      width: 2,
+                    )
+                    : BorderSide.none,
+          ),
+          labelStyle: TextStyle(
+            color:
+                _selectedGender == mujerText
+                    ? actualTheme.colorScheme.onPrimary
+                    : actualTheme.colorScheme.onSurface,
+          ),
+          selected: _selectedGender == mujerText,
           onSelected: (_) {
             setState(() {
-              _selectedGender = 'Mujer';
+              _selectedGender = mujerText;
             });
           },
         ),
@@ -138,13 +178,13 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final actualTheme = Theme.of(context);
     if (_loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
+      backgroundColor: actualTheme.colorScheme.primary,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -155,10 +195,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                 // Logo arriba
                 Padding(
                   padding: const EdgeInsets.only(bottom: 24),
-                  child: Image.asset(
-                    kLogoTrackFitBlancoMorado,
-                    height: 120,
-                  ),
+                  child: Image.asset(kLogoTrackFitBlancoMorado, height: 120),
                 ),
                 const Text(
                   'Completa tu perfil',
@@ -166,70 +203,176 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                 ),
                 const SizedBox(height: 24),
 
-                TextFormField(
-                  controller: _usernameCtrl,
-                  decoration: const InputDecoration(labelText: 'Nombre de usuario'),
-                  validator: (v) => v!.isEmpty ? 'Obligatorio' : null,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12.0,
+                    vertical: 6.0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: actualTheme.colorScheme.tertiary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: TextFormField(
+                    controller: _usernameCtrl,
+                    cursorColor: actualTheme.colorScheme.secondary,
+                    decoration: InputDecoration(
+                      labelText: 'Nombre de usuario',
+                      labelStyle: actualTheme.textTheme.bodyMedium?.copyWith(
+                        color: actualTheme.colorScheme.secondary,
+                      ),
+                      border: InputBorder.none,
+                    ),
+                    validator: (v) => v!.isEmpty ? 'Obligatorio' : null,
+                  ),
                 ),
-                const SizedBox(height: 16),
 
-                TextFormField(
-                  controller: _emailCtrl,
-                  decoration: const InputDecoration(labelText: 'Confirma el correo electrónico'),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (v) => v!.isEmpty ? 'Obligatorio' : null,
-                ),
-                const SizedBox(height: 16),
-
-                TextFormField(
-                  controller: _nameCtrl,
-                  decoration: const InputDecoration(labelText: 'Nombre'),
-                ),
-                const SizedBox(height: 16),
-
-                TextFormField(
-                  controller: _lastnameCtrl,
-                  decoration: const InputDecoration(labelText: 'Apellidos'),
-                ),
-                const SizedBox(height: 16),
-
-                TextFormField(
-                  controller: _weightCtrl,
-                  decoration: const InputDecoration(labelText: 'Peso (kg)'),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 16),
-
-                TextFormField(
-                  controller: _heightCtrl,
-                  decoration: const InputDecoration(labelText: 'Estatura (cm)'),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 16),
-
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text('Género', style: TextStyle(fontSize: 16)),
-                ),
                 const SizedBox(height: 8),
-                _genderSelector(),
-                const SizedBox(height: 16),
 
-                TextFormField(
-                  controller: _descriptionCtrl,
-                  decoration: const InputDecoration(labelText: 'Descripción'),
-                  maxLines: 3,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12.0,
+                    vertical: 6.0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: actualTheme.colorScheme.tertiary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: TextFormField(
+                    controller: _nameCtrl,
+                    cursorColor: actualTheme.colorScheme.secondary,
+                    decoration: InputDecoration(
+                      labelText: 'Nombre',
+                      labelStyle: actualTheme.textTheme.bodyMedium?.copyWith(
+                        color: actualTheme.colorScheme.secondary,
+                      ),
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12.0,
+                    vertical: 6.0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: actualTheme.colorScheme.tertiary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: TextFormField(
+                    controller: _lastnameCtrl,
+                    decoration: InputDecoration(
+                      labelText: 'Apellidos',
+                      labelStyle: actualTheme.textTheme.bodyMedium?.copyWith(
+                        color: actualTheme.colorScheme.secondary,
+                      ),
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12.0,
+                    vertical: 6.0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: actualTheme.colorScheme.tertiary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: TextFormField(
+                    controller: _weightCtrl,
+                    decoration: InputDecoration(
+                      labelText: 'Peso (kg)',
+                      labelStyle: actualTheme.textTheme.bodyMedium?.copyWith(
+                        color: actualTheme.colorScheme.secondary,
+                      ),
+                      border: InputBorder.none,
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12.0,
+                    vertical: 6.0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: actualTheme.colorScheme.tertiary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: TextFormField(
+                    controller: _heightCtrl,
+                    decoration: InputDecoration(
+                      labelText: 'Estatura (cm)',
+                      labelStyle: actualTheme.textTheme.bodyMedium?.copyWith(
+                        color: actualTheme.colorScheme.secondary,
+                      ),
+                      border: InputBorder.none,
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12.0,
+                    vertical: 6.0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: actualTheme.colorScheme.tertiary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Género', style: TextStyle(fontSize: 16)),
+                      const SizedBox(height: 8),
+                      _genderSelector(),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12.0,
+                    vertical: 6.0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: actualTheme.colorScheme.tertiary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: TextFormField(
+                    controller: _descriptionCtrl,
+                    decoration: InputDecoration(
+                      labelText: 'Descripción',
+                      labelStyle: actualTheme.textTheme.bodyMedium?.copyWith(
+                        color: actualTheme.colorScheme.secondary,
+                      ),
+                      border: InputBorder.none,
+                    ),
+                    maxLines: 3,
+                  ),
                 ),
                 const SizedBox(height: 24),
 
-                ElevatedButton(
+                CustomButton(
+                  text: 'Guardar perfil',
+                  actualTheme: Theme.of(context),
                   onPressed: _submit,
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48),
-                  ),
-                  child: _loading
-                      ? const CircularProgressIndicator()
-                      : const Text('Guardar perfil'),
                 ),
               ],
             ),

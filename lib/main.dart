@@ -7,9 +7,9 @@ import 'package:track_fit_app/themes/app_themes.dart';
 import 'package:track_fit_app/themes/logo_type.dart';
 import 'package:track_fit_app/trainer/screens/trainer_page.dart';
 
+import 'auth/complete_profile_page.dart';
 import 'auth/login_page.dart';
 import 'auth/register_page.dart';
-import 'auth/complete_profile_page.dart';
 import 'home/screens/home_page.dart';
 import 'navigation/app_routes.dart';
 
@@ -32,11 +32,12 @@ Future<void> main() async {
     if (event == AuthChangeEvent.signedIn && session != null) {
       final user = session.user;
 
-      final profile = await Supabase.instance.client
-          .from('usuarios')
-          .select()
-          .eq('auth_user_id', user.id)
-          .maybeSingle();
+      final profile =
+          await Supabase.instance.client
+              .from('usuarios')
+              .select()
+              .eq('auth_user_id', user.id)
+              .maybeSingle();
 
       bool needsProfile = false;
       if (profile == null) {
@@ -82,7 +83,11 @@ class MyApp extends StatelessWidget {
         AppRoutes.trainer: (context) => TrainerPage(),
         AppRoutes.profile: (context) => ProfilePage(),
       },
-      theme: AppThemes.themeForLogo(LogoType.blancoMorado),
+      theme: AppThemes.themeForLogo(LogoType.blancoMorado).copyWith(
+        textSelectionTheme: TextSelectionThemeData(
+          selectionHandleColor: Theme.of(context).colorScheme.onSecondary,
+        ),
+      ),
       // opcionalmente podrías tener otro tema para darkMode:
       // darkTheme: AppThemes.themeForLogo(LogoType.blancoNegro),
       // themeMode: ThemeMode.system,

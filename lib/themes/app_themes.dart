@@ -8,9 +8,9 @@ class AppThemes {
         // Colores del logo blancoMorado
         const Color indigoDark = Color(0xFF272454); // #272454
         const Color indigoDarker = Color(0xFF292759); // #292759
-        // const Color lavenderGray = Color(0xFFAFAEBF); // #AFAEBF
+        // const Color lavenderGray = Color.fromARGB(255, 56, 52, 107); // #AFAEBF
         const Color offWhite = Color(0xFFF2F2F2); // #F2F2F2
-        const Color purpleGray = Color(0xFF545373); // #545373
+        const Color purpleGray = Color(0xFF4A496E); // #545373
 
         return ThemeData(
           brightness: Brightness.dark,
@@ -42,7 +42,7 @@ class AppThemes {
         // Colores del logo blancoNegro
         const Color blackBg = Color(0xFF151412); // #151412
         const Color offWhite = Color(0xFFF2F0EB); // #F2F0EB
-        const Color grayAccent = Color(0xFF73726F); // #73726F
+        // const Color grayAccent = Color(0xFF73726F); // #73726F
         const Color darkSurface = Color(0xFF403F3D); // #403F3D
 
         return ThemeData(
@@ -77,7 +77,7 @@ class AppThemes {
         const Color tealDark = Color(0xFF022932); // #022932
         const Color teal = Color(0xFF0C3B40); // #0C3B40
         // const Color sand = Color(0xFFF2CEAE); // #F2CEAE
-        const Color bronze = Color(0xFFA68568); // #A68568
+        const Color bronze = Color.fromARGB(255, 141, 110, 82); // #A68568
 
         return ThemeData(
           brightness: Brightness.light,
@@ -143,8 +143,8 @@ class AppThemes {
         // Colores del logo rosaNegro
         const Color roseBg = Color(0xFFF2D0E9); // #F2D0E9
         // const Color roseMuted = Color(0xFFD9BAD1);    // #D9BAD1
-        const Color mauve = Color(0xFFA692A0); // #A692A0
-        const Color charcoal = Color(0xFF594F57); // #594F57
+        // const Color mauve = Color(0xFFA692A0); // #A692A0
+        const Color lightCharcoal = Color.fromARGB(255, 180, 173, 179); // #594F57
         const Color black = Color(0xFF252425); // #252425
 
         return ThemeData(
@@ -153,22 +153,23 @@ class AppThemes {
           scaffoldBackgroundColor: black,
           appBarTheme: const AppBarTheme(
             backgroundColor: roseBg,
-            iconTheme: IconThemeData(color: charcoal),
-            titleTextStyle: TextStyle(color: charcoal),
+            iconTheme: IconThemeData(color: lightCharcoal),
+            titleTextStyle: TextStyle(color: lightCharcoal),
           ),
           colorScheme: const ColorScheme.dark(
             primary: roseBg,
-            onPrimary: charcoal,
-            secondary: black,
-            onSecondary: charcoal,
-            surface: charcoal,
+            onPrimary: lightCharcoal,
+            secondary: lightCharcoal,
+            onSecondary: lightCharcoal,
+            tertiary: black,
+            surface: lightCharcoal,
             onSurface: roseBg,
             error: Colors.red,
             onError: Colors.white,
           ),
           textTheme: Typography.whiteMountainView.apply(
             bodyColor: roseBg,
-            displayColor: charcoal,
+            displayColor: lightCharcoal,
           ),
         );
     }
