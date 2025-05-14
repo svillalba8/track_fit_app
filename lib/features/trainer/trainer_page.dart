@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../navigation/navigation_widget.dart';
+import '../../widgets/navigation_widget.dart';
 
 class TrainerPage extends StatelessWidget {
   const TrainerPage({super.key});

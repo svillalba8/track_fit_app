@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:track_fit_app/features/routines/enums/exercise_type.dart';
+import 'package:track_fit_app/core/enums/exercise_type.dart';
 import 'package:track_fit_app/features/routines/routine_detail_page.dart';
 import '../../models/routine_model.dart';
 import '../../models/exercise_model.dart';

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/widgets/link_text.dart';
 import '../widgets/custom_button.dart';
-import '../utils/constants.dart';
+import '../core/constants.dart';
 
 /// Página de registro optimizada con diseño elegante
 class RegisterPage extends StatefulWidget {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../navigation/navigation_widget.dart';
+import '../../widgets/navigation_widget.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});

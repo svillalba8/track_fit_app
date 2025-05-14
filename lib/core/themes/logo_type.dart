@@ -1,4 +1,4 @@
-import 'package:track_fit_app/utils/constants.dart';
+import 'package:track_fit_app/core/constants.dart';
 
 enum LogoType {
   blancoMorado,

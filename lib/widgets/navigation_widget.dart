@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'app_routes.dart';
-import 'navigation_service.dart';
+import 'package:track_fit_app/core/constants.dart';
+
+import '../services/navigation_service.dart';
 
 class NavigationWidget {
   static BottomNavigationBar customBottonNavigationBar(BuildContext context, int defaultIndex) {

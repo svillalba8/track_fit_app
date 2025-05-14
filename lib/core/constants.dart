@@ -1,3 +1,14 @@
+// RUTAS PANTALLAS DE LA APLICACIÓN
+class AppRoutes {
+  static const login = '/login';
+  static const register = '/register';
+  static const completeProfile = '/complete-profile';
+  static const home = '/home';
+  static const routines = '/routines';
+  static const trainer = '/trainer';
+  static const profile = '/profile';
+}
+
 // ICONOS / LOGO APLICACION
 const kLogoTrackFitBlancoMorado = 'assets/images/TrackFit_blanco_morado.png';
 const kLogoTrackFitBlancoNegro = 'assets/images/TrackFit_blanco_negro.png';

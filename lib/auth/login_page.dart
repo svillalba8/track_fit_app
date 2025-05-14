@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/auth/register_page.dart';
 import 'package:track_fit_app/widgets/link_text.dart';
 import '../widgets/custom_button.dart';
-import '../utils/constants.dart';
+import '../core/constants.dart';
 import '../features/home/home_page.dart';
 
 /// Página de login optimizada con diseño elegante

@@ -1,4 +1,4 @@
-import '../features/routines/enums/exercise_type.dart';
+import '../core/enums/exercise_type.dart';
 
 class Exercise {
   final int id;

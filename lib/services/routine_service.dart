@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../features/routines/enums/exercise_type.dart';
+import '../core/enums/exercise_type.dart';
 import '../models/exercise_model.dart';
 import '../models/routine_model.dart';
 
