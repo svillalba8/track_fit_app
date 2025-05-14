@@ -1,8 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../enums/exercise_type.dart';
-import '../models/exercise.dart';
-import '../models/routine.dart';
+import '../features/routines/enums/exercise_type.dart';
+import '../models/exercise_model.dart';
+import '../models/routine_model.dart';
 
 class RoutineService {
   final SupabaseClient _client = Supabase.instance.client;
@@ -14,7 +14,11 @@ class RoutineService {
   }
 
   // Crear un nuevo ejercicio
-  Future<void> createExercise(String nombre, ExerciseType tipo, String? descripcion) async {
+  Future<void> createExercise(
+    String nombre,
+    ExerciseType tipo,
+    String? descripcion,
+  ) async {
     await _client.from('ejercicio').insert({
       'nombre': nombre,
       'tipo': tipo.name,
@@ -23,12 +27,20 @@ class RoutineService {
   }
 
   // Modificar un ejercicio existente
-  Future<void> updateExercise(int id, String nombre, ExerciseType tipo, String? descripcion) async {
-    await _client.from('ejercicio').update({
-      'nombre': nombre,
-      'tipo': tipo.name,
-      'descripcion': descripcion,
-    }).eq('id', id);
+  Future<void> updateExercise(
+    int id,
+    String nombre,
+    ExerciseType tipo,
+    String? descripcion,
+  ) async {
+    await _client
+        .from('ejercicio')
+        .update({
+          'nombre': nombre,
+          'tipo': tipo.name,
+          'descripcion': descripcion,
+        })
+        .eq('id', id);
   }
 
   // Eliminar un ejercicio
@@ -38,9 +50,7 @@ class RoutineService {
 
   // Crear una nueva rutina
   Future<void> createRoutine(String nombre) async {
-    await _client.from('rutina').insert({
-      'nombre': nombre,
-    });
+    await _client.from('rutina').insert({'nombre': nombre});
   }
 
   // Obtener todas las rutinas
@@ -67,7 +77,9 @@ class RoutineService {
   }
 
   // Obtener ejercicios de una rutina con detalles
-  Future<List<Map<String, dynamic>>> getEjerciciosForRutina(int rutinaId) async {
+  Future<List<Map<String, dynamic>>> getEjerciciosForRutina(
+    int rutinaId,
+  ) async {
     final response = await _client
         .from('ejerciciorutina')
         .select('series, repeticiones, duracion, ejercicio (*)')

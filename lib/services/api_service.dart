@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:track_fit_app/models/UsuarioModel.dart';
+import 'package:track_fit_app/models/usuario_model_model.dart';
 
 class ApiService {
   final SupabaseClient client;

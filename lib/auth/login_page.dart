@@ -4,7 +4,7 @@ import 'package:track_fit_app/auth/register_page.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/redirect_text_button.dart';
 import '../utils/constants.dart';
-import '../home/screens/home_page.dart';
+import '../features/home/home_page.dart';
 
 /// Página de login optimizada con diseño elegante
 class LoginPage extends StatefulWidget {
@@ -27,9 +27,9 @@ class _LoginPageState extends State<LoginPage> {
         email: _emailController.text.trim(),
         password: _passController.text,
       );
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomePage()),
-      );
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage()));
     } on AuthException catch (error) {
       _showMessage(error.message);
     } catch (error) {
@@ -40,9 +40,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _showMessage(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -55,10 +53,7 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset(
-                kLogoTrackFitBlancoMorado,
-                height: 120,
-              ),
+              Image.asset(kLogoTrackFitBlancoMorado, height: 120),
               const SizedBox(height: 32),
               Card(
                 shape: RoundedRectangleBorder(
@@ -69,10 +64,7 @@ class _LoginPageState extends State<LoginPage> {
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
                     children: [
-                      Text(
-                        'Iniciar Sesión',
-                        style: theme.textTheme.titleLarge,
-                      ),
+                      Text('Iniciar Sesión', style: theme.textTheme.titleLarge),
                       const SizedBox(height: 16),
                       TextField(
                         controller: _emailController,

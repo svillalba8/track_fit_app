@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/redirect_text_button.dart';
 import '../utils/constants.dart';
-import '../home/screens/home_page.dart';
+import '../features/home/home_page.dart';
 
 /// Página de registro optimizada con diseño elegante
 class RegisterPage extends StatefulWidget {
@@ -36,16 +36,18 @@ class _RegisterPageState extends State<RegisterPage> {
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('¡Registro exitoso! Revisa tu correo para confirmar.')),
+        const SnackBar(
+          content: Text('¡Registro exitoso! Revisa tu correo para confirmar.'),
+        ),
       );
     } on AuthException catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
     } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error inesperado: $error')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error inesperado: $error')));
     } finally {
       setState(() => _loading = false);
     }
@@ -63,10 +65,7 @@ class _RegisterPageState extends State<RegisterPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               // Logo de la app
-              Image.asset(
-                kLogoTrackFitBlancoMorado,
-                height: 120,
-              ),
+              Image.asset(kLogoTrackFitBlancoMorado, height: 120),
               const SizedBox(height: 32),
 
               // Card del formulario
@@ -79,10 +78,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
                     children: [
-                      Text(
-                        'Crear Cuenta',
-                        style: theme.textTheme.titleLarge,
-                      ),
+                      Text('Crear Cuenta', style: theme.textTheme.titleLarge),
                       const SizedBox(height: 16),
 
                       // Email
