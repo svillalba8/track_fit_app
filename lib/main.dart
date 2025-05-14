@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:track_fit_app/features/profile/profile_page.dart';
-import 'package:track_fit_app/features/routines/routine_page.dart';
-import 'package:track_fit_app/features/trainer/trainer_page.dart';
-import 'package:track_fit_app/di/di.dart';
+import 'package:track_fit_app/profile/screens/profile_page.dart';
+import 'package:track_fit_app/routines/screens/routine_page.dart';
+import 'package:track_fit_app/themes/app_themes.dart';
+import 'package:track_fit_app/themes/logo_type.dart';
+import 'package:track_fit_app/trainer/screens/trainer_page.dart';
 
+import 'auth/complete_profile_page.dart';
 import 'auth/login_page.dart';
 import 'auth/register_page.dart';
-import 'auth/complete_profile_page.dart';
-import 'features/home/home_page.dart';
+import 'home/screens/home_page.dart';
 import 'navigation/app_routes.dart';
 
 /// Clave global para navegar desde el listener de auth
@@ -67,7 +68,7 @@ Future<void> main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +85,18 @@ class MyApp extends StatelessWidget {
         AppRoutes.trainer: (context) => TrainerPage(),
         AppRoutes.profile: (context) => ProfilePage(),
       },
+<<<<<<< HEAD
       theme: ThemeData(primarySwatch: Colors.blue),
+=======
+      theme: AppThemes.themeForLogo(LogoType.blancoMorado).copyWith(
+        textSelectionTheme: TextSelectionThemeData(
+          selectionHandleColor: Theme.of(context).colorScheme.onSecondary,
+        ),
+      ),
+      // opcionalmente podrías tener otro tema para darkMode:
+      // darkTheme: AppThemes.themeForLogo(LogoType.blancoNegro),
+      // themeMode: ThemeMode.system,
+>>>>>>> auth
     );
   }
 }
