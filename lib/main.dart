@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/profile/screens/profile_page.dart';
 import 'package:track_fit_app/routines/screens/routine_page.dart';
 import 'package:track_fit_app/trainer/screens/trainer_page.dart';
+import 'package:track_fit_app/di/di.dart';
 
 import 'auth/login_page.dart';
 import 'auth/register_page.dart';
@@ -23,18 +24,21 @@ Future<void> main() async {
     anonKey: dotenv.env['SUPABASE_KEY']!,
   );
 
+  setupDependencies(); // 👈 ¡Aquí se inicializa todo!
+
   Supabase.instance.client.auth.onAuthStateChange.listen((data) async {
     final event = data.event;
     final session = data.session;
 
     if (event == AuthChangeEvent.signedIn && session != null) {
-      final user = session.user!;
+      final user = session.user;
 
-      final profile = await Supabase.instance.client
-          .from('usuarios')
-          .select()
-          .eq('auth_user_id', user.id)
-          .maybeSingle();
+      final profile =
+          await Supabase.instance.client
+              .from('usuarios')
+              .select()
+              .eq('auth_user_id', user.id)
+              .maybeSingle();
 
       bool needsProfile = false;
       if (profile == null) {
@@ -80,9 +84,7 @@ class MyApp extends StatelessWidget {
         AppRoutes.trainer: (context) => TrainerPage(),
         AppRoutes.profile: (context) => ProfilePage(),
       },
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: ThemeData(primarySwatch: Colors.blue),
     );
   }
 }
