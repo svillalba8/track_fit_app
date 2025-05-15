@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/auth/register_page.dart';
+import 'package:track_fit_app/auth/validation/auth_validators.dart';
+import 'package:track_fit_app/auth/widgets/email_field.dart';
+import 'package:track_fit_app/auth/widgets/password_field.dart';
+import 'package:track_fit_app/core/utils/snackbar_utils.dart';
 import 'package:track_fit_app/widgets/link_text.dart';
 import '../widgets/custom_button.dart';
 import '../core/constants.dart';
@@ -21,32 +25,9 @@ class _LoginPageState extends State<LoginPage> {
   bool _loading = false;
   bool _obscureRepeat = true;
 
-  Future<void> _signIn() async {
-    setState(() => _loading = true);
-    try {
-      await supabase.auth.signInWithPassword(
-        email: _emailController.text.trim(),
-        password: _passController.text.trim(),
-      );
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage()));
-    } on AuthException catch (error) {
-      _showMessage(error.message);
-    } catch (error) {
-      _showMessage('Error inesperado: \$error');
-    } finally {
-      setState(() => _loading = false);
-    }
-  }
-
-  void _showMessage(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
-
   @override
   Widget build(BuildContext context) {
-    final acutalTheme = Theme.of(context);
+    final actualTheme = Theme.of(context);
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
@@ -65,64 +46,57 @@ class _LoginPageState extends State<LoginPage> {
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
                     children: [
-                      Text('Iniciar Sesión', style: acutalTheme.textTheme.titleLarge),
+                      Text(
+                        'Iniciar Sesión',
+                        style: actualTheme.textTheme.titleLarge,
+                      ),
                       const SizedBox(height: 16),
 
-                      Container(
-                        decoration: BoxDecoration(
-                          color: acutalTheme.colorScheme.tertiary,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: TextField(
-                          controller: _emailController,
-                          decoration: InputDecoration(
-                            labelText: 'Email',
-                            floatingLabelStyle: TextStyle(color: acutalTheme.colorScheme.secondary),
-                            border: InputBorder.none,
-                            prefixIcon: Icon(Icons.email),
-                          ),
-                          keyboardType: TextInputType.emailAddress,
-                        ),
+                      // Email
+                      EmailField(
+                        emailController: _emailController,
+                        actualTheme: actualTheme,
                       ),
 
                       const SizedBox(height: 12),
 
-                      Container(
-                        decoration: BoxDecoration(
-                          color: acutalTheme.colorScheme.tertiary,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: TextField(
-                          controller: _passController,
-                          decoration: InputDecoration(
-                            labelText: 'Contraseña',
-                            floatingLabelStyle: TextStyle(color: acutalTheme.colorScheme.secondary),
-                            border: InputBorder.none,
-                            prefixIcon: const Icon(Icons.lock),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscureRepeat
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscureRepeat = !_obscureRepeat;
-                                });
-                              },
-                            ),
-                          ),
-                          obscureText: _obscureRepeat,
-                        ),
+                      // Contraseña
+                      PasswordField(
+                        passController: _passController,
+                        message: 'Contraseña',
+                        actualTheme: actualTheme,
+                        onToggleObscure: () {
+                          setState(() => _obscureRepeat = !_obscureRepeat);
+                        },
+                        obscureRepeat: _obscureRepeat,
                       ),
 
                       const SizedBox(height: 24),
 
+                      // Botón de inicio sesión
                       CustomButton(
-                        text: _loading ? 'Cargando...' : 'Ingresar',
+                        text: _loading ? 'Cargando...' : 'Iniciar sesión',
                         actualTheme: Theme.of(context),
                         onPressed: () {
-                          if (!_loading) _signIn();
+                          // 1) Ejecutamos todos los validadores y usamos el primero que devuelva error
+                          final errorMessage =
+                              AuthValidators.emailValidator(
+                                _emailController.text,
+                              ) ??
+                              AuthValidators.passwordValidator(
+                                _passController.text,
+                              );
+
+                          // 2) Si hay un mensaje de error, lo mostramos y salimos
+                          if (errorMessage != null) {
+                            showErrorSnackBar(context, errorMessage);
+                            return;
+                          }
+
+                          // 3) Si todo OK, lanzamos el signup
+                          if (!_loading) {
+                            _signIn();
+                          }
                         },
                       ),
 
@@ -151,5 +125,53 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _signIn() async {
+    setState(() => _loading = true);
+    try {
+      await supabase.auth.signInWithPassword(
+        email: _emailController.text.trim(),
+        password: _passController.text.trim(),
+      );
+
+      if (!mounted) return;
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage()));
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      showErrorSnackBar(context, _mapSignInError(e.message));
+    } catch (_) {
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Error inesperado. Intenta de nuevo.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  /// Traduce los mensajes de la API a textos amigables para el usuario.
+  String _mapSignInError(String apiMsg) {
+    switch (apiMsg) {
+      case 'Invalid login credentials':
+        // credenciales incorrectas
+        return 'Usuario o contraseña incorrectos.';
+
+      case 'Email not confirmed':
+        // cuenta no verificada
+        return 'Tu correo no está confirmado. Revisa tu bandeja.';
+
+      case 'Password should be a string with minimum length of 6':
+        // contraseña muy corta
+        return 'La contraseña debe tener al menos 6 caracteres.';
+
+      case 'Unexpected error':
+        // error genérico del servidor
+        return 'Ha ocurrido un error inesperado. Vuelve a intentarlo.';
+        
+      default:
+        // cualquier otro caso
+        return apiMsg;
+    }
   }
 }

@@ -76,7 +76,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Mi App con Supabase',
       navigatorKey: _navKey,
-      initialRoute: '/complete-profile', //'/login',
+      initialRoute: '/login',
       routes: {
         AppRoutes.login: (context) => const LoginPage(),
         AppRoutes.register: (context) => const RegisterPage(),
@@ -92,9 +92,13 @@ class MyApp extends StatelessWidget {
           selectionHandleColor: Theme.of(context).colorScheme.onSecondary,
         ),
       ),
-      // opcionalmente podrías tener otro tema para darkMode:
-      // darkTheme: AppThemes.themeForLogo(LogoType.blancoNegro),
-      // themeMode: ThemeMode.system,
+      builder: (context, child) {
+        return GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: child,
+        );
+      },
     );
   }
 }
