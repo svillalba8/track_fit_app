@@ -56,7 +56,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final actualTheme = Theme.of(context);
 
     return Scaffold(
       body: Center(
@@ -79,19 +79,20 @@ class _RegisterPageState extends State<RegisterPage> {
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
                     children: [
-                      Text('Crear Cuenta', style: theme.textTheme.titleLarge),
+                      Text('Crear Cuenta', style: actualTheme.textTheme.titleLarge),
                       const SizedBox(height: 16),
 
                       // Email
                       Container(
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.tertiary,
+                          color: actualTheme.colorScheme.tertiary,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: TextField(
                           controller: _emailController,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'Email',
+                            floatingLabelStyle: TextStyle(color: actualTheme.colorScheme.secondary),
                             border: InputBorder.none,
                             prefixIcon: Icon(Icons.email),
                           ),
@@ -104,13 +105,14 @@ class _RegisterPageState extends State<RegisterPage> {
                       // Contraseña
                       Container(
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.tertiary,
+                          color: actualTheme.colorScheme.tertiary,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: TextField(
                           controller: _passController,
                           decoration: InputDecoration(
                             labelText: 'Contraseña',
+                            floatingLabelStyle: TextStyle(color: actualTheme.colorScheme.secondary),
                             border: InputBorder.none,
                             prefixIcon: const Icon(Icons.lock),
                             suffixIcon: IconButton(
@@ -135,13 +137,14 @@ class _RegisterPageState extends State<RegisterPage> {
                       // Confirmar contraseña
                       Container(
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.tertiary,
+                          color: actualTheme.colorScheme.tertiary,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: TextField(
                           controller: _passConfiormController,
                           decoration: InputDecoration(
                             labelText: 'Repetir contraseña',
+                            floatingLabelStyle: TextStyle(color: actualTheme.colorScheme.secondary),
                             border: InputBorder.none,
                             prefixIcon: const Icon(Icons.lock),
                             suffixIcon: IconButton(

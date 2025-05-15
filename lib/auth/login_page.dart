@@ -46,7 +46,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final acutalTheme = Theme.of(context);
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
@@ -65,18 +65,19 @@ class _LoginPageState extends State<LoginPage> {
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
                     children: [
-                      Text('Iniciar Sesión', style: theme.textTheme.titleLarge),
+                      Text('Iniciar Sesión', style: acutalTheme.textTheme.titleLarge),
                       const SizedBox(height: 16),
 
                       Container(
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.tertiary,
+                          color: acutalTheme.colorScheme.tertiary,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: TextField(
                           controller: _emailController,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: 'Email',
+                            floatingLabelStyle: TextStyle(color: acutalTheme.colorScheme.secondary),
                             border: InputBorder.none,
                             prefixIcon: Icon(Icons.email),
                           ),
@@ -88,13 +89,14 @@ class _LoginPageState extends State<LoginPage> {
 
                       Container(
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.tertiary,
+                          color: acutalTheme.colorScheme.tertiary,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: TextField(
                           controller: _passController,
                           decoration: InputDecoration(
                             labelText: 'Contraseña',
+                            floatingLabelStyle: TextStyle(color: acutalTheme.colorScheme.secondary),
                             border: InputBorder.none,
                             prefixIcon: const Icon(Icons.lock),
                             suffixIcon: IconButton(

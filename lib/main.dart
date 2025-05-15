@@ -76,7 +76,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Mi App con Supabase',
       navigatorKey: _navKey,
-      initialRoute: '/login',
+      initialRoute: '/complete-profile', //'/login',
       routes: {
         AppRoutes.login: (context) => const LoginPage(),
         AppRoutes.register: (context) => const RegisterPage(),
