@@ -88,6 +88,7 @@ class MyApp extends StatelessWidget {
       },
       theme: AppThemes.themeForLogo(LogoType.blancoMorado).copyWith(
         textSelectionTheme: TextSelectionThemeData(
+          cursorColor: Theme.of(context).colorScheme.onSecondary,
           selectionHandleColor: Theme.of(context).colorScheme.onSecondary,
         ),
       ),
