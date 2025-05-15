@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:track_fit_app/core/constants.dart';
 
-import '../services/navigation_service.dart';
+import 'navigation_service.dart';
 
 class NavigationWidget {
-  static BottomNavigationBar customBottonNavigationBar(BuildContext context, int defaultIndex) {
+  static BottomNavigationBar customBottonNavigationBar(
+    BuildContext context,
+    int defaultIndex,
+  ) {
     return BottomNavigationBar(
       items: const [
         BottomNavigationBarItem(
