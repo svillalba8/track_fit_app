@@ -108,7 +108,10 @@ class _RoutinePageState extends State<RoutinePage> {
   // Muestra un diálogo para agregar una nueva rutina
   Future<void> _addRoutineDialog() async {
     final nombreCtrl = TextEditingController();
-    final selectedExercises = <Exercise>{};
+    final selectedExercises = <Exercise>[];
+    final seriesControllers = <TextEditingController>[];
+    final repeticionesControllers = <TextEditingController>[];
+    final duracionControllers = <TextEditingController>[];
 
     await showDialog(
       context: context,
@@ -120,58 +123,168 @@ class _RoutinePageState extends State<RoutinePage> {
               children: [
                 TextField(
                   controller: nombreCtrl,
-                  decoration: const InputDecoration(hintText: 'Nombre de la rutina'),
+                  decoration: const InputDecoration(
+                    hintText: 'Nombre de la rutina',
+                    labelText: 'Nombre*',
+                  ),
                 ),
-                const SizedBox(height: 16),
-                const Text('Selecciona ejercicios:'),
+                const SizedBox(height: 20),
+                const Text(
+                  'Selecciona ejercicios:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
                 ..._ejercicios.map((exercise) {
-                  return CheckboxListTile(
-                    title: Text(exercise.nombre),
-                    subtitle: Text(exercise.descripcion ?? ''),
-                    value: selectedExercises.contains(exercise),
-                    onChanged: (val) {
-                      setDialogState(() {
-                        if (val == true) {
-                          selectedExercises.add(exercise);
-                        } else {
-                          selectedExercises.remove(exercise);
-                        }
-                      });
-                    },
+                  final isSelected = selectedExercises.contains(exercise);
+                  final isCardio = exercise.tipo == ExerciseType.cardio;
+                  final index = selectedExercises.indexOf(exercise);
+
+                  return Column(
+                    children: [
+                      CheckboxListTile(
+                        title: Text(exercise.nombre),
+                        subtitle: Text('Tipo: ${exercise.tipo.name}'),
+                        value: isSelected,
+                        onChanged: (val) {
+                          setDialogState(() {
+                            if (val == true) {
+                              selectedExercises.add(exercise);
+                              seriesControllers.add(TextEditingController(text: '3'));
+                              repeticionesControllers.add(
+                                  TextEditingController(text: isCardio ? '0' : '10'));
+                              duracionControllers.add(
+                                  TextEditingController(text: isCardio ? '30' : ''));
+                            } else {
+                              final removeIndex = selectedExercises.indexOf(exercise);
+                              selectedExercises.removeAt(removeIndex);
+                              seriesControllers.removeAt(removeIndex);
+                              repeticionesControllers.removeAt(removeIndex);
+                              duracionControllers.removeAt(removeIndex);
+                            }
+                          });
+                        },
+                      ),
+                      if (isSelected)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: seriesControllers[index],
+                                      decoration: const InputDecoration(
+                                        labelText: 'Series*',
+                                      ),
+                                      keyboardType: TextInputType.number,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  if (!isCardio)
+                                    Expanded(
+                                      child: TextField(
+                                        controller: repeticionesControllers[index],
+                                        decoration: const InputDecoration(
+                                          labelText: 'Repeticiones*',
+                                        ),
+                                        keyboardType: TextInputType.number,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              if (isCardio)
+                                TextField(
+                                  controller: duracionControllers[index],
+                                  decoration: const InputDecoration(
+                                    labelText: 'Duración (min)*',
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                ),
+                              const SizedBox(height: 10),
+                            ],
+                          ),
+                        ),
+                    ],
                   );
                 }).toList(),
               ],
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
             ElevatedButton(
               onPressed: () async {
                 final nombre = nombreCtrl.text.trim();
-                if (nombre.isEmpty || selectedExercises.isEmpty) return;
-
-                // Aquí se crea la rutina con el nombre proporcionado
-                await _routineService.createRoutine(nombre);
-
-                // Luego, obtenemos las rutinas para encontrar la recién creada
-                final rutinas = await _routineService.getRoutines();
-                final nuevaRutina = rutinas.firstWhere((r) => r.nombre == nombre);
-
-                // Finalmente, se asocian los ejercicios seleccionados a la nueva rutina
-                for (var ejercicio in selectedExercises) {
-                  await _routineService.addExerciseToRutina(
-                    rutinaId: nuevaRutina.id,
-                    ejercicioId: ejercicio.id,
-                    series: 3,
-                    repeticiones: 10,
-                    duracion: null,
+                if (nombre.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('El nombre es requerido')),
                   );
+                  return;
                 }
 
-                Navigator.pop(context);
-                _loadData();
+                if (selectedExercises.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Selecciona al menos un ejercicio')),
+                  );
+                  return;
+                }
+
+                try {
+                  // Mostrar indicador de carga
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => const Center(child: CircularProgressIndicator()),
+                  );
+
+                  // 1. Crear la rutina
+                  final nuevaRutina = await _routineService.createRoutine(nombre);
+
+                  if (nuevaRutina == null) {
+                    Navigator.pop(context); // Cerrar loading
+                    throw Exception('No se pudo crear la rutina');
+                  }
+
+                  // 2. Asociar ejercicios con sus configuraciones
+                  for (int i = 0; i < selectedExercises.length; i++) {
+                    final exercise = selectedExercises[i];
+                    final series = int.tryParse(seriesControllers[i].text) ?? 3;
+                    final repeticiones = exercise.tipo == ExerciseType.cardio
+                        ? 0
+                        : int.tryParse(repeticionesControllers[i].text) ?? 10;
+                    final duracion = exercise.tipo == ExerciseType.cardio
+                        ? double.tryParse(duracionControllers[i].text)?.round()
+                        : null;
+
+                    await _routineService.addExerciseToRutina(
+                      rutinaId: nuevaRutina.id,
+                      ejercicioId: exercise.id,
+                      series: series,
+                      repeticiones: repeticiones,
+                      duracion: duracion?.toDouble(),
+                    );
+                  }
+
+                  // Cerrar diálogos y actualizar lista
+                  Navigator.pop(context); // Cerrar loading
+                  Navigator.pop(context); // Cerrar diálogo
+                  _loadData();
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Rutina creada exitosamente')),
+                  );
+                } catch (e) {
+                  Navigator.pop(context); // Cerrar loading
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error al crear rutina: ${e.toString()}')),
+                  );
+                }
               },
-              child: const Text('Guardar'),
+              child: const Text('Guardar Rutina'),
             ),
           ],
         ),

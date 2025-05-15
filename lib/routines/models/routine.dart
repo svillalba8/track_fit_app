@@ -1,16 +1,19 @@
 class Routine {
   final int id;
   final String nombre;
+  final String? userId;
 
   Routine({
     required this.id,
     required this.nombre,
+    this.userId,
   });
 
   factory Routine.fromMap(Map<String, dynamic> map) {
     return Routine(
       id: map['id'] as int,
       nombre: map['nombre'] as String,
+      userId: map['user_id'],
     );
   }
 
@@ -18,7 +21,7 @@ class Routine {
     return {
       'id': id,
       'nombre': nombre,
+      'user_id': userId,
     };
   }
 }
-

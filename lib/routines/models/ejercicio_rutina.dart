@@ -5,7 +5,7 @@ class EjercicioRutina {
   final DateTime createdAt;
   final int series;
   final int? repeticiones;
-  final double? duracion;
+  final int? duracion; // Cambiado a int?
 
   EjercicioRutina({
     required this.id,
@@ -25,7 +25,7 @@ class EjercicioRutina {
       createdAt: DateTime.parse(map['created_at']),
       series: map['series'] as int,
       repeticiones: map['repeticiones'] as int?,
-      duracion: (map['duracion'] as num?)?.toDouble(),
+      duracion: map['duracion'] as int?, // Cambiado a int?
     );
   }
 
@@ -40,4 +40,7 @@ class EjercicioRutina {
       'created_at': createdAt.toIso8601String(),
     };
   }
+
+  // Método auxiliar para obtener la duración como double si es necesario
+  double? get duracionAsDouble => duracion?.toDouble();
 }
