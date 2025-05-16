@@ -1,78 +1,69 @@
 import 'package:flutter/material.dart';
-import 'package:track_fit_app/routines/enums/exercise_type.dart';
-import 'package:track_fit_app/routines/screens/routine_detail_page.dart';
-import '../models/routine.dart';
+import '../../widgets/custom_button.dart';
 import '../models/exercise.dart';
+import '../enums/exercise_type.dart';
+import '../services/ejercicio_seleccionado_service.dart';
+import '../services/exercise_service.dart';
 import '../services/routine_service.dart';
 
 class RoutinePage extends StatefulWidget {
-  const RoutinePage({Key? key}) : super(key: key);
+  const RoutinePage({super.key});
 
   @override
   State<RoutinePage> createState() => _RoutinePageState();
 }
 
 class _RoutinePageState extends State<RoutinePage> {
-  final RoutineService _routineService = RoutineService();
-  List<Routine> _rutinas = [];
-  List<Exercise> _ejercicios = [];
+  final _exerciseService = ExerciseService();
+  final _routineService = RoutineService();
+  List<Exercise> _exercises = [];
 
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _loadExercises();
   }
 
-  // Carga las rutinas y ejercicios desde el servicio
-  Future<void> _loadData() async {
-    final rutinas = await _routineService.getRoutines();  // Obtiene las rutinas
-    final ejercicios = await _routineService.getExercises();  // Obtiene los ejercicios
+  Future<void> _loadExercises() async {
+    final ejercicios = await _exerciseService.getExercises();
     setState(() {
-      _rutinas = rutinas;
-      _ejercicios = ejercicios;
+      _exercises = ejercicios;
     });
   }
 
-  // Muestra un diálogo para agregar un nuevo ejercicio
-  Future<void> _addExerciseDialog() async {
-    final nombreCtrl = TextEditingController();
-    final descripcionCtrl = TextEditingController();
-    ExerciseType tipoSeleccionado = ExerciseType.cardio; // Valor inicial
+  Future<void> _showCreateExerciseDialog() async {
+    final nombreController = TextEditingController();
+    final descripcionController = TextEditingController();
+    ExerciseType selectedType = ExerciseType.fuerza;
 
     await showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Nuevo Ejercicio'),
+      builder: (context) => AlertDialog(
+        title: const Text("Crear Ejercicio"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: nombreCtrl, decoration: const InputDecoration(hintText: 'Nombre')),
-            TextField(controller: descripcionCtrl, decoration: const InputDecoration(hintText: 'Descripción')),
-            const SizedBox(height: 16),
-            const Text('Selecciona un tipo de ejercicio:'),
-            // Botones para elegir el tipo de ejercicio
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    tipoSeleccionado = ExerciseType.cardio;
-                  },
-                  child: const Text('Cardio'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    tipoSeleccionado = ExerciseType.fuerza;
-                  },
-                  child: const Text('Fuerza'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    tipoSeleccionado = ExerciseType.intenso;
-                  },
-                  child: const Text('Intenso'),
-                ),
-              ],
+            TextField(
+              controller: nombreController,
+              decoration: const InputDecoration(labelText: 'Nombre'),
+            ),
+            DropdownButton<ExerciseType>(
+              value: selectedType,
+              onChanged: (value) {
+                setState(() {
+                  selectedType = value!;
+                });
+              },
+              items: ExerciseType.values.map((tipo) {
+                return DropdownMenuItem(
+                  value: tipo,
+                  child: Text(tipo.name),
+                );
+              }).toList(),
+            ),
+            TextField(
+              controller: descripcionController,
+              decoration: const InputDecoration(labelText: 'Descripción'),
             ),
           ],
         ),
@@ -80,132 +71,96 @@ class _RoutinePageState extends State<RoutinePage> {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
           ElevatedButton(
             onPressed: () async {
-              final nombre = nombreCtrl.text.trim();
-              final descripcion = descripcionCtrl.text.trim();
-              if (nombre.isEmpty) return;
-
-              // Crear el ejercicio usando el tipo de ejercicio seleccionado
-              await _routineService.createExercise(nombre, tipoSeleccionado, descripcion);
-
-              // Mostrar un mensaje de éxito usando un Snackbar
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Ejercicio registrado')),
+              await _exerciseService.createExercise(
+                nombreController.text,
+                selectedType,
+                descripcionController.text,
               );
-
+              await _loadExercises();
               Navigator.pop(context);
-              _loadData();
             },
-            child: const Text('Guardar'),
+            child: const Text('Crear'),
           ),
         ],
       ),
     );
   }
 
+  void _showCreateRoutineDialog() async {
+    final nombreController = TextEditingController();
+    final ejerciciosDisponibles = await _routineService.getExercises();
 
+    if (ejerciciosDisponibles.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Primero debes crear al menos un ejercicio.')),
+      );
+      return;
+    }
 
+    final ejerciciosSeleccionados = <EjercicioSeleccionadoService>[];
+    Exercise? selectedExercise = ejerciciosDisponibles.first;
 
-  // Muestra un diálogo para agregar una nueva rutina
-  Future<void> _addRoutineDialog() async {
-    final nombreCtrl = TextEditingController();
-    final selectedExercises = <Exercise>[];
-    final seriesControllers = <TextEditingController>[];
-    final repeticionesControllers = <TextEditingController>[];
-    final duracionControllers = <TextEditingController>[];
-
-    await showDialog(
+    showDialog(
       context: context,
       builder: (_) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Nueva Rutina'),
+        builder: (context, setState) => AlertDialog(
+          title: Text('Crear rutina'),
           content: SingleChildScrollView(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
-                  controller: nombreCtrl,
-                  decoration: const InputDecoration(
-                    hintText: 'Nombre de la rutina',
-                    labelText: 'Nombre*',
-                  ),
+                  controller: nombreController,
+                  decoration: InputDecoration(labelText: 'Nombre rutina'),
                 ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Selecciona ejercicios:',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                DropdownButton<Exercise>(
+                  value: selectedExercise,
+                  isExpanded: true,
+                  onChanged: (value) {
+                    setState(() {
+                      selectedExercise = value!;
+                    });
+                  },
+                  items: ejerciciosDisponibles.map((e) {
+                    return DropdownMenuItem(value: e, child: Text(e.nombre));
+                  }).toList(),
                 ),
-                const SizedBox(height: 10),
-                ..._ejercicios.map((exercise) {
-                  final isSelected = selectedExercises.contains(exercise);
-                  final isCardio = exercise.tipo == ExerciseType.cardio;
-                  final index = selectedExercises.indexOf(exercise);
-
-                  return Column(
-                    children: [
-                      CheckboxListTile(
-                        title: Text(exercise.nombre),
-                        subtitle: Text('Tipo: ${exercise.tipo.name}'),
-                        value: isSelected,
-                        onChanged: (val) {
-                          setDialogState(() {
-                            if (val == true) {
-                              selectedExercises.add(exercise);
-                              seriesControllers.add(TextEditingController(text: '3'));
-                              repeticionesControllers.add(
-                                  TextEditingController(text: isCardio ? '0' : '10'));
-                              duracionControllers.add(
-                                  TextEditingController(text: isCardio ? '30' : ''));
-                            } else {
-                              final removeIndex = selectedExercises.indexOf(exercise);
-                              selectedExercises.removeAt(removeIndex);
-                              seriesControllers.removeAt(removeIndex);
-                              repeticionesControllers.removeAt(removeIndex);
-                              duracionControllers.removeAt(removeIndex);
-                            }
-                          });
-                        },
-                      ),
-                      if (isSelected)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: TextField(
-                                      controller: seriesControllers[index],
-                                      decoration: const InputDecoration(
-                                        labelText: 'Series*',
-                                      ),
-                                      keyboardType: TextInputType.number,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  if (!isCardio)
-                                    Expanded(
-                                      child: TextField(
-                                        controller: repeticionesControllers[index],
-                                        decoration: const InputDecoration(
-                                          labelText: 'Repeticiones*',
-                                        ),
-                                        keyboardType: TextInputType.number,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              if (isCardio)
-                                TextField(
-                                  controller: duracionControllers[index],
-                                  decoration: const InputDecoration(
-                                    labelText: 'Duración (min)*',
-                                  ),
-                                  keyboardType: TextInputType.number,
-                                ),
-                              const SizedBox(height: 10),
-                            ],
-                          ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (selectedExercise != null &&
+                        !ejerciciosSeleccionados.any((e) => e.ejercicio.id == selectedExercise!.id)) {
+                      setState(() {
+                        ejerciciosSeleccionados.add(EjercicioSeleccionadoService(selectedExercise!));
+                      });
+                    }
+                  },
+                  child: Text('Añadir ejercicio'),
+                ),
+                ...ejerciciosSeleccionados.map((eSel) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Divider(),
+                        Text(eSel.ejercicio.nombre, style: TextStyle(fontWeight: FontWeight.bold)),
+                        TextField(
+                          controller: eSel.seriesController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(labelText: 'Series'),
                         ),
-                    ],
+                        TextField(
+                          controller: eSel.repeticionesController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(labelText: 'Repeticiones'),
+                        ),
+                        TextField(
+                          controller: eSel.duracionController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(labelText: 'Duración (segundos)'),
+                        ),
+                      ],
+                    ),
                   );
                 }).toList(),
               ],
@@ -214,77 +169,46 @@ class _RoutinePageState extends State<RoutinePage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar'),
+              child: Text('Cancelar'),
             ),
-            ElevatedButton(
+            TextButton(
               onPressed: () async {
-                final nombre = nombreCtrl.text.trim();
-                if (nombre.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('El nombre es requerido')),
-                  );
-                  return;
-                }
-
-                if (selectedExercises.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Selecciona al menos un ejercicio')),
-                  );
-                  return;
-                }
-
                 try {
-                  // Mostrar indicador de carga
-                  showDialog(
-                    context: context,
-                    barrierDismissible: false,
-                    builder: (context) => const Center(child: CircularProgressIndicator()),
-                  );
+                  final nombre = nombreController.text.trim();
 
-                  // 1. Crear la rutina
-                  final nuevaRutina = await _routineService.createRoutine(nombre);
-
-                  if (nuevaRutina == null) {
-                    Navigator.pop(context); // Cerrar loading
-                    throw Exception('No se pudo crear la rutina');
+                  if (nombre.isEmpty || ejerciciosSeleccionados.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Debes ingresar un nombre y al menos un ejercicio')),
+                    );
+                    return;
                   }
 
-                  // 2. Asociar ejercicios con sus configuraciones
-                  for (int i = 0; i < selectedExercises.length; i++) {
-                    final exercise = selectedExercises[i];
-                    final series = int.tryParse(seriesControllers[i].text) ?? 3;
-                    final repeticiones = exercise.tipo == ExerciseType.cardio
-                        ? 0
-                        : int.tryParse(repeticionesControllers[i].text) ?? 10;
-                    final duracion = exercise.tipo == ExerciseType.cardio
-                        ? double.tryParse(duracionControllers[i].text)?.round()
-                        : null;
+                  final nuevaRutina = await _routineService.createRoutine(nombre);
+
+                  for (var eSel in ejerciciosSeleccionados) {
+                    final series = int.tryParse(eSel.seriesController.text.trim()) ?? 0;
+                    final repes = int.tryParse(eSel.repeticionesController.text.trim()) ?? 0;
+                    final duracion = int.tryParse(eSel.duracionController.text.trim());
 
                     await _routineService.addExerciseToRutina(
-                      rutinaId: nuevaRutina.id,
-                      ejercicioId: exercise.id,
+                      rutinaId: nuevaRutina!.id,
+                      ejercicioId: eSel.ejercicio.id,
                       series: series,
-                      repeticiones: repeticiones,
+                      repeticiones: repes,
                       duracion: duracion?.toDouble(),
                     );
                   }
 
-                  // Cerrar diálogos y actualizar lista
-                  Navigator.pop(context); // Cerrar loading
-                  Navigator.pop(context); // Cerrar diálogo
-                  _loadData();
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Rutina creada exitosamente')),
-                  );
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Rutina creada con ejercicios')));
+                  }
                 } catch (e) {
-                  Navigator.pop(context); // Cerrar loading
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error al crear rutina: ${e.toString()}')),
-                  );
+                  print('Error al crear rutina: $e');
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error al crear rutina')));
                 }
               },
-              child: const Text('Guardar Rutina'),
+              child: Text('Guardar'),
             ),
           ],
         ),
@@ -292,52 +216,31 @@ class _RoutinePageState extends State<RoutinePage> {
     );
   }
 
+
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Rutinas y Ejercicios')),
-      body: Column(
-        children: [
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton.icon(
-                icon: const Icon(Icons.add),
-                label: const Text('Añadir Rutina'),
-                onPressed: _addRoutineDialog,
-              ),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.fitness_center),
-                label: const Text('Añadir Ejercicio'),
-                onPressed: _addExerciseDialog,
-              ),
-            ],
-          ),
-          const Divider(),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _rutinas.length,
-              itemBuilder: (_, index) {
-                final rutina = _rutinas[index];
-                return Card(
-                  margin: const EdgeInsets.all(8),
-                  child: ListTile(
-                    title: Text(rutina.nombre),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => RoutineDetailPage(routine: rutina),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CustomButton(
+              text: 'Crear Ejercicio',
+              onPressed: _showCreateExerciseDialog,
+              colorTheme: Colors.blue,
             ),
-          ),
-        ],
+            const SizedBox(height: 20),
+            CustomButton(
+              text: 'Crear Rutina',
+              onPressed: _showCreateRoutineDialog,
+              colorTheme: Colors.green,
+            ),
+          ],
+        ),
       ),
     );
   }

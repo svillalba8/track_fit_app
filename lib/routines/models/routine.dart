@@ -11,11 +11,12 @@ class Routine {
 
   factory Routine.fromMap(Map<String, dynamic> map) {
     return Routine(
-      id: map['id'] as int,
+      id: int.parse(map['id'].toString()), // más robusto ante String/int
       nombre: map['nombre'] as String,
-      userId: map['user_id'],
+      userId: map['user_id'] as String?,   // más explícito
     );
   }
+
 
   Map<String, dynamic> toMap() {
     return {
