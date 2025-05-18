@@ -26,7 +26,7 @@ Future<void> main() async {
     anonKey: dotenv.env['SUPABASE_KEY']!,
   );
 
-  setupDependencies(); // 👈 ¡Aquí se inicializa todo!
+  setupDependencies();
 
   Supabase.instance.client.auth.onAuthStateChange.listen((data) async {
     final event = data.event;

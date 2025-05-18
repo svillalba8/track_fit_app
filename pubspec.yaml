@@ -19,6 +19,7 @@ dependencies:
   shared_preferences: ^2.0.0
   palette_generator: ^0.3.3
   image_picker: ^1.0.0
+  webview_flutter: ^4.0.7
 
 dev_dependencies:
   flutter_test:
@@ -30,4 +31,5 @@ flutter:
   assets:
     - .env
     - assets/logos/
+    - assets/images/
     - .env

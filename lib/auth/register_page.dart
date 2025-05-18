@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/auth/validation/auth_validators.dart';
@@ -7,8 +5,9 @@ import 'package:track_fit_app/auth/widgets/email_field.dart';
 import 'package:track_fit_app/auth/widgets/password_field.dart';
 import 'package:track_fit_app/core/utils/snackbar_utils.dart';
 import 'package:track_fit_app/widgets/link_text.dart';
-import '../widgets/custom_button.dart';
+
 import '../core/constants.dart';
+import '../widgets/custom_button.dart';
 
 /// Página de registro optimizada con diseño elegante
 class RegisterPage extends StatefulWidget {
@@ -166,12 +165,12 @@ class _RegisterPageState extends State<RegisterPage> {
 
       // 3) Navego al login y destruyo esta pantalla
       Navigator.of(context).pushReplacementNamed('/login');
-      
     } on AuthException catch (e) {
       if (mounted) showErrorSnackBar(context, _mapSignUpError(e.message));
     } catch (err) {
-      if (mounted)
+      if (mounted) {
         showErrorSnackBar(context, 'Error inesperado. Intenta de nuevo.');
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

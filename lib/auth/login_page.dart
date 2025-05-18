@@ -1,14 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:track_fit_app/auth/complete_profile_page.dart';
 import 'package:track_fit_app/auth/register_page.dart';
 import 'package:track_fit_app/auth/validation/auth_validators.dart';
 import 'package:track_fit_app/auth/widgets/email_field.dart';
 import 'package:track_fit_app/auth/widgets/password_field.dart';
 import 'package:track_fit_app/core/utils/snackbar_utils.dart';
+import 'package:track_fit_app/widgets/custom_icon_button.dart';
 import 'package:track_fit_app/widgets/link_text.dart';
-import '../widgets/custom_button.dart';
+
 import '../core/constants.dart';
-import '../features/home/home_page.dart';
+import '../widgets/custom_button.dart';
 
 /// Página de login optimizada con diseño elegante
 class LoginPage extends StatefulWidget {
@@ -20,10 +24,36 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
-  final _passController = TextEditingController();
+  final _passwordController = TextEditingController();
   final supabase = Supabase.instance.client;
   bool _loading = false;
   bool _obscureRepeat = true;
+  late final StreamSubscription<AuthState> _authSub;
+  
+
+  @override
+  void initState() {
+    super.initState();
+    // Inicia escucha de cambios en auth para gestionar el flujo tras login
+    _authSub = supabase.auth.onAuthStateChange.listen((data) {
+      final event = data.event;
+      final user = data.session?.user;
+      // Si el usuario acaba de iniciar sesión, procesamos el siguiente paso
+      print('🔔 Auth event: $event, user: ${user?.id}');
+      if (event == AuthChangeEvent.signedIn && user != null) {
+        _afterLogin(user);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    // Cancela la suscripción al cambiar de pantalla y libera controllers
+    _authSub.cancel();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +92,7 @@ class _LoginPageState extends State<LoginPage> {
 
                       // Contraseña
                       PasswordField(
-                        passController: _passController,
+                        passController: _passwordController,
                         message: 'Contraseña',
                         actualTheme: actualTheme,
                         onToggleObscure: () {
@@ -84,7 +114,7 @@ class _LoginPageState extends State<LoginPage> {
                                 _emailController.text,
                               ) ??
                               AuthValidators.passwordValidator(
-                                _passController.text,
+                                _passwordController.text,
                               );
 
                           // 2) Si hay un mensaje de error, lo mostramos y salimos
@@ -95,7 +125,7 @@ class _LoginPageState extends State<LoginPage> {
 
                           // 3) Si todo OK, lanzamos el signup
                           if (!_loading) {
-                            _signIn();
+                            _signInWithEmail();
                           }
                         },
                       ),
@@ -116,6 +146,30 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                       ),
+
+                      const SizedBox(height: 9),
+
+                      // Separador
+                      Center(
+                        child: Text(
+                          'O',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // OAuth: Google
+                      CustomIconButton(
+                        icon: Image.asset('assets/logos/google_logo_icon.png'),
+                        texto: 'Continuar con Google',
+                        actualTheme: actualTheme,
+                        onPressed: () {
+                          if (!_loading) {
+                            _signInWithGoogle();
+                          }
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -127,19 +181,15 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Future<void> _signIn() async {
+  Future<void> _signInWithEmail() async {
     setState(() => _loading = true);
     try {
       await supabase.auth.signInWithPassword(
         email: _emailController.text.trim(),
-        password: _passController.text.trim(),
+        password: _passwordController.text.trim(),
       );
 
       if (!mounted) return;
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage()));
-      showSuccessSnackBar(context, 'Sesión iniciada con éxito');
     } on AuthException catch (e) {
       if (!mounted) return;
       showErrorSnackBar(context, _mapSignInError(e.message));
@@ -148,6 +198,46 @@ class _LoginPageState extends State<LoginPage> {
       showErrorSnackBar(context, 'Error inesperado. Intenta de nuevo.');
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() => _loading = true);
+    try {
+      // Inicia OAuth con Google
+      await supabase.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: 'io.trackfit://login-callback',
+        authScreenLaunchMode: LaunchMode.inAppWebView
+      );
+    } catch (e) {
+      // Captura errores de OAuth
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error Google Sign-In: $e')));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _afterLogin(User user) async {
+    // Verifica si el perfil existe en la tabla 'usuarios'
+    final profile =
+        await supabase
+            .from('usuarios')
+            .select()
+            .eq('auth_user_id', user.id)
+            .maybeSingle();
+
+    if (!mounted) return;
+    if (profile == null) {
+      // Si no hay perfil, navegamos hasta a la pantalla de completar perfil
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => CompleteProfilePage(userId: user.id)),
+      );
+    } else {
+      // Si ya existe, llevamos al usuario al home
+      Navigator.of(context).pushReplacementNamed('/home');
     }
   }
 

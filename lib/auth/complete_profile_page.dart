@@ -5,7 +5,7 @@ import 'package:track_fit_app/widgets/custom_button.dart';
 import '../core/constants.dart';
 
 class CompleteProfilePage extends StatefulWidget {
-  const CompleteProfilePage({super.key});
+  const CompleteProfilePage({super.key, String? userId});
 
   @override
   _CompleteProfilePageState createState() => _CompleteProfilePageState();
