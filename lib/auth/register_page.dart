@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/auth/validation/auth_validators.dart';
@@ -147,30 +149,29 @@ class _RegisterPageState extends State<RegisterPage> {
   Future<void> _signUp() async {
     setState(() => _loading = true);
     try {
+      final email = _emailController.text.trim();
+      final password = _passController.text.trim();
+
+      // 1) Alta en Auth
       final response = await supabase.auth.signUp(
-        email: _emailController.text.trim(),
-        password: _passController.text,
+        email: email,
+        password: password,
       );
+      final user = response.user;
+      if (user == null) throw Exception('No se pudo crear el usuario');
 
-      final userId = response.user?.id;
-      if (userId != null) {
-        await supabase.from('usuarios').insert({
-          'auth_user_id': userId,
-          'created_at': DateTime.now().toIso8601String(),
-        });
-      }
-
+      // 2) Muestro snack de éxito
       if (!mounted) return;
-      showSuccessSnackBar(
-        context,
-        '¡Registro exitoso! Revisa tu correo para confirmar.',
-      );
+      showSuccessSnackBar(context, 'Registro correcto. Ahora inicia sesión.');
+
+      // 3) Navego al login y destruyo esta pantalla
+      Navigator.of(context).pushReplacementNamed('/login');
+      
     } on AuthException catch (e) {
-      if (!mounted) return;
-      showErrorSnackBar(context, _mapSignUpError(e.message));
-    } catch (_) {
-      if (!mounted) return;
-      showErrorSnackBar(context, 'Error inesperado. Intenta de nuevo.');
+      if (mounted) showErrorSnackBar(context, _mapSignUpError(e.message));
+    } catch (err) {
+      if (mounted)
+        showErrorSnackBar(context, 'Error inesperado. Intenta de nuevo.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }

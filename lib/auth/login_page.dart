@@ -139,6 +139,7 @@ class _LoginPageState extends State<LoginPage> {
       Navigator.of(
         context,
       ).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage()));
+      showSuccessSnackBar(context, 'Sesión iniciada con éxito');
     } on AuthException catch (e) {
       if (!mounted) return;
       showErrorSnackBar(context, _mapSignInError(e.message));
@@ -168,7 +169,7 @@ class _LoginPageState extends State<LoginPage> {
       case 'Unexpected error':
         // error genérico del servidor
         return 'Ha ocurrido un error inesperado. Vuelve a intentarlo.';
-        
+
       default:
         // cualquier otro caso
         return apiMsg;

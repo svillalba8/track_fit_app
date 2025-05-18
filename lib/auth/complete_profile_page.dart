@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:track_fit_app/core/utils/snackbar_utils.dart';
 import 'package:track_fit_app/widgets/custom_button.dart';
 import '../core/constants.dart';
 
@@ -29,83 +30,6 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
   void initState() {
     super.initState();
     _loadProfile();
-  }
-
-  Future<void> _loadProfile() async {
-    final user = supabase.auth.currentUser!;
-    try {
-      final data =
-          await supabase
-              .from('usuarios')
-              .select()
-              .eq('auth_user_id', user.id)
-              .maybeSingle();
-
-      setState(() {
-        _profile = data;
-        _loading = false;
-
-        if (_profile != null) {
-          _usernameCtrl.text = data?['nombre_usuario'] ?? '';
-          _descriptionCtrl.text = data?['descripcion'] ?? '';
-          _weightCtrl.text = data?['peso']?.toString() ?? '';
-          _heightCtrl.text = data?['estatura']?.toString() ?? '';
-          _genderCtrl.text = data?['genero'] ?? '';
-          _nameCtrl.text = data?['nombre'] ?? '';
-          _lastnameCtrl.text = data?['apellidos'] ?? '';
-          _selectedGender = _genderCtrl.text;
-        }
-      });
-    } catch (error) {
-      setState(() => _loading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error cargando perfil: $error')));
-    }
-  }
-
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() => _loading = true);
-    final user = supabase.auth.currentUser!;
-
-    final dataToSave = {
-      'auth_user_id': user.id,
-      'nombre_usuario': _usernameCtrl.text.trim(),
-      'descripcion': _descriptionCtrl.text.trim(),
-      'peso': double.tryParse(_weightCtrl.text),
-      'estatura': double.tryParse(_heightCtrl.text),
-      'genero': _selectedGender,
-      'nombre': _nameCtrl.text.trim(),
-      'apellidos': _lastnameCtrl.text.trim(),
-      'updated_at': DateTime.now().toIso8601String(),
-    };
-
-    if (_profile == null) {
-      dataToSave['created_at'] = DateTime.now().toIso8601String();
-      try {
-        await supabase.from('usuarios').insert(dataToSave);
-        Navigator.of(context).pushReplacementNamed('/home');
-      } catch (error) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error al guardar: $error')));
-      }
-    } else {
-      try {
-        await supabase
-            .from('usuarios')
-            .update(dataToSave)
-            .eq('auth_user_id', user.id);
-        Navigator.of(context).pushReplacementNamed('/home');
-      } catch (error) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error al actualizar: $error')));
-      }
-    }
-
-    setState(() => _loading = false);
   }
 
   Widget _genderSelector() {
@@ -380,5 +304,112 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
         ),
       ),
     );
+  }
+
+  Future<void> _loadProfile() async {
+    final user = supabase.auth.currentUser!;
+    try {
+      final data =
+          await supabase
+              .from('usuarios')
+              .select()
+              .eq('auth_user_id', user.id)
+              .maybeSingle();
+
+      setState(() {
+        _profile = data;
+        _loading = false;
+
+        if (_profile != null) {
+          _usernameCtrl.text = data?['nombre_usuario'] ?? '';
+          _descriptionCtrl.text = data?['descripcion'] ?? '';
+          _weightCtrl.text = data?['peso']?.toString() ?? '';
+          _heightCtrl.text = data?['estatura']?.toString() ?? '';
+          _genderCtrl.text = data?['genero'] ?? '';
+          _nameCtrl.text = data?['nombre'] ?? '';
+          _lastnameCtrl.text = data?['apellidos'] ?? '';
+          _selectedGender = _genderCtrl.text;
+        }
+      });
+    } catch (error) {
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error cargando perfil: $error')));
+    }
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _loading = true);
+
+    final user = supabase.auth.currentUser!;
+    final dateNowIso = DateTime.now().toIso8601String();
+
+    final data = {
+      'auth_user_id': user.id,
+      'nombre_usuario': _usernameCtrl.text.trim(),
+      'descripcion': _descriptionCtrl.text.trim(),
+      'peso': double.tryParse(_weightCtrl.text),
+      'estatura': double.tryParse(_heightCtrl.text),
+      'genero': _selectedGender,
+      'nombre': _nameCtrl.text.trim(),
+      'apellidos': _lastnameCtrl.text.trim(),
+      'created_at': dateNowIso,
+      'updated_at': dateNowIso,
+    };
+
+    try {
+      await supabase.from('usuarios').insert(data);
+      if (!mounted) return;
+      Navigator.of(context).pushReplacementNamed('/home');
+      showSuccessSnackBar(context, 'Registro completado con éxito');
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      showErrorSnackBar(context, _mapProfileError(e.message));
+    } catch (e) {
+      if (mounted) showErrorSnackBar(context, 'Error al guardar: $e');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  /// Traduce los mensajes de PostgREST a textos amigables
+  String _mapProfileError(String apiMsg) {
+    switch (apiMsg) {
+      // Violación de PK o unique sobre auth_user_id
+      case 'duplicate key value violates unique constraint "usuarios_pkey"':
+      case 'duplicate key value violates unique constraint "usuarios_auth_user_id_unique"':
+        return 'Ya existe un perfil para este usuario.';
+
+      // Si tienes unique en nombre de usuario
+      case 'duplicate key value violates unique constraint "usuarios_nombre_usuario_key"':
+        return 'El nombre de usuario ya está en uso.';
+
+      // Campos obligatorios
+      case 'null value in column "nombre_usuario" violates not-null constraint':
+        return 'El nombre de usuario es obligatorio.';
+      case 'null value in column "nombre" violates not-null constraint':
+        return 'El nombre es obligatorio.';
+      case 'null value in column "apellidos" violates not-null constraint':
+        return 'Los apellidos son obligatorios.';
+      case 'null value in column "genero" violates not-null constraint':
+        return 'Selecciona un género.';
+      case 'null value in column "peso" violates not-null constraint':
+        return 'El peso es obligatorio.';
+      case 'null value in column "estatura" violates not-null constraint':
+        return 'La estatura es obligatoria.';
+      case 'null value in column "created_at" violates not-null constraint':
+      case 'null value in column "updated_at" violates not-null constraint':
+        return 'Ha ocurrido un problema con las fechas del registro.';
+
+      // Fallos de parseo de números
+      case 'invalid input syntax for type double precision':
+        return 'Peso y estatura deben ser números válidos.';
+
+      // Cualquier otro error
+      default:
+        return 'No se pudo guardar el perfil: $apiMsg';
+    }
   }
 }
