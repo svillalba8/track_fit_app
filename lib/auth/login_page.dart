@@ -28,13 +28,11 @@ class _LoginPageState extends State<LoginPage> {
         email: _emailController.text.trim(),
         password: _passController.text.trim(),
       );
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage()));
+      // ❌ No hagas navegación aquí
     } on AuthException catch (error) {
       _showMessage(error.message);
     } catch (error) {
-      _showMessage('Error inesperado: \$error');
+      _showMessage('Error inesperado: $error');
     } finally {
       setState(() => _loading = false);
     }
