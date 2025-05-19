@@ -2,13 +2,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../enums/exercise_type.dart';
 import '../models/exercise.dart';
 import '../models/routine.dart';
+import '../models/ejercicio_rutina.dart';
 
 class RoutineService {
   final SupabaseClient _client = Supabase.instance.client;
 
   String? get _userId => _client.auth.currentUser?.id;
 
-  // Obtener todos los ejercicios del usuario actual
   Future<List<Exercise>> getExercises() async {
     final userId = _userId;
     if (userId == null) {
@@ -129,14 +129,13 @@ class RoutineService {
     required int rutinaId,
     required int ejercicioId,
     required int series,
-    required int repeticiones,
+    int? repeticiones,
     double? duracion,
   }) async {
     final userId = _userId;
     if (userId == null) throw Exception('User not authenticated');
 
     try {
-      // Verificar que la rutina existe y pertenece al usuario
       final routine = await _client
           .from('rutina')
           .select()
@@ -144,7 +143,6 @@ class RoutineService {
           .eq('user_id', userId)
           .maybeSingle();
 
-      // Verificar que el ejercicio existe y pertenece al usuario
       final exercise = await _client
           .from('ejercicio')
           .select()
@@ -155,13 +153,12 @@ class RoutineService {
       if (routine == null) throw Exception('Rutina no encontrada o no pertenece al usuario.');
       if (exercise == null) throw Exception('Ejercicio no encontrado o no pertenece al usuario.');
 
-      // Insertar en la tabla ejercicio_rutina (con guion bajo y claves correctas)
       await _client.from('ejercicio_rutina').insert({
         'id_rutina': rutinaId,
         'id_ejercicio': ejercicioId,
         'series': series,
         'repeticiones': repeticiones,
-        'duracion': duracion, // Si es double, insertarlo así directamente
+        'duracion': duracion,
         'created_at': DateTime.now().toIso8601String(),
       });
     } catch (e) {
@@ -170,5 +167,99 @@ class RoutineService {
     }
   }
 
+  Future<List<RoutineWithExercises>> getRoutinesWithExercises() async {
+    final userId = _userId;
+    if (userId == null) return [];
 
+    try {
+      final rutinasData = await _client
+          .from('rutina')
+          .select('*, ejercicio_rutina(*, ejercicio(*))')
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+
+
+      List<Routine> rutinas = (rutinasData as List)
+          .map((r) => Routine.fromMap(r))
+          .toList();
+
+      List<RoutineWithExercises> rutinasConEjercicios = [];
+
+      for (var rutina in rutinas) {
+        final ejerciciosRutinaData = await _client
+            .from('ejercicio_rutina')
+            .select()
+            .eq('id_rutina', rutina.id)
+            .order('created_at', ascending: true);
+
+        List<EjercicioRutina> ejerciciosRutina = (ejerciciosRutinaData as List)
+            .map((e) => EjercicioRutina.fromMap(e))
+            .toList();
+
+        List<int> ejerciciosIds = ejerciciosRutina.map((e) => e.idEjercicio).toList();
+
+        if (ejerciciosIds.isEmpty) {
+          rutinasConEjercicios.add(RoutineWithExercises(rutina: rutina, ejercicios: []));
+          continue;
+        }
+
+        final ejerciciosData = await _client
+            .from('ejercicio')
+            .select()
+            .filter('id', 'in', '(${ejerciciosIds.join(",")})')
+            .order('created_at', ascending: false);
+
+        List<Exercise> ejercicios = (ejerciciosData as List)
+            .map((e) => Exercise.fromMap(e))
+            .toList();
+
+        List<ExerciseWithDetails> ejerciciosConDetalles = ejerciciosRutina.map((ejRutina) {
+          final ejercicio = ejercicios.firstWhere((ex) => ex.id == ejRutina.idEjercicio);
+          return ExerciseWithDetails(
+            exercise: ejercicio,
+            series: ejRutina.series,
+            repeticiones: ejRutina.repeticiones,
+            duracion: ejRutina.duracion,
+          );
+        }).toList();
+
+        rutinasConEjercicios.add(
+          RoutineWithExercises(
+            rutina: rutina,
+            ejercicios: ejerciciosConDetalles,
+          ),
+        );
+      }
+
+      return rutinasConEjercicios;
+    } catch (e) {
+      print('Error fetching routines with exercises: $e');
+      return [];
+    }
+  }
+
+}
+
+class RoutineWithExercises {
+  final Routine rutina;
+  final List<ExerciseWithDetails> ejercicios;
+
+  RoutineWithExercises({
+    required this.rutina,
+    required this.ejercicios,
+  });
+}
+
+class ExerciseWithDetails {
+  final Exercise exercise;
+  final int series;
+  final int? repeticiones;
+  final double? duracion;
+
+  ExerciseWithDetails({
+    required this.exercise,
+    required this.series,
+    this.repeticiones,
+    this.duracion,
+  });
 }
