@@ -10,8 +10,15 @@ class AppRoutes {
 }
 
 // ICONOS / LOGO APLICACION
-const kLogoTrackFitBlancoMorado = 'assets/logos/TrackFit_blanco_morado.png';
-const kLogoTrackFitBlancoNegro = 'assets/logos/TrackFit_blanco_negro.png';
-const kLogoTrackFitCremaAzulMarino = 'assets/logos/TrackFit_crema_azulmarino.png';
-const kLogoTrackFitCremaRosa = 'assets/logos/TrackFit_crema_rosa.png';
-const kLogoTrackFitRosaNegro = 'assets/logos/TrackFit_rosa_negro.png';
+const String kLogoTrackFitBlancoMorado = 'assets/logos/TrackFit_blanco_morado.png';
+const String kLogoTrackFitBlancoNegro = 'assets/logos/TrackFit_blanco_negro.png';
+const String kLogoTrackFitCremaAzulMarino = 'assets/logos/TrackFit_crema_azulmarino.png';
+const String kLogoTrackFitCremaRosa = 'assets/logos/TrackFit_crema_rosa.png';
+const String kLogoTrackFitRosaNegro = 'assets/logos/TrackFit_rosa_negro.png';
+
+// RANGOS MINIMOS Y MAXIMOS PARA AUTH
+const double kPesoMinimo = 42;
+const double kPesoMaximo = 200;
+const double kAlturaMinima = 145;
+const double kAlturaMaxima = 220;
+const int kCaracteresMaximosDescripcion = 150;

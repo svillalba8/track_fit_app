@@ -29,7 +29,6 @@ class _LoginPageState extends State<LoginPage> {
   bool _loading = false;
   bool _obscureRepeat = true;
   late final StreamSubscription<AuthState> _authSub;
-  
 
   @override
   void initState() {
@@ -39,7 +38,6 @@ class _LoginPageState extends State<LoginPage> {
       final event = data.event;
       final user = data.session?.user;
       // Si el usuario acaba de iniciar sesión, procesamos el siguiente paso
-      print('🔔 Auth event: $event, user: ${user?.id}');
       if (event == AuthChangeEvent.signedIn && user != null) {
         _afterLogin(user);
       }
@@ -208,7 +206,7 @@ class _LoginPageState extends State<LoginPage> {
       await supabase.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: 'io.trackfit://login-callback',
-        authScreenLaunchMode: LaunchMode.inAppWebView
+        authScreenLaunchMode: LaunchMode.inAppWebView,
       );
     } catch (e) {
       // Captura errores de OAuth
@@ -252,6 +250,15 @@ class _LoginPageState extends State<LoginPage> {
         // cuenta no verificada
         return 'Tu correo no está confirmado. Revisa tu bandeja.';
 
+      case 'User not found':
+        // usuario no existente
+        return 'No existe ninguna cuenta con ese correo.';
+
+      case 'User already registered':
+      case 'email_exists':
+        // correo ya registrado
+        return 'Este correo ya está en uso.';
+
       case 'Password should be a string with minimum length of 6':
         // contraseña muy corta
         return 'La contraseña debe tener al menos 6 caracteres.';
@@ -261,7 +268,7 @@ class _LoginPageState extends State<LoginPage> {
         return 'Ha ocurrido un error inesperado. Vuelve a intentarlo.';
 
       default:
-        // cualquier otro caso
+        // cualquier otro mensaje
         return apiMsg;
     }
   }

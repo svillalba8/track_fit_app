@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:track_fit_app/auth/validation/auth_validators.dart';
+import 'package:track_fit_app/auth/widgets/profile_field.dart';
 import 'package:track_fit_app/core/utils/snackbar_utils.dart';
 import 'package:track_fit_app/widgets/custom_button.dart';
+
 import '../core/constants.dart';
 
 class CompleteProfilePage extends StatefulWidget {
@@ -127,122 +130,44 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                 ),
                 const SizedBox(height: 24),
 
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12.0,
-                    vertical: 6.0,
-                  ),
-                  decoration: BoxDecoration(
-                    color: actualTheme.colorScheme.tertiary,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: TextFormField(
-                    controller: _usernameCtrl,
-                    cursorColor: actualTheme.colorScheme.secondary,
-                    decoration: InputDecoration(
-                      labelText: 'Nombre de usuario',
-                      labelStyle: actualTheme.textTheme.bodyMedium?.copyWith(
-                        color: actualTheme.colorScheme.secondary,
-                      ),
-                      border: InputBorder.none,
-                    ),
-                    validator: (v) => v!.isEmpty ? 'Obligatorio' : null,
-                  ),
+                ProfileField(
+                  controller: _usernameCtrl,
+                  label: 'Nombre de usuario',
+                  validator: AuthValidators.usernameValidator,
                 ),
 
                 const SizedBox(height: 8),
 
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12.0,
-                    vertical: 6.0,
-                  ),
-                  decoration: BoxDecoration(
-                    color: actualTheme.colorScheme.tertiary,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: TextFormField(
-                    controller: _nameCtrl,
-                    cursorColor: actualTheme.colorScheme.secondary,
-                    decoration: InputDecoration(
-                      labelText: 'Nombre',
-                      labelStyle: actualTheme.textTheme.bodyMedium?.copyWith(
-                        color: actualTheme.colorScheme.secondary,
-                      ),
-                      border: InputBorder.none,
-                    ),
-                  ),
+                ProfileField(
+                  controller: _nameCtrl,
+                  label: 'Nombre',
+                  validator: AuthValidators.nameValidator,
                 ),
 
                 const SizedBox(height: 8),
 
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12.0,
-                    vertical: 6.0,
-                  ),
-                  decoration: BoxDecoration(
-                    color: actualTheme.colorScheme.tertiary,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: TextFormField(
-                    controller: _lastnameCtrl,
-                    decoration: InputDecoration(
-                      labelText: 'Apellidos',
-                      labelStyle: actualTheme.textTheme.bodyMedium?.copyWith(
-                        color: actualTheme.colorScheme.secondary,
-                      ),
-                      border: InputBorder.none,
-                    ),
-                  ),
+                ProfileField(
+                  controller: _lastnameCtrl,
+                  label: 'Apellidos',
+                  validator: AuthValidators.lastnameValidator,
                 ),
 
                 const SizedBox(height: 8),
 
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12.0,
-                    vertical: 6.0,
-                  ),
-                  decoration: BoxDecoration(
-                    color: actualTheme.colorScheme.tertiary,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: TextFormField(
-                    controller: _weightCtrl,
-                    decoration: InputDecoration(
-                      labelText: 'Peso (kg)',
-                      labelStyle: actualTheme.textTheme.bodyMedium?.copyWith(
-                        color: actualTheme.colorScheme.secondary,
-                      ),
-                      border: InputBorder.none,
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
+                ProfileField(
+                  controller: _weightCtrl,
+                  label: 'Peso (kg)',
+                  keyboardType: TextInputType.number,
+                  validator: AuthValidators.weightValidator,
                 ),
 
                 const SizedBox(height: 8),
 
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12.0,
-                    vertical: 6.0,
-                  ),
-                  decoration: BoxDecoration(
-                    color: actualTheme.colorScheme.tertiary,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: TextFormField(
-                    controller: _heightCtrl,
-                    decoration: InputDecoration(
-                      labelText: 'Estatura (cm)',
-                      labelStyle: actualTheme.textTheme.bodyMedium?.copyWith(
-                        color: actualTheme.colorScheme.secondary,
-                      ),
-                      border: InputBorder.none,
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
+                ProfileField(
+                  controller: _heightCtrl,
+                  label: 'Estatura (cm)',
+                  keyboardType: TextInputType.number,
+                  validator: AuthValidators.heightValidator,
                 ),
 
                 const SizedBox(height: 8),
@@ -270,33 +195,40 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
 
                 const SizedBox(height: 8),
 
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12.0,
-                    vertical: 6.0,
-                  ),
-                  decoration: BoxDecoration(
-                    color: actualTheme.colorScheme.tertiary,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: TextFormField(
-                    controller: _descriptionCtrl,
-                    decoration: InputDecoration(
-                      labelText: 'Descripción',
-                      labelStyle: actualTheme.textTheme.bodyMedium?.copyWith(
-                        color: actualTheme.colorScheme.secondary,
-                      ),
-                      border: InputBorder.none,
-                    ),
-                    maxLines: 3,
-                  ),
+                ProfileField(
+                  controller: _descriptionCtrl,
+                  label: 'Descripción',
+                  maxLines: 3,
+                  validator: AuthValidators.descriptionValidator,
                 ),
+
                 const SizedBox(height: 24),
 
                 CustomButton(
-                  text: 'Guardar perfil',
+                  text: _loading ? 'Guardando...' : 'Guardar perfil',
                   actualTheme: Theme.of(context),
-                  onPressed: _submit,
+                  onPressed: () {
+                    // 1) Validamos todos los campos y nos quedamos con el primer error
+                    final errorMessage =
+                        AuthValidators.usernameValidator(_usernameCtrl.text) ??
+                        AuthValidators.nameValidator(_nameCtrl.text) ??
+                        AuthValidators.lastnameValidator(_lastnameCtrl.text) ??
+                        AuthValidators.weightValidator(_weightCtrl.text) ??
+                        AuthValidators.heightValidator(_heightCtrl.text) ??
+                        AuthValidators.genderValidator(_selectedGender) ??
+                        AuthValidators.descriptionValidator(
+                          _descriptionCtrl.text,
+                        );
+
+                    // 2) Si hay error, lo mostramos y salimos
+                    if (errorMessage != null) {
+                      showErrorSnackBar(context, errorMessage);
+                      return;
+                    }
+
+                    // 3) Si todo OK, continuamos
+                    _submit();
+                  },
                 ),
               ],
             ),
@@ -343,24 +275,43 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
 
+    final username = _usernameCtrl.text.trim();
     final user = supabase.auth.currentUser!;
-    final dateNowIso = DateTime.now().toIso8601String();
-
-    final data = {
-      'auth_user_id': user.id,
-      'nombre_usuario': _usernameCtrl.text.trim(),
-      'descripcion': _descriptionCtrl.text.trim(),
-      'peso': double.tryParse(_weightCtrl.text),
-      'estatura': double.tryParse(_heightCtrl.text),
-      'genero': _selectedGender,
-      'nombre': _nameCtrl.text.trim(),
-      'apellidos': _lastnameCtrl.text.trim(),
-      'created_at': dateNowIso,
-      'updated_at': dateNowIso,
-    };
 
     try {
+      // comprobamos que no exista ya el username
+      final existing =
+          await supabase
+              .from('usuarios')
+              .select('auth_user_id')
+              .eq('nombre_usuario', username)
+              .maybeSingle();
+
+      if (existing != null) {
+        // Ya hay un perfil con ese nombre de usuario
+        if (!mounted) return;
+        showErrorSnackBar(context, 'El nombre de usuario ya está en uso');
+        setState(() => _loading = false);
+        return;
+      }
+
+      // si todo esta bien, continuamos
+      final dateNowIso = DateTime.now().toIso8601String();
+      final data = {
+        'auth_user_id': user.id,
+        'nombre_usuario': username,
+        'descripcion': _descriptionCtrl.text.trim(),
+        'peso': double.tryParse(_weightCtrl.text),
+        'estatura': double.tryParse(_heightCtrl.text),
+        'genero': _selectedGender,
+        'nombre': _nameCtrl.text.trim(),
+        'apellidos': _lastnameCtrl.text.trim(),
+        'created_at': dateNowIso,
+        'updated_at': dateNowIso,
+      };
+
       await supabase.from('usuarios').insert(data);
+
       if (!mounted) return;
       Navigator.of(context).pushReplacementNamed('/home');
       showSuccessSnackBar(context, 'Registro completado con éxito');

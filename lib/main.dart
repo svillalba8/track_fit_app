@@ -21,62 +21,67 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load();
 
+  // 1) Inicializamos Supabase
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL']!,
     anonKey: dotenv.env['SUPABASE_KEY']!,
+    authOptions: const FlutterAuthClientOptions(
+      autoRefreshToken: true,
+      detectSessionInUri: true,
+    ),
   );
 
+  // 2) Inyectamos dependencias
   setupDependencies();
 
-  Supabase.instance.client.auth.onAuthStateChange.listen((data) async {
+  // 3) Cierra la sesión del usuario y te redirige a la pantalla de login.
+  Supabase.instance.client.auth.onAuthStateChange.listen((data) {
     final event = data.event;
-    final session = data.session;
-
-    if (event == AuthChangeEvent.signedIn && session != null) {
-      final user = session.user;
-
-      final profile =
-          await Supabase.instance.client
-              .from('usuarios')
-              .select()
-              .eq('auth_user_id', user.id)
-              .maybeSingle();
-
-      bool needsProfile = false;
-      if (profile == null) {
-        needsProfile = true;
-      } else {
-        const required = ['nombre_usuario', 'nombre', 'apellidos'];
-        for (var field in required) {
-          if (profile[field] == null) {
-            needsProfile = true;
-            break;
-          }
-        }
-      }
-
-      if (needsProfile) {
-        _navKey.currentState?.pushReplacementNamed(AppRoutes.completeProfile);
-      } else {
-        _navKey.currentState?.pushReplacementNamed(AppRoutes.home);
-      }
-    } else if (event == AuthChangeEvent.signedOut) {
+    if (event == AuthChangeEvent.signedOut) {
+      // si alguien se cierra sesión en cualquier parte,
+      // la app navega sola al login
       _navKey.currentState?.pushReplacementNamed(AppRoutes.login);
     }
   });
 
-  runApp(const MyApp());
+  // 4) Leemos la sesión actual
+  final supabase = Supabase.instance.client;
+  final session = supabase.auth.currentSession;
+
+  // 5) Decidimos la pantalla inicial
+  Widget initialScreen;
+  if (session == null) {
+    // No hay usuario logueado
+    initialScreen = const LoginPage();
+  } else {
+    // Hay sesión: comprobamos si el perfil está completo
+    final profile =
+        await supabase
+            .from('usuarios')
+            .select()
+            .eq('auth_user_id', session.user.id)
+            .maybeSingle();
+    const required = ['nombre_usuario', 'nombre', 'apellidos'];
+    final needsProfile =
+        profile == null || required.any((field) => profile[field] == null);
+    initialScreen =
+        needsProfile ? const CompleteProfilePage() : const HomePage();
+  }
+
+  // 6) Arrancamos la app con la pantalla adecuada
+  runApp(MyApp(initialScreen: initialScreen));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final Widget initialScreen;
+  const MyApp({required this.initialScreen, super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Mi App con Supabase',
       navigatorKey: _navKey,
-      initialRoute: '/login',
+      home: initialScreen,
       routes: {
         AppRoutes.login: (context) => const LoginPage(),
         AppRoutes.register: (context) => const RegisterPage(),
@@ -92,6 +97,7 @@ class MyApp extends StatelessWidget {
           selectionHandleColor: Theme.of(context).colorScheme.onSecondary,
         ),
       ),
+      // Para ocultar el teclado al tocar fuera
       builder: (context, child) {
         return GestureDetector(
           behavior: HitTestBehavior.translucent,

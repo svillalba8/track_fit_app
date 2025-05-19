@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:track_fit_app/auth/service/auth_service.dart';
 import 'package:track_fit_app/auth/validation/auth_validators.dart';
 import 'package:track_fit_app/auth/widgets/email_field.dart';
 import 'package:track_fit_app/auth/widgets/password_field.dart';
@@ -144,84 +145,63 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  /// Lógica de registro con Supabase y mapeo de errores
+  /// Lógica de registro con Supabase, pre‐check RPC y mapeo de errores
+  final _authService = AuthService();
+
   Future<void> _signUp() async {
     setState(() => _loading = true);
-    try {
-      final email = _emailController.text.trim();
-      final password = _passController.text.trim();
 
-      // 1) Alta en Auth
-      final response = await supabase.auth.signUp(
-        email: email,
-        password: password,
-      );
-      final user = response.user;
-      if (user == null) throw Exception('No se pudo crear el usuario');
+    final email = _emailController.text.trim();
+    final password = _passController.text.trim();
 
-      // 2) Muestro snack de éxito
+    // Validación local
+    final localError =
+        AuthValidators.emailValidator(email) ??
+        AuthValidators.passwordValidator(password) ??
+        AuthValidators.confirmPasswordValidator(
+          _passConfirmController.text,
+          password,
+        );
+    if (localError != null) {
       if (!mounted) return;
-      showSuccessSnackBar(context, 'Registro correcto. Ahora inicia sesión.');
+      showErrorSnackBar(context, localError);
+      setState(() => _loading = false);
+      return;
+    }
 
-      // 3) Navego al login y destruyo esta pantalla
+    // Pre-check
+    final exists = await _authService.emailExists(email);
+    if (!mounted) return;
+    if (exists) {
+      showErrorSnackBar(context, 'Este correo ya está en uso.');
+      setState(() => _loading = false);
+      return;
+    }
+
+    // Sign up
+    try {
+      await _authService.signUp(email: email, password: password);
+      if (!mounted) return;
+      showSuccessSnackBar(
+        context,
+        'Te hemos enviado un correo para confirmar tu cuenta. Revisa tu bandeja.',
+      );
       Navigator.of(context).pushReplacementNamed('/login');
     } on AuthException catch (e) {
-      if (mounted) showErrorSnackBar(context, _mapSignUpError(e.message));
-    } catch (err) {
-      if (mounted) {
-        showErrorSnackBar(context, 'Error inesperado. Intenta de nuevo.');
+      if (!mounted) return;
+      final msg = e.message.toLowerCase();
+      if (msg.contains('user already registered') ||
+          msg.contains('email_exists') ||
+          msg.contains('duplicate key')) {
+        showErrorSnackBar(context, 'Este correo ya está en uso.');
+      } else {
+        showErrorSnackBar(context, _authService.mapError(e.message));
       }
+    } catch (_) {
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Error inesperado. Intenta de nuevo.');
     } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  /// Convierte mensajes crudos de Supabase en mensajes de usuario
-  String _mapSignUpError(String apiMsg) {
-    switch (apiMsg) {
-      // — Email inválido
-      case 'Invalid email address':
-        return 'El formato del correo no es válido.';
-
-      // — Correo ya usado
-      case 'User already registered':
-      case 'email_exists':
-        return 'Este correo ya está en uso.';
-
-      // — Registro deshabilitado en el servidor
-      case 'Signups are disabled for email and password':
-      case 'Sign ups (new account creation) are disabled on the server.':
-        return 'El registro por correo está deshabilitado.';
-
-      // — Contraseña débil o corta
-      case 'Password should be a string with minimum length of 6':
-        return 'La contraseña debe tener al menos 6 caracteres.';
-      case 'weak_password':
-        return 'La contraseña es demasiado débil.';
-
-      // — Parámetros mal formados
-      case 'validation_failed':
-        return 'Los datos introducidos no son válidos.';
-
-      // — Límite de peticiones superado
-      case 'conflict':
-        return 'Parece que ya existe una operación en curso. Intenta de nuevo.';
-      case 'over_request_rate_limit':
-        return 'Demasiadas solicitudes. Espera un momento antes de volver a intentarlo.';
-      case 'over_email_send_rate_limit':
-        return 'Has enviado demasiados correos de confirmación. Vuelve a intentarlo más tarde.';
-
-      // — CAPTCHA
-      case 'captcha_failed':
-        return 'No se pudo verificar el CAPTCHA.';
-
-      // — Errores généricos del servidor
-      case 'Internal server error':
-        return 'Error interno. Inténtalo de nuevo más tarde.';
-
-      // — Por defecto, devolvemos el mensaje crudo
-      default:
-        return apiMsg;
+      setState(() => _loading = false);
     }
   }
 }
