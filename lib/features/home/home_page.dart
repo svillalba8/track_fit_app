@@ -1,8 +1,5 @@
-
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import '../../navigation/navigation_widget.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -23,10 +20,6 @@ class HomePage extends StatelessWidget {
         ],
       ),
       body: const Center(child: Text('Bienvenido a tu app')),
-      bottomNavigationBar: NavigationWidget.customBottonNavigationBar(
-        context,
-        0,
-      ),
     );
   }
 }

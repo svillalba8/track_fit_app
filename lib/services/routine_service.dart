@@ -1,8 +1,15 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+<<<<<<< HEAD:lib/routines/services/routine_service.dart
 import '../enums/exercise_type.dart';
 import '../models/exercise.dart';
 import '../models/routine.dart';
 import '../models/ejercicio_rutina.dart';
+=======
+
+import '../core/enums/exercise_type.dart';
+import '../models/exercise_model.dart';
+import '../models/routine_model.dart';
+>>>>>>> db482cd44f599da2dc881743c214d9173d94526f:lib/services/routine_service.dart
 
 class RoutineService {
   final SupabaseClient _client = Supabase.instance.client;
@@ -31,6 +38,7 @@ class RoutineService {
     }
   }
 
+<<<<<<< HEAD:lib/routines/services/routine_service.dart
   Future<void> createExercise(String nombre, ExerciseType tipo, String? descripcion) async {
     final userId = _userId;
     if (userId == null) throw Exception('User not authenticated');
@@ -67,6 +75,36 @@ class RoutineService {
       print('Error al actualizar ejercicio: $e');
       rethrow;
     }
+=======
+  // Crear un nuevo ejercicio
+  Future<void> createExercise(
+    String nombre,
+    ExerciseType tipo,
+    String? descripcion,
+  ) async {
+    await _client.from('ejercicio').insert({
+      'nombre': nombre,
+      'tipo': tipo.name,
+      'descripcion': descripcion,
+    });
+  }
+
+  // Modificar un ejercicio existente
+  Future<void> updateExercise(
+    int id,
+    String nombre,
+    ExerciseType tipo,
+    String? descripcion,
+  ) async {
+    await _client
+        .from('ejercicio')
+        .update({
+          'nombre': nombre,
+          'tipo': tipo.name,
+          'descripcion': descripcion,
+        })
+        .eq('id', id);
+>>>>>>> db482cd44f599da2dc881743c214d9173d94526f:lib/services/routine_service.dart
   }
 
   Future<void> deleteExercise(int id) async {
@@ -85,6 +123,7 @@ class RoutineService {
     }
   }
 
+<<<<<<< HEAD:lib/routines/services/routine_service.dart
   Future<Routine?> createRoutine(String nombre) async {
     final userId = _userId;
     if (userId == null) throw Exception('User not authenticated');
@@ -105,6 +144,11 @@ class RoutineService {
       print('Error al crear rutina: $e');
       rethrow;
     }
+=======
+  // Crear una nueva rutina
+  Future<void> createRoutine(String nombre) async {
+    await _client.from('rutina').insert({'nombre': nombre});
+>>>>>>> db482cd44f599da2dc881743c214d9173d94526f:lib/services/routine_service.dart
   }
 
   Future<List<Routine>> getRoutines() async {
@@ -167,9 +211,20 @@ class RoutineService {
     }
   }
 
+<<<<<<< HEAD:lib/routines/services/routine_service.dart
   Future<List<RoutineWithExercises>> getRoutinesWithExercises() async {
     final userId = _userId;
     if (userId == null) return [];
+=======
+  // Obtener ejercicios de una rutina con detalles
+  Future<List<Map<String, dynamic>>> getEjerciciosForRutina(
+    int rutinaId,
+  ) async {
+    final response = await _client
+        .from('ejerciciorutina')
+        .select('series, repeticiones, duracion, ejercicio (*)')
+        .eq('rutina_id', rutinaId);
+>>>>>>> db482cd44f599da2dc881743c214d9173d94526f:lib/services/routine_service.dart
 
     try {
       final rutinasData = await _client
@@ -238,6 +293,7 @@ class RoutineService {
     }
   }
 
+<<<<<<< HEAD:lib/routines/services/routine_service.dart
 }
 
 class RoutineWithExercises {
@@ -262,4 +318,13 @@ class ExerciseWithDetails {
     this.repeticiones,
     this.duracion,
   });
+=======
+  // Eliminar un ejercicio de una rutina
+  Future<void> deleteExerciseFromRutina(int rutinaId, int ejercicioId) async {
+    await _client.from('ejerciciorutina').delete().match({
+      'rutina_id': rutinaId,
+      'ejercicio_id': ejercicioId,
+    });
+  }
+>>>>>>> db482cd44f599da2dc881743c214d9173d94526f:lib/services/routine_service.dart
 }

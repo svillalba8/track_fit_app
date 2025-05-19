@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:track_fit_app/widgets/link_text.dart';
 import '../widgets/custom_button.dart';
-import '../widgets/redirect_text_button.dart';
-import '../utils/constants.dart';
-import '../home/screens/home_page.dart';
+import '../core/constants.dart';
 
 /// Página de registro optimizada con diseño elegante
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({Key? key}) : super(key: key);
+  const RegisterPage({super.key});
 
   @override
   _RegisterPageState createState() => _RegisterPageState();
@@ -16,8 +15,10 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final _emailController = TextEditingController();
   final _passController = TextEditingController();
+  final _passConfiormController = TextEditingController();
   final supabase = Supabase.instance.client;
   bool _loading = false;
+  bool _obscureRepeat = true;
 
   Future<void> _signUp() async {
     setState(() => _loading = true);
@@ -36,16 +37,18 @@ class _RegisterPageState extends State<RegisterPage> {
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('¡Registro exitoso! Revisa tu correo para confirmar.')),
+        const SnackBar(
+          content: Text('¡Registro exitoso! Revisa tu correo para confirmar.'),
+        ),
       );
     } on AuthException catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
     } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error inesperado: $error')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error inesperado: $error')));
     } finally {
       setState(() => _loading = false);
     }
@@ -63,10 +66,7 @@ class _RegisterPageState extends State<RegisterPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               // Logo de la app
-              Image.asset(
-                kLogoTrackFitBlancoMorado,
-                height: 120,
-              ),
+              Image.asset(kLogoTrackFitBlancoMorado, height: 120),
               const SizedBox(height: 32),
 
               // Card del formulario
@@ -79,51 +79,110 @@ class _RegisterPageState extends State<RegisterPage> {
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
                     children: [
-                      Text(
-                        'Crear Cuenta',
-                        style: theme.textTheme.titleLarge,
-                      ),
+                      Text('Crear Cuenta', style: theme.textTheme.titleLarge),
                       const SizedBox(height: 16),
 
                       // Email
-                      TextField(
-                        controller: _emailController,
-                        decoration: const InputDecoration(
-                          labelText: 'Email',
-                          prefixIcon: Icon(Icons.email),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.tertiary,
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        keyboardType: TextInputType.emailAddress,
+                        child: TextField(
+                          controller: _emailController,
+                          decoration: const InputDecoration(
+                            labelText: 'Email',
+                            border: InputBorder.none,
+                            prefixIcon: Icon(Icons.email),
+                          ),
+                          keyboardType: TextInputType.emailAddress,
+                        ),
                       ),
-                      const SizedBox(height: 12),
+
+                      const SizedBox(height: 24),
 
                       // Contraseña
-                      TextField(
-                        controller: _passController,
-                        decoration: const InputDecoration(
-                          labelText: 'Contraseña',
-                          prefixIcon: Icon(Icons.lock),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.tertiary,
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        obscureText: true,
+                        child: TextField(
+                          controller: _passController,
+                          decoration: InputDecoration(
+                            labelText: 'Contraseña',
+                            border: InputBorder.none,
+                            prefixIcon: const Icon(Icons.lock),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureRepeat
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscureRepeat = !_obscureRepeat;
+                                });
+                              },
+                            ),
+                          ),
+                          obscureText: _obscureRepeat,
+                        ),
                       ),
+
+                      const SizedBox(height: 12),
+
+                      // Confirmar contraseña
+                      Container(
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.tertiary,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: TextField(
+                          controller: _passConfiormController,
+                          decoration: InputDecoration(
+                            labelText: 'Repetir contraseña',
+                            border: InputBorder.none,
+                            prefixIcon: const Icon(Icons.lock),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureRepeat
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscureRepeat = !_obscureRepeat;
+                                });
+                              },
+                            ),
+                          ),
+                          obscureText: _obscureRepeat,
+                        ),
+                      ),
+
                       const SizedBox(height: 24),
 
                       // Botón de registro
                       CustomButton(
                         text: _loading ? 'Cargando...' : 'Crear cuenta',
+                        actualTheme: Theme.of(context),
                         onPressed: () {
                           if (!_loading) _signUp();
                         },
-                        colorTheme: theme.colorScheme.primary,
                       ),
 
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 34),
 
                       // Enlace a login
-                      RedirectTextButton(
+                      LinkText(
                         text: '¿Ya tienes cuenta? Inicia sesión',
-                        function: () {
-                          Navigator.of(context).pop();
-                        },
+                        underline: false,
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        onTap: () => Navigator.of(context).pop(),
                       ),
                     ],
                   ),
