@@ -82,7 +82,7 @@ class MyApp extends StatelessWidget {
         AppRoutes.completeProfile: (context) => const CompleteProfilePage(),
       },
 
-      theme: AppThemes.themeForLogo(LogoType.blancoMorado).copyWith(
+      theme: AppThemes.themeForLogo(LogoType.blancoNegro).copyWith(
         textSelectionTheme: TextSelectionThemeData(
           cursorColor: Theme.of(context).colorScheme.onSecondary,
           selectionHandleColor: Theme.of(context).colorScheme.onSecondary,

@@ -1,21 +1,14 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-<<<<<<< HEAD:lib/routines/services/routine_service.dart
-import '../enums/exercise_type.dart';
-import '../models/exercise.dart';
-import '../models/routine.dart';
-import '../models/ejercicio_rutina.dart';
-=======
-
 import '../core/enums/exercise_type.dart';
 import '../models/exercise_model.dart';
 import '../models/routine_model.dart';
->>>>>>> db482cd44f599da2dc881743c214d9173d94526f:lib/services/routine_service.dart
 
 class RoutineService {
   final SupabaseClient _client = Supabase.instance.client;
 
   String? get _userId => _client.auth.currentUser?.id;
 
+  // Obtener todos los ejercicios del usuario actual
   Future<List<Exercise>> getExercises() async {
     final userId = _userId;
     if (userId == null) {
@@ -38,7 +31,6 @@ class RoutineService {
     }
   }
 
-<<<<<<< HEAD:lib/routines/services/routine_service.dart
   Future<void> createExercise(String nombre, ExerciseType tipo, String? descripcion) async {
     final userId = _userId;
     if (userId == null) throw Exception('User not authenticated');
@@ -75,36 +67,6 @@ class RoutineService {
       print('Error al actualizar ejercicio: $e');
       rethrow;
     }
-=======
-  // Crear un nuevo ejercicio
-  Future<void> createExercise(
-    String nombre,
-    ExerciseType tipo,
-    String? descripcion,
-  ) async {
-    await _client.from('ejercicio').insert({
-      'nombre': nombre,
-      'tipo': tipo.name,
-      'descripcion': descripcion,
-    });
-  }
-
-  // Modificar un ejercicio existente
-  Future<void> updateExercise(
-    int id,
-    String nombre,
-    ExerciseType tipo,
-    String? descripcion,
-  ) async {
-    await _client
-        .from('ejercicio')
-        .update({
-          'nombre': nombre,
-          'tipo': tipo.name,
-          'descripcion': descripcion,
-        })
-        .eq('id', id);
->>>>>>> db482cd44f599da2dc881743c214d9173d94526f:lib/services/routine_service.dart
   }
 
   Future<void> deleteExercise(int id) async {
@@ -123,7 +85,6 @@ class RoutineService {
     }
   }
 
-<<<<<<< HEAD:lib/routines/services/routine_service.dart
   Future<Routine?> createRoutine(String nombre) async {
     final userId = _userId;
     if (userId == null) throw Exception('User not authenticated');
@@ -144,11 +105,6 @@ class RoutineService {
       print('Error al crear rutina: $e');
       rethrow;
     }
-=======
-  // Crear una nueva rutina
-  Future<void> createRoutine(String nombre) async {
-    await _client.from('rutina').insert({'nombre': nombre});
->>>>>>> db482cd44f599da2dc881743c214d9173d94526f:lib/services/routine_service.dart
   }
 
   Future<List<Routine>> getRoutines() async {
@@ -169,11 +125,58 @@ class RoutineService {
     }
   }
 
+  // Nuevo método: Obtener ejercicios de una rutina específica
+  Future<List<Exercise>> getExercisesForRoutine(int routineId) async {
+    final userId = _userId;
+    if (userId == null) return [];
+
+    try {
+      final data = await _client
+          .from('ejercicio_rutina')
+          .select('''
+            id_ejercicio,
+            ejercicio:ejercicio_id(*)
+          ''')
+          .eq('id_rutina', routineId);
+
+      return (data as List)
+          .map((e) => Exercise.fromMap(e['ejercicio']))
+          .toList();
+    } catch (e) {
+      print('Error al obtener ejercicios de rutina: $e');
+      return [];
+    }
+  }
+
+  // Nuevo método: Obtener detalles completos de ejercicios en rutina
+  Future<List<Map<String, dynamic>>> getRoutineExercisesDetails(int routineId) async {
+    final userId = _userId;
+    if (userId == null) return [];
+
+    try {
+      final data = await _client
+          .from('ejercicio_rutina')
+          .select('''
+            id_ejercicio,
+            series,
+            repeticiones,
+            duracion,
+            ejercicio:ejercicio_id(*)
+          ''')
+          .eq('id_rutina', routineId);
+
+      return (data as List).cast<Map<String, dynamic>>();
+    } catch (e) {
+      print('Error al obtener detalles de ejercicios en rutina: $e');
+      return [];
+    }
+  }
+
   Future<void> addExerciseToRutina({
     required int rutinaId,
     required int ejercicioId,
     required int series,
-    int? repeticiones,
+    required int repeticiones,
     double? duracion,
   }) async {
     final userId = _userId;
@@ -211,120 +214,99 @@ class RoutineService {
     }
   }
 
-<<<<<<< HEAD:lib/routines/services/routine_service.dart
-  Future<List<RoutineWithExercises>> getRoutinesWithExercises() async {
+  // Nuevo método: Actualizar nombre de rutina
+  Future<void> updateRoutine(int routineId, String newName) async {
     final userId = _userId;
-    if (userId == null) return [];
-=======
-  // Obtener ejercicios de una rutina con detalles
-  Future<List<Map<String, dynamic>>> getEjerciciosForRutina(
-    int rutinaId,
-  ) async {
-    final response = await _client
-        .from('ejerciciorutina')
-        .select('series, repeticiones, duracion, ejercicio (*)')
-        .eq('rutina_id', rutinaId);
->>>>>>> db482cd44f599da2dc881743c214d9173d94526f:lib/services/routine_service.dart
+    if (userId == null) throw Exception('User not authenticated');
 
     try {
-      final rutinasData = await _client
+      await _client
           .from('rutina')
-          .select('*, ejercicio_rutina(*, ejercicio(*))')
-          .eq('user_id', userId)
-          .order('created_at', ascending: false);
-
-
-      List<Routine> rutinas = (rutinasData as List)
-          .map((r) => Routine.fromMap(r))
-          .toList();
-
-      List<RoutineWithExercises> rutinasConEjercicios = [];
-
-      for (var rutina in rutinas) {
-        final ejerciciosRutinaData = await _client
-            .from('ejercicio_rutina')
-            .select()
-            .eq('id_rutina', rutina.id)
-            .order('created_at', ascending: true);
-
-        List<EjercicioRutina> ejerciciosRutina = (ejerciciosRutinaData as List)
-            .map((e) => EjercicioRutina.fromMap(e))
-            .toList();
-
-        List<int> ejerciciosIds = ejerciciosRutina.map((e) => e.idEjercicio).toList();
-
-        if (ejerciciosIds.isEmpty) {
-          rutinasConEjercicios.add(RoutineWithExercises(rutina: rutina, ejercicios: []));
-          continue;
-        }
-
-        final ejerciciosData = await _client
-            .from('ejercicio')
-            .select()
-            .filter('id', 'in', '(${ejerciciosIds.join(",")})')
-            .order('created_at', ascending: false);
-
-        List<Exercise> ejercicios = (ejerciciosData as List)
-            .map((e) => Exercise.fromMap(e))
-            .toList();
-
-        List<ExerciseWithDetails> ejerciciosConDetalles = ejerciciosRutina.map((ejRutina) {
-          final ejercicio = ejercicios.firstWhere((ex) => ex.id == ejRutina.idEjercicio);
-          return ExerciseWithDetails(
-            exercise: ejercicio,
-            series: ejRutina.series,
-            repeticiones: ejRutina.repeticiones,
-            duracion: ejRutina.duracion,
-          );
-        }).toList();
-
-        rutinasConEjercicios.add(
-          RoutineWithExercises(
-            rutina: rutina,
-            ejercicios: ejerciciosConDetalles,
-          ),
-        );
-      }
-
-      return rutinasConEjercicios;
+          .update({
+        'nombre': newName,
+      })
+          .eq('id', routineId)
+          .eq('user_id', userId);
     } catch (e) {
-      print('Error fetching routines with exercises: $e');
-      return [];
+      print('Error al actualizar rutina: $e');
+      rethrow;
     }
   }
 
-<<<<<<< HEAD:lib/routines/services/routine_service.dart
-}
+  // Nuevo método: Eliminar todos los ejercicios de una rutina
+  Future<void> removeAllExercisesFromRoutine(int routineId) async {
+    final userId = _userId;
+    if (userId == null) throw Exception('User not authenticated');
 
-class RoutineWithExercises {
-  final Routine rutina;
-  final List<ExerciseWithDetails> ejercicios;
+    try {
+      // Verificar que la rutina pertenece al usuario
+      final routine = await _client
+          .from('rutina')
+          .select()
+          .eq('id', routineId)
+          .eq('user_id', userId)
+          .maybeSingle();
 
-  RoutineWithExercises({
-    required this.rutina,
-    required this.ejercicios,
-  });
-}
+      if (routine == null) throw Exception('Rutina no encontrada o no pertenece al usuario.');
 
-class ExerciseWithDetails {
-  final Exercise exercise;
-  final int series;
-  final int? repeticiones;
-  final double? duracion;
-
-  ExerciseWithDetails({
-    required this.exercise,
-    required this.series,
-    this.repeticiones,
-    this.duracion,
-  });
-=======
-  // Eliminar un ejercicio de una rutina
-  Future<void> deleteExerciseFromRutina(int rutinaId, int ejercicioId) async {
-    await _client.from('ejerciciorutina').delete().match({
-      'rutina_id': rutinaId,
-      'ejercicio_id': ejercicioId,
-    });
+      await _client
+          .from('ejercicio_rutina')
+          .delete()
+          .eq('id_rutina', routineId);
+    } catch (e) {
+      print('Error al eliminar ejercicios de rutina: $e');
+      rethrow;
+    }
   }
->>>>>>> db482cd44f599da2dc881743c214d9173d94526f:lib/services/routine_service.dart
+
+  // Nuevo método: Eliminar un ejercicio específico de una rutina
+  Future<void> removeExerciseFromRoutine(int routineId, int exerciseId) async {
+    final userId = _userId;
+    if (userId == null) throw Exception('User not authenticated');
+
+    try {
+      // Verificar que la rutina pertenece al usuario
+      final routine = await _client
+          .from('rutina')
+          .select()
+          .eq('id', routineId)
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      if (routine == null) throw Exception('Rutina no encontrada o no pertenece al usuario.');
+
+      await _client
+          .from('ejercicio_rutina')
+          .delete()
+          .eq('id_rutina', routineId)
+          .eq('id_ejercicio', exerciseId);
+    } catch (e) {
+      print('Error al eliminar ejercicio de rutina: $e');
+      rethrow;
+    }
+  }
+
+  /// Eliminar una rutina y sus asociaciones
+  Future<void> deleteRoutine(int rutinaId) async {
+    final userId = _userId;
+    if (userId == null) throw Exception('User not authenticated');
+
+    try {
+      // Eliminar ejercicios asociados
+      await _client
+          .from('ejercicio_rutina')
+          .delete()
+          .eq('id_rutina', rutinaId);
+
+      // Eliminar rutina
+      await _client
+          .from('rutina')
+          .delete()
+          .eq('id', rutinaId)
+          .eq('user_id', userId);
+    } catch (e) {
+      print('Error al eliminar rutina: $e');
+      rethrow;
+    }
+  }
 }

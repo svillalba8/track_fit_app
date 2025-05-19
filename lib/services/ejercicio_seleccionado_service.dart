@@ -1,6 +1,7 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
-import '../models/exercise.dart';
+import '../models/exercise_model.dart';
+
 
 class EjercicioSeleccionadoService {
   final Exercise ejercicio;

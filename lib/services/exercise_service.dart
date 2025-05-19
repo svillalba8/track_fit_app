@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../enums/exercise_type.dart';
-import '../models/exercise.dart';
+import '../core/enums/exercise_type.dart';
+import '../models/exercise_model.dart';
 
 class ExerciseService {
   final SupabaseClient _client = Supabase.instance.client;
@@ -70,14 +70,16 @@ class ExerciseService {
     if (userId == null) throw Exception('User not authenticated');
 
     try {
-      await _client
+      final response = await _client
           .from('ejercicio')
           .delete()
           .eq('id', id)
           .eq('user_id', userId);
+      print('Respuesta deleteExercise: $response');
     } catch (e) {
-      print('Error deleting exercise: $e');
+      print('Error al eliminar ejercicio: $e');
       rethrow;
     }
   }
+
 }
