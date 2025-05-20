@@ -37,4 +37,30 @@ class UsuarioModel {
       idProgreso: json['id_progreso'] as int?,
     );
   }
+
+  UsuarioModel copyWith({
+    int? id,
+    String? nombreUsuario,
+    String? descripcion,
+    double? peso,
+    double? estatura,
+    String? genero,
+    String? nombre,
+    String? apellidos,
+    String? authUsersId,
+    int? idProgreso,
+  }) {
+    return UsuarioModel(
+      id: id ?? this.id,
+      nombreUsuario: nombreUsuario ?? this.nombreUsuario,
+      descripcion: descripcion ?? this.descripcion,
+      peso: peso ?? this.peso,
+      estatura: estatura ?? this.estatura,
+      genero: genero ?? this.genero,
+      nombre: nombre ?? this.nombre,
+      apellidos: apellidos ?? this.apellidos,
+      authUsersId: authUsersId ?? this.authUsersId,
+      idProgreso: idProgreso ?? this.idProgreso,
+    );
+  }
 }
