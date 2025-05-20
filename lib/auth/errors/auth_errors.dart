@@ -4,17 +4,17 @@ abstract class Failure {
 }
 
 class ServerFailure extends Failure {
-  const ServerFailure({String message = "Error del servidor"}) : super(message: message);
+  const ServerFailure({super.message = "Error del servidor"});
 }
 
 class AuthFailure extends Failure {
-  const AuthFailure({String message = "Error de autenticación"}) : super(message: message);
+  const AuthFailure({super.message = "Error de autenticación"});
 }
 
 class UserNotFoundFailure extends Failure {
-  const UserNotFoundFailure({String message = "Usuario no encontrado"}) : super(message: message);
+  const UserNotFoundFailure({super.message = "Usuario no encontrado"});
 }
 
 class NetworkFailure extends Failure {
-  const NetworkFailure({String message = "Error de red"}) : super(message: message);
+  const NetworkFailure({super.message = "Error de red"});
 }

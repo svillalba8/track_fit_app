@@ -1,51 +1,65 @@
 import 'package:flutter/material.dart';
-import 'package:track_fit_app/features/home/home_page.dart';
-import 'package:track_fit_app/features/profile/profile_page.dart';
-import 'package:track_fit_app/features/routines/routine_page.dart';
-import 'package:track_fit_app/features/trainer/trainer_page.dart';
+import 'package:go_router/go_router.dart';
+import 'package:track_fit_app/core/constants.dart';
 
-class MainScaffold extends StatefulWidget {
-  const MainScaffold({super.key});
+/// Scaffold principal con BottomNavigation y contenido dinámico via ShellRoute
+class MainScaffold extends StatelessWidget {
+  final Widget child;
+  const MainScaffold({required this.child, super.key});
 
-  @override
-  State<MainScaffold> createState() => _MainScaffoldState();
-}
+  int _calculateIndex(BuildContext context) {
+    final location = GoRouter.of(context).location;
+    switch (location) {
+      case AppRoutes.home:
+        return 0;
+      case AppRoutes.routines:
+        return 1;
+      case AppRoutes.trainer:
+        return 2;
+      case AppRoutes.profile:
+        return 3;
+      default:
+        return 0;
+    }
+  }
 
-class _MainScaffoldState extends State<MainScaffold> {
-  int _selectedIndex = 0;
-
-  final List<Widget> _screens = const [
-    HomePage(),
-    RoutinePage(),
-    TrainerPage(),
-    ProfilePage(),
-  ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+  void _onTap(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        context.go(AppRoutes.home);
+        break;
+      case 1:
+        context.go(AppRoutes.routines);
+        break;
+      case 2:
+        context.go(AppRoutes.trainer);
+        break;
+      case 3:
+        context.go(AppRoutes.profile);
+        break;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final currentIndex = _calculateIndex(context);
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: _screens),
+      body: child,
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
+        currentIndex: currentIndex,
+        onTap: (i) => _onTap(context, i),
         type: BottomNavigationBarType.fixed,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Inicio"),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Inicio'),
           BottomNavigationBarItem(
             icon: Icon(Icons.fitness_center),
-            label: "Rutinas",
+            label: 'Rutinas',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_search),
-            label: "Entrenador",
+            label: 'Entrenador',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Perfil"),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
         ],
       ),
     );

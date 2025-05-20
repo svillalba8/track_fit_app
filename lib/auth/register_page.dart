@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:track_fit_app/auth/service/auth_service.dart';
+import 'package:track_fit_app/auth/validation/auth_validators.dart';
+import 'package:track_fit_app/auth/widgets/email_field.dart';
+import 'package:track_fit_app/auth/widgets/password_field.dart';
+import 'package:track_fit_app/core/utils/snackbar_utils.dart';
 import 'package:track_fit_app/widgets/link_text.dart';
-import '../widgets/custom_button.dart';
+
 import '../core/constants.dart';
+import '../widgets/custom_button.dart';
 
 /// Página de registro optimizada con diseño elegante
 class RegisterPage extends StatefulWidget {
@@ -15,48 +22,14 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final _emailController = TextEditingController();
   final _passController = TextEditingController();
-  final _passConfiormController = TextEditingController();
+  final _passConfirmController = TextEditingController();
   final supabase = Supabase.instance.client;
   bool _loading = false;
   bool _obscureRepeat = true;
 
-  Future<void> _signUp() async {
-    setState(() => _loading = true);
-    try {
-      final response = await supabase.auth.signUp(
-        email: _emailController.text.trim(),
-        password: _passController.text,
-      );
-
-      final userId = response.user?.id;
-      if (userId != null) {
-        await supabase.from('usuarios').insert({
-          'auth_user_id': userId,
-          'created_at': DateTime.now().toIso8601String(),
-        });
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('¡Registro exitoso! Revisa tu correo para confirmar.'),
-        ),
-      );
-    } on AuthException catch (error) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error.message)));
-    } catch (error) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error inesperado: $error')));
-    } finally {
-      setState(() => _loading = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final actualTheme = Theme.of(context);
 
     return Scaffold(
       body: Center(
@@ -79,86 +52,42 @@ class _RegisterPageState extends State<RegisterPage> {
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
                     children: [
-                      Text('Crear Cuenta', style: theme.textTheme.titleLarge),
+                      Text(
+                        'Crear Cuenta',
+                        style: actualTheme.textTheme.titleLarge,
+                      ),
                       const SizedBox(height: 16),
 
                       // Email
-                      Container(
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.tertiary,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: TextField(
-                          controller: _emailController,
-                          decoration: const InputDecoration(
-                            labelText: 'Email',
-                            border: InputBorder.none,
-                            prefixIcon: Icon(Icons.email),
-                          ),
-                          keyboardType: TextInputType.emailAddress,
-                        ),
+                      EmailField(
+                        emailController: _emailController,
+                        actualTheme: actualTheme,
                       ),
 
                       const SizedBox(height: 24),
 
                       // Contraseña
-                      Container(
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.tertiary,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: TextField(
-                          controller: _passController,
-                          decoration: InputDecoration(
-                            labelText: 'Contraseña',
-                            border: InputBorder.none,
-                            prefixIcon: const Icon(Icons.lock),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscureRepeat
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscureRepeat = !_obscureRepeat;
-                                });
-                              },
-                            ),
-                          ),
-                          obscureText: _obscureRepeat,
-                        ),
+                      PasswordField(
+                        passController: _passController,
+                        message: 'Contraseña',
+                        actualTheme: actualTheme,
+                        onToggleObscure: () {
+                          setState(() => _obscureRepeat = !_obscureRepeat);
+                        },
+                        obscureRepeat: _obscureRepeat,
                       ),
 
                       const SizedBox(height: 12),
 
                       // Confirmar contraseña
-                      Container(
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.tertiary,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: TextField(
-                          controller: _passConfiormController,
-                          decoration: InputDecoration(
-                            labelText: 'Repetir contraseña',
-                            border: InputBorder.none,
-                            prefixIcon: const Icon(Icons.lock),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscureRepeat
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscureRepeat = !_obscureRepeat;
-                                });
-                              },
-                            ),
-                          ),
-                          obscureText: _obscureRepeat,
-                        ),
+                      PasswordField(
+                        passController: _passConfirmController,
+                        message: 'Repetir contraseña',
+                        actualTheme: actualTheme,
+                        onToggleObscure: () {
+                          setState(() => _obscureRepeat = !_obscureRepeat);
+                        },
+                        obscureRepeat: _obscureRepeat,
                       ),
 
                       const SizedBox(height: 24),
@@ -168,7 +97,29 @@ class _RegisterPageState extends State<RegisterPage> {
                         text: _loading ? 'Cargando...' : 'Crear cuenta',
                         actualTheme: Theme.of(context),
                         onPressed: () {
-                          if (!_loading) _signUp();
+                          // 1) Ejecutamos todos los validadores y usamos el primero que devuelva error
+                          final errorMessage =
+                              AuthValidators.emailValidator(
+                                _emailController.text,
+                              ) ??
+                              AuthValidators.passwordValidator(
+                                _passController.text,
+                              ) ??
+                              AuthValidators.confirmPasswordValidator(
+                                _passConfirmController.text,
+                                _passController.text,
+                              );
+
+                          // 2) Si hay un mensaje de error, lo mostramos y salimos
+                          if (errorMessage != null) {
+                            showErrorSnackBar(context, errorMessage);
+                            return;
+                          }
+
+                          // 3) Si todo OK, lanzamos el signup
+                          if (!_loading) {
+                            _signUp();
+                          }
                         },
                       ),
 
@@ -182,7 +133,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
-                        onTap: () => Navigator.of(context).pop(),
+                        onTap: () => context.go(AppRoutes.login),
                       ),
                     ],
                   ),
@@ -193,5 +144,65 @@ class _RegisterPageState extends State<RegisterPage> {
         ),
       ),
     );
+  }
+
+  /// Lógica de registro con Supabase, pre‐check RPC y mapeo de errores
+  final _authService = AuthService();
+
+  Future<void> _signUp() async {
+    setState(() => _loading = true);
+
+    final email = _emailController.text.trim();
+    final password = _passController.text.trim();
+
+    // Validación local
+    final localError =
+        AuthValidators.emailValidator(email) ??
+        AuthValidators.passwordValidator(password) ??
+        AuthValidators.confirmPasswordValidator(
+          _passConfirmController.text,
+          password,
+        );
+    if (localError != null) {
+      if (!mounted) return;
+      showErrorSnackBar(context, localError);
+      setState(() => _loading = false);
+      return;
+    }
+
+    // Pre-check
+    final exists = await _authService.emailExists(email);
+    if (!mounted) return;
+    if (exists) {
+      showErrorSnackBar(context, 'Este correo ya está en uso.');
+      setState(() => _loading = false);
+      return;
+    }
+
+    // Sign up
+    try {
+      await _authService.signUp(email: email, password: password);
+      if (!mounted) return;
+      showSuccessSnackBar(
+        context,
+        'Te hemos enviado un correo para confirmar tu cuenta. Revisa tu bandeja.',
+      );
+      context.go(AppRoutes.login);
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      final msg = e.message.toLowerCase();
+      if (msg.contains('user already registered') ||
+          msg.contains('email_exists') ||
+          msg.contains('duplicate key')) {
+        showErrorSnackBar(context, 'Este correo ya está en uso.');
+      } else {
+        showErrorSnackBar(context, _authService.mapError(e.message));
+      }
+    } catch (_) {
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Error inesperado. Intenta de nuevo.');
+    } finally {
+      setState(() => _loading = false);
+    }
   }
 }

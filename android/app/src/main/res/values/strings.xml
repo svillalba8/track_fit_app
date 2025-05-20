@@ -1,0 +1,6 @@
+<resources>
+    <!-- CLIENT ID que copiaste de Google Cloud -->
+    <string name="default_web_client_id">
+        432927842735-a0ttcevpetrik1d5471gnrrk38brb0i9.apps.googleusercontent.com
+    </string>
+</resources>
