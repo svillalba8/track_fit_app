@@ -3,8 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:track_fit_app/auth/complete_profile_page.dart';
-import 'package:track_fit_app/auth/register_page.dart';
 import 'package:track_fit_app/auth/validation/auth_validators.dart';
 import 'package:track_fit_app/auth/widgets/email_field.dart';
 import 'package:track_fit_app/auth/widgets/password_field.dart';
@@ -138,12 +136,7 @@ class _LoginPageState extends State<LoginPage> {
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
                         ),
-                        onTap:
-                            () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const RegisterPage(),
-                              ),
-                            ),
+                        onTap: () => context.push(AppRoutes.register),
                       ),
 
                       const SizedBox(height: 9),

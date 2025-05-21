@@ -26,16 +26,28 @@ class LinkText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final defaultStyle = Theme.of(context).textTheme.bodyMedium!.copyWith(
-      color: Theme.of(context).colorScheme.secondary,
+    // 1) Calcula el estilo final
+    final base =
+        style ??
+        Theme.of(context).textTheme.bodyMedium!.copyWith(
+          color: Theme.of(context).colorScheme.secondary,
+        );
+    final textStyle = base.copyWith(
       decoration: underline ? TextDecoration.underline : TextDecoration.none,
     );
 
+    // 2) Amplío un poco el área activa con algo de padding
     return InkWell(
-      onTap: onTap,
+      onTap: () {
+        debugPrint('LinkText tapped: $text');
+        onTap();
+      },
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
-      child: Text(text, style: defaultStyle),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 2.0),
+        child: Text(text, style: textStyle),
+      ),
     );
   }
 }
