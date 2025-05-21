@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:track_fit_app/auth/validation/auth_validators.dart';
+import 'package:track_fit_app/auth/widgets/profile_field.dart';
 import 'package:track_fit_app/models/usuario_model.dart';
-import 'package:track_fit_app/services/api_service.dart';
+import 'package:track_fit_app/services/usuario_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:track_fit_app/widgets/custom_button.dart';
 
 class EditUserPage extends StatefulWidget {
   final UsuarioModel usuario;
@@ -19,6 +22,7 @@ class _EditUserPageState extends State<EditUserPage> {
   final _pesoController = TextEditingController();
   final _estaturaController = TextEditingController();
   bool _isSaving = false;
+  bool _isEditing = false;
 
   @override
   void initState() {
@@ -70,7 +74,22 @@ class _EditUserPageState extends State<EditUserPage> {
     Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Editar datos personales')),
+      appBar: AppBar(
+        title: const Text('Editar datos personales'),
+        actions: [
+          IconButton(
+            icon: Icon(_isEditing ? Icons.check : Icons.edit),
+            onPressed: () {
+              setState(() {
+                _isEditing = !_isEditing;
+              });
+              // Si se desactiva la edición, puedes guardar automáticamente si quieres
+              // o simplemente dejar que el usuario pulse 'Guardar cambios'
+            },
+          ),
+        ],
+      ),
+
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -78,65 +97,42 @@ class _EditUserPageState extends State<EditUserPage> {
             key: _formKey,
             child: Column(
               children: [
-                TextFormField(
+                ProfileField(
                   controller: _nombreUsuarioController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nombre de usuario',
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Introduce un nombre de usuario';
-                    }
-                    if (value.trim().length < 5) {
-                      return 'Debe tener al menos 5 caracteres';
-                    }
-                    return null;
-                  },
+                  label: 'Nombre de usuario',
+                  validator: AuthValidators.usernameValidator,
                 ),
-                TextFormField(
+
+                const SizedBox(height: 12),
+
+                ProfileField(
                   controller: _descripcionController,
-                  decoration: const InputDecoration(labelText: 'Descripción'),
-                  maxLines: 2,
+                  label: 'Descripción',
+                  validator: AuthValidators.descriptionValidator,
                 ),
-                TextFormField(
+
+                const SizedBox(height: 12),
+
+                ProfileField(
                   controller: _pesoController,
-                  decoration: const InputDecoration(labelText: 'Peso (kg)'),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  validator: (value) {
-                    final peso = double.tryParse(value ?? '');
-                    if (peso == null || peso <= 0) {
-                      return 'Introduce un peso válido';
-                    }
-                    return null;
-                  },
+                  label: 'Peso (Kg)',
+                  validator: AuthValidators.weightValidator,
                 ),
-                TextFormField(
+
+                const SizedBox(height: 12),
+
+                ProfileField(
                   controller: _estaturaController,
-                  decoration: const InputDecoration(labelText: 'Estatura (cm)'),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  validator: (value) {
-                    final estatura = double.tryParse(value ?? '');
-                    if (estatura == null || estatura <= 0) {
-                      return 'Introduce una estatura válida';
-                    }
-                    return null;
-                  },
+                  label: 'Estatura (cm)',
+                  validator: AuthValidators.heightValidator,
                 ),
+
                 const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: _isSaving ? null : _guardarCambios,
-                  child:
-                      _isSaving
-                          ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                          : const Text('Guardar cambios'),
+
+                CustomButton(
+                  text: _isSaving ? 'Cargando...' : 'Guardar cambios',
+                  actualTheme: Theme.of(context),
+                  onPressed: _guardarCambios,
                 ),
               ],
             ),

@@ -1,6 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../services/api_service.dart'; // Asegúrate de tener esto
+import '../services/usuario_service.dart'; // Asegúrate de tener esto
 // import '../repositories/user_repository.dart'; // Cuando lo tengas
 
 final getIt = GetIt.instance;

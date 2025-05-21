@@ -3,38 +3,55 @@ import 'package:track_fit_app/core/constants.dart';
 class AuthValidators {
   // Comprueba formato de email y no vacío.
   static String? emailValidator(String? emailIntroducido) {
-    if (emailIntroducido == null || emailIntroducido.isEmpty) return 'El email es obligatorio';
+    if (emailIntroducido == null || emailIntroducido.isEmpty) {
+      return 'El email es obligatorio';
+    }
     final re = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-    if (!re.hasMatch(emailIntroducido.trim())) return 'Introduce un email válido';
+    if (!re.hasMatch(emailIntroducido.trim())) {
+      return 'Introduce un email válido';
+    }
     return null;
   }
 
   // Verifica que la contraseña exista y mida ≥6.
   static String? passwordValidator(String? passwordEntered) {
-    if (passwordEntered == null || passwordEntered.isEmpty) return 'La contraseña es obligatoria';
+    if (passwordEntered == null || passwordEntered.isEmpty) {
+      return 'La contraseña es obligatoria';
+    }
     if (passwordEntered.length < 6) return 'Mínimo 6 caracteres';
 
     // Al menos un dígito
-    if (!RegExp(r'\d').hasMatch(passwordEntered)) return 'Debe contener al menos un número';
-    
+    if (!RegExp(r'\d').hasMatch(passwordEntered)) {
+      return 'Debe contener al menos un número';
+    }
+
     // Al menos un carácter especial
-    if (!RegExp(r'[!@#\$%^&*(),.?":{}|<>]').hasMatch(passwordEntered)) return 'Debe contener al menos un carácter especial';
+    if (!RegExp(r'[!@#\$%^&*(),.?":{}|<>]').hasMatch(passwordEntered)) {
+      return 'Debe contener al menos un carácter especial';
+    }
     return null;
   }
 
   // Asegura que ambas contraseñas coincidan.
-  static String? confirmPasswordValidator(String? password2Entered, String originalPassword) {
-    if (password2Entered != originalPassword) return 'Las contraseñas no coinciden';
+  static String? confirmPasswordValidator(
+    String? password2Entered,
+    String originalPassword,
+  ) {
+    if (password2Entered != originalPassword) {
+      return 'Las contraseñas no coinciden';
+    }
     return null;
   }
 
   /// Nombre de usuario: obligatorio, 6–15 chars, sólo letras, números y guión bajo
   static String? usernameValidator(String? nameEntered) {
-    if (nameEntered == null || nameEntered.trim().isEmpty) return 'El nombre de usuario es obligatorio';
-    final t = nameEntered.trim();
-    if (t.length <= 6) return 'Mínimo 6 caracteres';
-    if (t.length >= 15) return 'Máximo 15 caracteres';
-    if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(t)) {
+    if (nameEntered == null || nameEntered.trim().isEmpty) {
+      return 'El nombre de usuario es obligatorio';
+    }
+    final name = nameEntered.trim();
+    if (name.length < 6) return 'Mínimo 6 caracteres';
+    if (name.length > 15) return 'Máximo 15 caracteres';
+    if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(name)) {
       return 'Sólo letras, números y _';
     }
     return null;
@@ -51,7 +68,9 @@ class AuthValidators {
 
   /// Apellidos: obligatorio, sólo letras y espacios
   static String? lastnameValidator(String? surnameEntered) {
-    if (surnameEntered == null || surnameEntered.trim().isEmpty) return 'Los apellidos son obligatorios';
+    if (surnameEntered == null || surnameEntered.trim().isEmpty) {
+      return 'Los apellidos son obligatorios';
+    }
     if (!RegExp(r'^[A-Za-zÁÉÍÓÚáéíóúñÑ ]+$').hasMatch(surnameEntered.trim())) {
       return 'Sólo se permiten letras y espacios';
     }
@@ -60,33 +79,46 @@ class AuthValidators {
 
   /// Peso (kg): obligatorio, númerico.
   static String? weightValidator(String? weightEntered) {
-    if (weightEntered == null || weightEntered.trim().isEmpty) return 'El peso es obligatorio';
+    if (weightEntered == null || weightEntered.trim().isEmpty) {
+      return 'El peso es obligatorio';
+    }
     final weight = double.tryParse(weightEntered.trim());
     if (weight == null) return 'Introduce un peso válido';
     if (weight <= kPesoMinimo) return 'El peso debe ser mayor que $kPesoMinimo';
-    if (weight > kPesoMaximo) return 'Cuidado el peso no puede ser mayor de $kPesoMaximo';
+    if (weight > kPesoMaximo) {
+      return 'Cuidado el peso no puede ser mayor de $kPesoMaximo';
+    }
     return null;
   }
 
   /// Estatura (cm): obligatorio, numérico
   static String? heightValidator(String? heightEntered) {
-    if (heightEntered == null || heightEntered.trim().isEmpty) return 'La estatura es obligatoria';
+    if (heightEntered == null || heightEntered.trim().isEmpty) {
+      return 'La estatura es obligatoria';
+    }
     final height = double.tryParse(heightEntered.trim());
     if (height == null) return 'Introduce una estatura válida';
-    if (height <= kAlturaMinima) return 'La estatura debe ser mayor que $kAlturaMinima';
-    if (height > kAlturaMaxima) return 'Cuidado la altura no puede ser mayor de $kAlturaMaxima';
+    if (height <= kAlturaMinima) {
+      return 'La estatura debe ser mayor que $kAlturaMinima';
+    }
+    if (height > kAlturaMaxima) {
+      return 'Cuidado la altura no puede ser mayor de $kAlturaMaxima';
+    }
     return null;
   }
 
   /// Género: obligatorio (constantes -> “Hombre” o “Mujer”)
   static String? genderValidator(String? selectedGender) {
-    if (selectedGender == null || selectedGender.isEmpty) return 'Selecciona un género';
+    if (selectedGender == null || selectedGender.isEmpty) {
+      return 'Selecciona un género';
+    }
     return null;
   }
 
   /// Descripción: opcional, pero tope de 150 caracteres
   static String? descriptionValidator(String? descriptionEntered) {
-    if (descriptionEntered != null && descriptionEntered.trim().length > kCaracteresMaximosDescripcion) {
+    if (descriptionEntered != null &&
+        descriptionEntered.trim().length > kCaracteresMaximosDescripcion) {
       return 'Máximo $kCaracteresMaximosDescripcion caracteres';
     }
     return null;
