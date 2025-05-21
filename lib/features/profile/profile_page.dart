@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:track_fit_app/core/utils/snackbar_utils.dart';
 import 'package:track_fit_app/models/usuario_model.dart';
 import 'package:track_fit_app/services/usuario_service.dart';
 import 'package:track_fit_app/features/settings/user_settings_page.dart'; // <-- nueva pantalla
@@ -68,9 +69,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 setState(() {
                   usuario = updatedUsuario;
                 });
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Datos actualizados')),
-                );
+                showNeutralSnackBar(context, 'Datos actualizados');
               }
             },
           ),

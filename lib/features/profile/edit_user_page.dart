@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:track_fit_app/auth/validation/auth_validators.dart';
 import 'package:track_fit_app/auth/widgets/profile_field.dart';
+import 'package:track_fit_app/core/utils/snackbar_utils.dart';
 import 'package:track_fit_app/models/usuario_model.dart';
 import 'package:track_fit_app/services/usuario_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -61,9 +62,7 @@ class _EditUserPageState extends State<EditUserPage> {
       if (!mounted) return;
       Navigator.pop(context, updatedUser);
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error al guardar: $e')));
+      showErrorSnackBar(context, 'Error al guardar: $e');
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -71,25 +70,24 @@ class _EditUserPageState extends State<EditUserPage> {
 
   @override
   Widget build(BuildContext context) {
-    Theme.of(context);
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Editar datos personales'),
+        title: const Text('Datos personales'),
+        titleTextStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         actions: [
           IconButton(
-            icon: Icon(_isEditing ? Icons.check : Icons.edit),
+            icon: Icon(_isEditing ? Icons.close : Icons.edit),
+            tooltip: _isEditing ? 'Cancelar edición' : 'Editar',
             onPressed: () {
               setState(() {
                 _isEditing = !_isEditing;
               });
-              // Si se desactiva la edición, puedes guardar automáticamente si quieres
-              // o simplemente dejar que el usuario pulse 'Guardar cambios'
             },
           ),
         ],
       ),
-
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -101,39 +99,36 @@ class _EditUserPageState extends State<EditUserPage> {
                   controller: _nombreUsuarioController,
                   label: 'Nombre de usuario',
                   validator: AuthValidators.usernameValidator,
+                  readOnly: !_isEditing,
                 ),
-
                 const SizedBox(height: 12),
-
                 ProfileField(
                   controller: _descripcionController,
                   label: 'Descripción',
                   validator: AuthValidators.descriptionValidator,
+                  readOnly: !_isEditing,
                 ),
-
                 const SizedBox(height: 12),
-
                 ProfileField(
                   controller: _pesoController,
                   label: 'Peso (Kg)',
                   validator: AuthValidators.weightValidator,
+                  readOnly: !_isEditing,
                 ),
-
                 const SizedBox(height: 12),
-
                 ProfileField(
                   controller: _estaturaController,
                   label: 'Estatura (cm)',
                   validator: AuthValidators.heightValidator,
+                  readOnly: !_isEditing,
                 ),
-
                 const SizedBox(height: 24),
-
-                CustomButton(
-                  text: _isSaving ? 'Cargando...' : 'Guardar cambios',
-                  actualTheme: Theme.of(context),
-                  onPressed: _guardarCambios,
-                ),
+                if (_isEditing)
+                  CustomButton(
+                    text: _isSaving ? 'Cargando...' : 'Guardar cambios',
+                    actualTheme: theme,
+                    onPressed: _guardarCambios,
+                  ),
               ],
             ),
           ),
