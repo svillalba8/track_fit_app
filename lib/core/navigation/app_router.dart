@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/auth/complete_profile_page.dart';
@@ -25,7 +26,8 @@ final GoRouter appRouter = GoRouter(
   redirect: (ctx, state) {
     final session = Supabase.instance.client.auth.currentSession;
     final loggingIn =
-        state.subloc == AppRoutes.login || state.subloc == AppRoutes.register;
+        state.matchedLocation == AppRoutes.login ||
+        state.matchedLocation == AppRoutes.register;
     if (session == null && !loggingIn) return AppRoutes.login;
     if (session != null && loggingIn) return AppRoutes.home;
     return null;
@@ -49,22 +51,49 @@ final GoRouter appRouter = GoRouter(
       builder: (ctx, state) => const CompleteProfilePage(),
     ),
 
-    // 3) ShellRoute + bottom-nav
-    ShellRoute(
-      builder: (ctx, state, child) => MainScaffold(child: child),
-      routes: [
-        GoRoute(path: AppRoutes.home, builder: (_, __) => const HomePage()),
-        GoRoute(
-          path: AppRoutes.routines,
-          builder: (_, __) => const RoutinePage(),
+    /// 3) StatefulShellRoute con IndexedStack para conservar el estado
+    StatefulShellRoute.indexedStack(
+      builder: (
+        BuildContext ctx,
+        GoRouterState state,
+        StatefulNavigationShell nav,
+      ) {
+        // Ahora MainScaffold recibe el índice y el callback para cambiar de rama
+        return MainScaffold(
+          currentIndex: nav.currentIndex,
+          onTap: nav.goBranch,
+          child: nav,
+        );
+      },
+      branches: [
+        StatefulShellBranch(
+          routes: [
+            GoRoute(path: AppRoutes.home, builder: (_, __) => const HomePage()),
+          ],
         ),
-        GoRoute(
-          path: AppRoutes.trainer,
-          builder: (_, __) => const TrainerPage(),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.routines,
+              builder: (_, __) => const RoutinePage(),
+            ),
+          ],
         ),
-        GoRoute(
-          path: AppRoutes.profile,
-          builder: (_, __) => const ProfilePage(),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.trainer,
+              builder: (_, __) => const TrainerPage(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.profile,
+              builder: (_, __) => const ProfilePage(),
+            ),
+          ],
         ),
       ],
     ),

@@ -6,8 +6,21 @@ import 'package:track_fit_app/notifiers/auth_user_notifier.dart';
 
 /// Scaffold principal con BottomNavigation y contenido dinámico via ShellRoute
 class MainScaffold extends StatelessWidget {
+  /// Índice de la pestaña activa
+  final int currentIndex;
+
+  /// Callback para cambiar de pestaña (usa nav.goBranch)
+  final void Function(int index, {bool initialLocation}) onTap;
+
+  /// Contenido dinámico (el NavigationShell)
   final Widget child;
-  const MainScaffold({required this.child, super.key});
+
+  const MainScaffold({
+    super.key,
+    required this.currentIndex,
+    required this.onTap,
+    required this.child,
+  });
 
   int _calculateIndex(BuildContext context) {
     final location = GoRouter.of(context).location;
@@ -69,78 +82,91 @@ class MainScaffold extends StatelessWidget {
       ),
       child: Scaffold(
         body: child,
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: currentIndex,
-          onTap: (i) => _onTap(context, i),
-          type: BottomNavigationBarType.fixed,
-          enableFeedback: false,
-          showSelectedLabels: false, // quita el label activo
-          showUnselectedLabels: false, // quita los labels inactivos
-          backgroundColor: actualTheme.colorScheme.tertiary,
-          selectedItemColor: actualTheme.colorScheme.secondary,
-          unselectedItemColor: actualTheme.colorScheme.onSurface.withAlpha(
-            (0.60 * 255).round(),
-          ),
-          items: [
-            BottomNavigationBarItem(
-              icon: Image.asset(
-                'assets/icons/casa.png',
-                width: 26,
-                height: 26,
-                color: actualTheme.colorScheme.secondary,
+        bottomNavigationBar: Column(
+          mainAxisSize:
+              MainAxisSize.min, // Solo ocupa lo necesario (divider + bar)
+          children: [
+            Divider(
+              height: 1, // altura total del Divider
+              thickness: 1, // grosor de la línea
+              color: actualTheme.colorScheme.onSurface.withAlpha(
+                (0.40 * 255).round(),
               ),
-              activeIcon: Image.asset(
-                'assets/icons/casa_en_uso.png',
-                width: 26,
-                height: 26,
-                color: actualTheme.colorScheme.secondary,
-              ),
-              label: '',
             ),
-            BottomNavigationBarItem(
-              icon: Image.asset(
-                'assets/icons/pesa.png',
-                width: 26,
-                height: 26,
-                color: actualTheme.colorScheme.secondary,
+            BottomNavigationBar(
+              currentIndex: currentIndex,
+              onTap: (i) => _onTap(context, i),
+              type: BottomNavigationBarType.fixed,
+              enableFeedback: false,
+              showSelectedLabels: false, // quita el label activo
+              showUnselectedLabels: false, // quita los labels inactivos
+              backgroundColor: actualTheme.colorScheme.primary,
+              selectedItemColor: actualTheme.colorScheme.secondary,
+              unselectedItemColor: actualTheme.colorScheme.onSurface.withAlpha(
+                (0.60 * 255).round(),
               ),
-              activeIcon: Image.asset(
-                'assets/icons/pesa_en_uso.png',
-                width: 26,
-                height: 26,
-                color: actualTheme.colorScheme.secondary,
-              ),
-              label: '',
-            ),
-            BottomNavigationBarItem(
-              icon: Image.asset(
-                'assets/icons/entrenador_per.png',
-                width: 26,
-                height: 26,
-                color: actualTheme.colorScheme.secondary,
-              ),
-              activeIcon: Image.asset(
-                'assets/icons/entrenador_per_en_uso.png',
-                width: 26,
-                height: 26,
-                color: actualTheme.colorScheme.secondary,
-              ),
-              label: '',
-            ),
-            BottomNavigationBarItem(
-              icon: Image.asset(
-                'assets/icons/$iconPrefix.png',
-                width: 26,
-                height: 26,
-                color: actualTheme.colorScheme.secondary,
-              ),
-              activeIcon: Image.asset(
-                'assets/icons/${iconPrefix}_en_uso.png',
-                width: 26,
-                height: 26,
-                color: actualTheme.colorScheme.secondary,
-              ),
-              label: '',
+              items: [
+                BottomNavigationBarItem(
+                  icon: Image.asset(
+                    'assets/icons/casa.png',
+                    width: 26,
+                    height: 26,
+                    color: actualTheme.colorScheme.secondary,
+                  ),
+                  activeIcon: Image.asset(
+                    'assets/icons/casa_en_uso.png',
+                    width: 26,
+                    height: 26,
+                    color: actualTheme.colorScheme.secondary,
+                  ),
+                  label: '',
+                ),
+                BottomNavigationBarItem(
+                  icon: Image.asset(
+                    'assets/icons/pesa.png',
+                    width: 26,
+                    height: 26,
+                    color: actualTheme.colorScheme.secondary,
+                  ),
+                  activeIcon: Image.asset(
+                    'assets/icons/pesa_en_uso.png',
+                    width: 26,
+                    height: 26,
+                    color: actualTheme.colorScheme.secondary,
+                  ),
+                  label: '',
+                ),
+                BottomNavigationBarItem(
+                  icon: Image.asset(
+                    'assets/icons/entrenador_per.png',
+                    width: 26,
+                    height: 26,
+                    color: actualTheme.colorScheme.secondary,
+                  ),
+                  activeIcon: Image.asset(
+                    'assets/icons/entrenador_per_en_uso.png',
+                    width: 26,
+                    height: 26,
+                    color: actualTheme.colorScheme.secondary,
+                  ),
+                  label: '',
+                ),
+                BottomNavigationBarItem(
+                  icon: Image.asset(
+                    'assets/icons/$iconPrefix.png',
+                    width: 26,
+                    height: 26,
+                    color: actualTheme.colorScheme.secondary,
+                  ),
+                  activeIcon: Image.asset(
+                    'assets/icons/${iconPrefix}_en_uso.png',
+                    width: 26,
+                    height: 26,
+                    color: actualTheme.colorScheme.secondary,
+                  ),
+                  label: '',
+                ),
+              ],
             ),
           ],
         ),

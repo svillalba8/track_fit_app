@@ -20,7 +20,7 @@ dependencies:
   palette_generator: ^0.3.3
   image_picker: ^1.0.0
   webview_flutter: ^4.0.7
-  go_router: ^6.0.0
+  go_router: ^7.1.0
 
 dev_dependencies:
   flutter_test:

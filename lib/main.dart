@@ -29,7 +29,7 @@ Future<void> main() async {
   runApp(
     ChangeNotifierProvider(
       create: (_) => AuthUserNotifier(Supabase.instance.client),
-      child: const MyApp(), // <-- tu widget raíz con MaterialApp / GoRouter
+      child: const MyApp(),
     ),
   );
 }
