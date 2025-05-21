@@ -1,20 +1,20 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:track_fit_app/services/api_service.dart';
+import 'package:track_fit_app/services/usuario_service.dart';
 import 'package:track_fit_app/models/usuario_model.dart';
 
 /// Notificador para el usuario autenticado, con carga inicial,
 /// escucha de cambios de auth y recarga manual del perfil.
 class AuthUserNotifier extends ChangeNotifier {
   final SupabaseClient supabase;
-  final ApiService api;
+  final UsuarioService userApi;
 
   UsuarioModel? _usuario;
   bool _loading = true;
   late final StreamSubscription<AuthState> _authSubscription;
 
-  AuthUserNotifier(this.supabase) : api = ApiService(supabase) {
+  AuthUserNotifier(this.supabase) : userApi = UsuarioService(supabase) {
     // 1) Carga inicial si ya hay sesión activa
     _init();
 
@@ -63,7 +63,7 @@ class AuthUserNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _usuario = await api.fetchUsuarioByAuthId(userId);
+      _usuario = await userApi.fetchUsuarioByAuthId(userId);
     } catch (e) {
       _usuario = null;
     } finally {

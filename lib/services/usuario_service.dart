@@ -1,10 +1,10 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/models/usuario_model.dart';
 
-class ApiService {
+class UsuarioService {
   final SupabaseClient client;
 
-  ApiService(this.client);
+  UsuarioService(this.client);
 
   Future<UsuarioModel?> fetchUsuarioByAuthId(String authUserId) async {
     final response =

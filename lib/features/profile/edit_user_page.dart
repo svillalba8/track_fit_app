@@ -56,7 +56,7 @@ class _EditUserPageState extends State<EditUserPage> {
         estatura: double.parse(_estaturaController.text.trim()),
       );
 
-      final api = ApiService(Supabase.instance.client);
+      final api = UsuarioService(Supabase.instance.client);
       await api.updateUsuario(updatedUser);
 
       if (!mounted) return;

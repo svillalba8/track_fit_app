@@ -14,14 +14,14 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final supabase = Supabase.instance.client;
-  late final ApiService apiService;
+  late final UsuarioService apiService;
   UsuarioModel? usuario;
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    apiService = ApiService(supabase);
+    apiService = UsuarioService(supabase);
     _loadUsuario();
   }
 

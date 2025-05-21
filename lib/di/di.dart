@@ -10,7 +10,9 @@ void setupDependencies() {
   getIt.registerSingleton<SupabaseClient>(Supabase.instance.client);
 
   // Registro de ApiService con Supabase
-  getIt.registerSingleton<ApiService>(ApiService(getIt<SupabaseClient>()));
+  getIt.registerSingleton<UsuarioService>(
+    UsuarioService(getIt<SupabaseClient>()),
+  );
 
   // Registro de repositorios u otros servicios (opcional)
   // getIt.registerSingleton<UserRepository>(
