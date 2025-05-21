@@ -43,24 +43,96 @@ class MainScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentIndex = _calculateIndex(context);
-    return Scaffold(
-      body: child,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex,
-        onTap: (i) => _onTap(context, i),
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Inicio'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.fitness_center),
-            label: 'Rutinas',
+    final actualTheme = Theme.of(context);
+
+    return Theme(
+      data: actualTheme.copyWith(
+        // Usa el splash circular clásico, o NoSplash.splashFactory para eliminarlo
+        splashFactory: NoSplash.splashFactory, // o NoSplash.splashFactory
+        // Color del fogonazo: aquí un 20% de tu secondary
+        splashColor: actualTheme.colorScheme.onSurface.withAlpha(
+          (0.60 * 255).round(),
+        ),
+        // Quita el highlight si no lo quieres ver
+        highlightColor: Colors.transparent,
+      ),
+      child: Scaffold(
+        body: child,
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: currentIndex,
+          onTap: (i) => _onTap(context, i),
+          type: BottomNavigationBarType.fixed,
+          enableFeedback: false,
+          showSelectedLabels: false, // quita el label activo
+          showUnselectedLabels: false, // quita los labels inactivos
+          backgroundColor: actualTheme.colorScheme.tertiary,
+          selectedItemColor: actualTheme.colorScheme.secondary,
+          unselectedItemColor: actualTheme.colorScheme.onSurface.withAlpha(
+            (0.60 * 255).round(),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_search),
-            label: 'Entrenador',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
-        ],
+          items: [
+            BottomNavigationBarItem(
+              icon: Image.asset(
+                'assets/icons/casa.png',
+                width: 26,
+                height: 26,
+                color: actualTheme.colorScheme.secondary,
+              ),
+              activeIcon: Image.asset(
+                'assets/icons/casa_en_uso.png',
+                width: 26,
+                height: 26,
+                color: actualTheme.colorScheme.secondary,
+              ),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: Image.asset(
+                'assets/icons/pesa.png',
+                width: 26,
+                height: 26,
+                color: actualTheme.colorScheme.secondary,
+              ),
+              activeIcon: Image.asset(
+                'assets/icons/pesa_en_uso.png',
+                width: 26,
+                height: 26,
+                color: actualTheme.colorScheme.secondary,
+              ),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: Image.asset(
+                'assets/icons/entrenador_per.png',
+                width: 26,
+                height: 26,
+                color: actualTheme.colorScheme.secondary,
+              ),
+              activeIcon: Image.asset(
+                'assets/icons/entrenador_per_en_uso.png',
+                width: 26,
+                height: 26,
+                color: actualTheme.colorScheme.secondary,
+              ),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: Image.asset(
+                'assets/icons/perfil_usuario_h.png',
+                width: 26,
+                height: 26,
+                color: actualTheme.colorScheme.secondary,
+              ),
+              activeIcon: Image.asset(
+                'assets/icons/perfil_usuario_h_en_uso.png',
+                width: 26,
+                height: 26,
+                color: actualTheme.colorScheme.secondary,
+              ),
+              label: '',
+            ),
+          ],
+        ),
       ),
     );
   }
