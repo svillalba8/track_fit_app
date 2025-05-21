@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:track_fit_app/auth/validation/auth_validators.dart';
+import 'package:track_fit_app/auth/widgets/profile_field.dart';
+import 'package:track_fit_app/core/utils/snackbar_utils.dart';
 import 'package:track_fit_app/models/usuario_model.dart';
-import 'package:track_fit_app/services/api_service.dart';
+import 'package:track_fit_app/services/usuario_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:track_fit_app/widgets/custom_button.dart';
 
 class EditUserPage extends StatefulWidget {
   final UsuarioModel usuario;
@@ -19,6 +23,7 @@ class _EditUserPageState extends State<EditUserPage> {
   final _pesoController = TextEditingController();
   final _estaturaController = TextEditingController();
   bool _isSaving = false;
+  bool _isEditing = false;
 
   @override
   void initState() {
@@ -57,9 +62,7 @@ class _EditUserPageState extends State<EditUserPage> {
       if (!mounted) return;
       Navigator.pop(context, updatedUser);
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error al guardar: $e')));
+      showErrorSnackBar(context, 'Error al guardar: $e');
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -67,10 +70,24 @@ class _EditUserPageState extends State<EditUserPage> {
 
   @override
   Widget build(BuildContext context) {
-    Theme.of(context);
+    final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Editar datos personales')),
+      appBar: AppBar(
+        title: const Text('Datos personales'),
+        titleTextStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        actions: [
+          IconButton(
+            icon: Icon(_isEditing ? Icons.close : Icons.edit),
+            tooltip: _isEditing ? 'Cancelar edición' : 'Editar',
+            onPressed: () {
+              setState(() {
+                _isEditing = !_isEditing;
+              });
+            },
+          ),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -78,66 +95,40 @@ class _EditUserPageState extends State<EditUserPage> {
             key: _formKey,
             child: Column(
               children: [
-                TextFormField(
+                ProfileField(
                   controller: _nombreUsuarioController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nombre de usuario',
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Introduce un nombre de usuario';
-                    }
-                    if (value.trim().length < 5) {
-                      return 'Debe tener al menos 5 caracteres';
-                    }
-                    return null;
-                  },
+                  label: 'Nombre de usuario',
+                  validator: AuthValidators.usernameValidator,
+                  readOnly: !_isEditing,
                 ),
-                TextFormField(
+                const SizedBox(height: 12),
+                ProfileField(
                   controller: _descripcionController,
-                  decoration: const InputDecoration(labelText: 'Descripción'),
-                  maxLines: 2,
+                  label: 'Descripción',
+                  validator: AuthValidators.descriptionValidator,
+                  readOnly: !_isEditing,
                 ),
-                TextFormField(
+                const SizedBox(height: 12),
+                ProfileField(
                   controller: _pesoController,
-                  decoration: const InputDecoration(labelText: 'Peso (kg)'),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  validator: (value) {
-                    final peso = double.tryParse(value ?? '');
-                    if (peso == null || peso <= 0) {
-                      return 'Introduce un peso válido';
-                    }
-                    return null;
-                  },
+                  label: 'Peso (Kg)',
+                  validator: AuthValidators.weightValidator,
+                  readOnly: !_isEditing,
                 ),
-                TextFormField(
+                const SizedBox(height: 12),
+                ProfileField(
                   controller: _estaturaController,
-                  decoration: const InputDecoration(labelText: 'Estatura (cm)'),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  validator: (value) {
-                    final estatura = double.tryParse(value ?? '');
-                    if (estatura == null || estatura <= 0) {
-                      return 'Introduce una estatura válida';
-                    }
-                    return null;
-                  },
+                  label: 'Estatura (cm)',
+                  validator: AuthValidators.heightValidator,
+                  readOnly: !_isEditing,
                 ),
                 const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: _isSaving ? null : _guardarCambios,
-                  child:
-                      _isSaving
-                          ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                          : const Text('Guardar cambios'),
-                ),
+                if (_isEditing)
+                  CustomButton(
+                    text: _isSaving ? 'Cargando...' : 'Guardar cambios',
+                    actualTheme: theme,
+                    onPressed: _guardarCambios,
+                  ),
               ],
             ),
           ),
