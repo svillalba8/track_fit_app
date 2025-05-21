@@ -16,6 +16,8 @@ const String kLogoTrackFitBlancoNegro = 'assets/logos/TrackFit_blanco_negro.png'
 const String kLogoTrackFitCremaAzulMarino = 'assets/logos/TrackFit_crema_azulmarino.png';
 const String kLogoTrackFitCremaRosa = 'assets/logos/TrackFit_crema_rosa.png';
 const String kLogoTrackFitRosaNegro = 'assets/logos/TrackFit_rosa_negro.png';
+const String kLogoTrackFitBlancoSinFondo = 'assets/logos/TrackFit_blanco_sin_fondo.png';
+const String kLogoTrackFitBlancoSinFondoSinLetras = 'assets/logos/TrackFit_blanco_sin_fondo_sin_letra.png';
 
 // RANGOS MINIMOS Y MAXIMOS PARA AUTH
 const double kPesoMinimo = 42;

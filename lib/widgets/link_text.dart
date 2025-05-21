@@ -26,14 +26,17 @@ class LinkText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData actualTheme = Theme.of(context);
+
     // 1) Calcula el estilo final
     final base =
         style ??
         Theme.of(context).textTheme.bodyMedium!.copyWith(
-          color: Theme.of(context).colorScheme.secondary,
+          color: actualTheme.colorScheme.secondary,
         );
     final textStyle = base.copyWith(
       decoration: underline ? TextDecoration.underline : TextDecoration.none,
+      color: actualTheme.colorScheme.secondary
     );
 
     // 2) Amplío un poco el área activa con algo de padding

@@ -5,7 +5,9 @@ enum LogoType {
   blancoNegro,
   cremaAzulMarino,
   cremaRosa,
-  rosaNegro
+  rosaNegro,
+  blancoSinFondo, // SOLO VISUAL (No para los temas)
+  blancoSinFondoSinletras // SOLO VISUAL (No para los temas)
 }
 
 extension LogoAsset on LogoType {
@@ -21,6 +23,10 @@ extension LogoAsset on LogoType {
         return kLogoTrackFitCremaRosa;
       case LogoType.rosaNegro:
         return kLogoTrackFitRosaNegro;
+      case LogoType.blancoSinFondo:
+        return kLogoTrackFitBlancoSinFondo;
+      case LogoType.blancoSinFondoSinletras:
+        return kLogoTrackFitBlancoSinFondoSinLetras;
     }
   }
 }

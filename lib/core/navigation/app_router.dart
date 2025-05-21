@@ -6,7 +6,7 @@ import 'package:track_fit_app/auth/login_page.dart';
 import 'package:track_fit_app/auth/register_page.dart';
 import 'package:track_fit_app/core/constants.dart';
 import 'package:track_fit_app/core/navigation/main_scaffold.dart';
-import 'package:track_fit_app/core/utils/steram_listenable.dart';
+import 'package:track_fit_app/core/utils/stream_listenable.dart';
 import 'package:track_fit_app/features/home/home_page.dart';
 import 'package:track_fit_app/features/profile/profile_page.dart';
 import 'package:track_fit_app/features/routines/routine_page.dart';

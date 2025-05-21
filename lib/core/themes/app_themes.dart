@@ -109,26 +109,26 @@ class AppThemes {
         // Colores del logo cremaRosa
         const Color creamCr = Color(0xFFF2E8C9); // #F2E8C9 (fondo claro crema)
         const Color pinkLight = Color(0xFFD99A9F); // #D99A9F
-        const Color pink = Color(0xFFD98299); // #D98299
+        // const Color pink = Color(0xFFD98299); // #D98299
         const Color fuchsia = Color(0xFFC55474); // #C55474
         // const Color roseBeige = Color(0xFFD9B6A9);    // #D9B6A9
 
         return ThemeData(
           brightness: Brightness.light,
           primaryColor: pinkLight,
-          scaffoldBackgroundColor: fuchsia,
+          scaffoldBackgroundColor: pinkLight,
           appBarTheme: const AppBarTheme(
             backgroundColor: pinkLight,
             iconTheme: IconThemeData(color: creamCr),
             titleTextStyle: TextStyle(color: creamCr),
           ),
           colorScheme: const ColorScheme.light(
-            primary: pinkLight,
+            primary: fuchsia,
             onPrimary: creamCr,
             secondary: creamCr,
             onSecondary: creamCr,
-            tertiary: fuchsia,
-            surface: pink,
+            tertiary: pinkLight,
+            surface: fuchsia,
             onSurface: creamCr,
             error: Colors.red,
             onError: Colors.white,
@@ -144,7 +144,7 @@ class AppThemes {
         const Color roseBg = Color(0xFFF2D0E9); // #F2D0E9
         // const Color roseMuted = Color(0xFFD9BAD1);    // #D9BAD1
         // const Color mauve = Color(0xFFA692A0); // #A692A0
-        const Color lightCharcoal = Color.fromARGB(255, 180, 173, 179); // #594F57
+        const Color lightPinkCharcoal = Color.fromARGB(255, 131, 119, 129); // #594F57
         const Color black = Color(0xFF252425); // #252425
 
         return ThemeData(
@@ -152,26 +152,30 @@ class AppThemes {
           primaryColor: roseBg,
           scaffoldBackgroundColor: black,
           appBarTheme: const AppBarTheme(
-            backgroundColor: roseBg,
-            iconTheme: IconThemeData(color: lightCharcoal),
-            titleTextStyle: TextStyle(color: lightCharcoal),
+            backgroundColor: black,
+            iconTheme: IconThemeData(color: roseBg),
+            titleTextStyle: TextStyle(color: roseBg),
           ),
           colorScheme: const ColorScheme.dark(
-            primary: roseBg,
-            onPrimary: lightCharcoal,
-            secondary: lightCharcoal,
-            onSecondary: lightCharcoal,
-            tertiary: black,
-            surface: lightCharcoal,
+            primary: black,
+            onPrimary: lightPinkCharcoal,
+            secondary: roseBg,
+            onSecondary: lightPinkCharcoal,
+            tertiary: lightPinkCharcoal,
+            surface: black,
             onSurface: roseBg,
             error: Colors.red,
             onError: Colors.white,
           ),
           textTheme: Typography.whiteMountainView.apply(
             bodyColor: roseBg,
-            displayColor: lightCharcoal,
+            displayColor: lightPinkCharcoal,
           ),
         );
+      case LogoType.blancoSinFondo:
+        throw UnimplementedError();
+      case LogoType.blancoSinFondoSinletras:
+        throw UnimplementedError();
     }
   }
 }
