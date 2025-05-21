@@ -5,7 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/core/navigation/app_router.dart';
 import 'package:track_fit_app/core/themes/app_themes.dart';
 import 'package:track_fit_app/core/themes/logo_type.dart';
-import 'package:track_fit_app/di/di.dart';
+import 'package:track_fit_app/data/di.dart';
 import 'package:track_fit_app/notifiers/auth_user_notifier.dart';
 
 Future<void> main() async {
@@ -28,7 +28,7 @@ Future<void> main() async {
   // Arranca la aplicación con GoRouter
   runApp(
     ChangeNotifierProvider(
-      create: (_) => AuthUserNotifier(Supabase.instance.client),
+      create: (_) => AuthUserNotifier(),
       child: const MyApp(),
     ),
   );

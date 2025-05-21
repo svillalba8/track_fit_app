@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:track_fit_app/data/di.dart';
 import 'package:track_fit_app/core/utils/snackbar_utils.dart';
 import 'package:track_fit_app/models/usuario_model.dart';
 import 'package:track_fit_app/services/usuario_service.dart';
-import 'package:track_fit_app/features/settings/user_settings_page.dart'; // <-- nueva pantalla
+import 'package:track_fit_app/features/settings/user_settings_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -13,28 +14,35 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final supabase = Supabase.instance.client;
-  late final UsuarioService apiService;
+  late final UsuarioService userService;
   UsuarioModel? usuario;
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    apiService = UsuarioService(supabase);
+    userService = getIt<UsuarioService>();
     _loadUsuario();
   }
 
   Future<void> _loadUsuario() async {
-    final authUserId = supabase.auth.currentUser?.id;
-    if (authUserId != null) {
-      final data = await apiService.fetchUsuarioByAuthId(authUserId);
-      setState(() {
-        usuario = data;
-        isLoading = false;
-      });
+    final supabase = getIt<SupabaseClient>();
+    final authUser = supabase.auth.currentUser;
+
+    if (authUser != null) {
+      try {
+        final data = await userService.fetchUsuarioByAuthId(authUser.id);
+        setState(() {
+          usuario = data;
+          isLoading = false;
+        });
+      } catch (e) {
+        setState(() => isLoading = false);
+        showErrorSnackBar(context, 'Error al cargar usuario');
+      }
     } else {
       setState(() => isLoading = false);
+      showErrorSnackBar(context, 'No hay usuario autenticado');
     }
   }
 
@@ -65,7 +73,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   builder: (_) => UserSettingsPage(usuario: usuario!),
                 ),
               );
-              if (updatedUsuario != null && updatedUsuario is UsuarioModel) {
+              if (updatedUsuario is UsuarioModel) {
                 setState(() {
                   usuario = updatedUsuario;
                 });
@@ -86,7 +94,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
             // Descripción
             Text(
-              usuario!.descripcion ?? 'Sin descripción',
+              usuario!.descripcion?.isNotEmpty == true
+                  ? usuario!.descripcion!
+                  : 'Sin descripción',
               style: theme.textTheme.bodyMedium,
             ),
 
@@ -102,6 +112,8 @@ class _ProfilePageState extends State<ProfilePage> {
             ListTile(
               leading: const Icon(Icons.flag),
               title: const Text('Objetivo de peso'),
+              // Aquí podrías mostrar el campo si lo tuvieras
+              trailing: const Text('—'), // Placeholder
             ),
           ],
         ),

@@ -2,13 +2,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/models/usuario_model.dart';
 
 class UsuarioService {
-  final SupabaseClient client;
+  final SupabaseClient supabase;
 
-  UsuarioService(this.client);
+  UsuarioService(this.supabase);
 
   Future<UsuarioModel?> fetchUsuarioByAuthId(String authUserId) async {
     final response =
-        await client
+        await supabase
             .from('usuarios')
             .select()
             .eq('auth_user_id', authUserId)
@@ -22,7 +22,7 @@ class UsuarioService {
 
   Future<void> updateUsuario(UsuarioModel usuario) async {
     final response =
-        await client
+        await supabase
             .from('usuarios')
             .update({
               'nombre_usuario': usuario.nombreUsuario,
