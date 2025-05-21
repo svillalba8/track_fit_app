@@ -23,3 +23,9 @@ const double kPesoMaximo = 200;
 const double kAlturaMinima = 145;
 const double kAlturaMaxima = 220;
 const int kCaracteresMaximosDescripcion = 150;
+
+/// Géneros de usuario (Para introducción a base de datos RECORDAR en mayusculas)
+const String kGeneroHombre = 'Hombre';
+const String kGeneroMujer  = 'Mujer';
+const String kGeneroHombreMayus  = 'HOMBRE'; // EN BBDD -> 'HOMBRE'
+const String kGeneroMujerMayus  = 'MUJER'; // EN BBDD -> 'MUJER'

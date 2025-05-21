@@ -38,21 +38,19 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
 
   Widget _genderSelector() {
     final actualTheme = Theme.of(context);
-    const hombreText = 'Hombre';
-    const mujerText = 'Mujer';
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         ChoiceChip(
-          label: const Text(hombreText),
-          selected: _selectedGender == hombreText,
+          label: const Text(kGeneroHombre),
+          selected: _selectedGender == kGeneroHombre,
           backgroundColor: actualTheme.colorScheme.tertiary,
           selectedColor: actualTheme.colorScheme.primary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side:
-                _selectedGender == hombreText
+                _selectedGender == kGeneroHombre
                     ? BorderSide(
                       color: actualTheme.colorScheme.secondary,
                       width: 2,
@@ -61,26 +59,26 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
           ),
           labelStyle: TextStyle(
             color:
-                _selectedGender == hombreText
+                _selectedGender == kGeneroHombre
                     ? actualTheme.colorScheme.onPrimary
                     : actualTheme.colorScheme.onSurface,
           ),
           onSelected: (_) {
             setState(() {
-              _selectedGender = hombreText;
+              _selectedGender = kGeneroHombreMayus;
             });
           },
         ),
         const SizedBox(width: 16),
 
         ChoiceChip(
-          label: const Text(mujerText),
+          label: const Text(kGeneroMujer),
           backgroundColor: actualTheme.colorScheme.tertiary,
           selectedColor: actualTheme.colorScheme.primary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side:
-                _selectedGender == mujerText
+                _selectedGender == kGeneroMujer
                     ? BorderSide(
                       color: actualTheme.colorScheme.secondary,
                       width: 2,
@@ -89,14 +87,14 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
           ),
           labelStyle: TextStyle(
             color:
-                _selectedGender == mujerText
+                _selectedGender == kGeneroMujer
                     ? actualTheme.colorScheme.onPrimary
                     : actualTheme.colorScheme.onSurface,
           ),
-          selected: _selectedGender == mujerText,
+          selected: _selectedGender == kGeneroMujer,
           onSelected: (_) {
             setState(() {
-              _selectedGender = mujerText;
+              _selectedGender = kGeneroMujerMayus;
             });
           },
         ),

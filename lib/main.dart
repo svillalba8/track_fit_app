@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/core/navigation/app_router.dart';
 import 'package:track_fit_app/core/themes/app_themes.dart';
 import 'package:track_fit_app/core/themes/logo_type.dart';
 import 'package:track_fit_app/di/di.dart';
+import 'package:track_fit_app/notifiers/auth_user_notifier.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,7 +26,12 @@ Future<void> main() async {
   setupDependencies();
 
   // Arranca la aplicación con GoRouter
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => AuthUserNotifier(Supabase.instance.client),
+      child: const MyApp(), // <-- tu widget raíz con MaterialApp / GoRouter
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

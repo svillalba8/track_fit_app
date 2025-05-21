@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:track_fit_app/core/constants.dart';
+import 'package:track_fit_app/notifiers/auth_user_notifier.dart';
 
 /// Scaffold principal con BottomNavigation y contenido dinámico via ShellRoute
 class MainScaffold extends StatelessWidget {
@@ -44,6 +46,15 @@ class MainScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentIndex = _calculateIndex(context);
     final actualTheme = Theme.of(context);
+
+    // 1) Obtén el usuario de tu ChangeNotifier
+    final authNotifier = context.watch<AuthUserNotifier>();
+    final usuario = authNotifier.usuario;
+
+    // 2) Decide un prefijo por defecto si por alguna razón es null
+    final genero = usuario?.genero ?? kGeneroHombreMayus;
+    final iconPrefix =
+        genero == kGeneroHombreMayus ? 'perfil_usuario_h' : 'perfil_usuario_m';
 
     return Theme(
       data: actualTheme.copyWith(
@@ -118,13 +129,13 @@ class MainScaffold extends StatelessWidget {
             ),
             BottomNavigationBarItem(
               icon: Image.asset(
-                'assets/icons/perfil_usuario_h.png',
+                'assets/icons/$iconPrefix.png',
                 width: 26,
                 height: 26,
                 color: actualTheme.colorScheme.secondary,
               ),
               activeIcon: Image.asset(
-                'assets/icons/perfil_usuario_h_en_uso.png',
+                'assets/icons/${iconPrefix}_en_uso.png',
                 width: 26,
                 height: 26,
                 color: actualTheme.colorScheme.secondary,
