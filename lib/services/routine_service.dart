@@ -1,106 +1,168 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import '../core/enums/exercise_type.dart';
 import '../models/exercise_model.dart';
 import '../models/routine_model.dart';
 
 class RoutineService {
   final SupabaseClient _client = Supabase.instance.client;
 
-  // Obtener todos los ejercicios
-  Future<List<Exercise>> getExercises() async {
-    final response = await _client.from('ejercicio').select();
-    return (response as List).map((e) => Exercise.fromMap(e)).toList();
+  String? get _userId => _client.auth.currentUser?.id;
+
+  Future<Routine?> createRoutine(String nombre) async {
+    final userId = _userId;
+    if (userId == null) throw Exception('User not authenticated');
+    try {
+      final response = await _client.from('rutina').insert({
+        'nombre': nombre,
+        'user_id': userId,
+        'created_at': DateTime.now().toIso8601String(),
+      }).select().single();
+      return Routine.fromMap(response);
+    } catch (e) {
+      print('Error creating routine: $e');
+      rethrow;
+    }
   }
 
-  // Crear un nuevo ejercicio
-  Future<void> createExercise(
-    String nombre,
-    ExerciseType tipo,
-    String? descripcion,
-  ) async {
-    await _client.from('ejercicio').insert({
-      'nombre': nombre,
-      'tipo': tipo.name,
-      'descripcion': descripcion,
-    });
-  }
-
-  // Modificar un ejercicio existente
-  Future<void> updateExercise(
-    int id,
-    String nombre,
-    ExerciseType tipo,
-    String? descripcion,
-  ) async {
-    await _client
-        .from('ejercicio')
-        .update({
-          'nombre': nombre,
-          'tipo': tipo.name,
-          'descripcion': descripcion,
-        })
-        .eq('id', id);
-  }
-
-  // Eliminar un ejercicio
-  Future<void> deleteExercise(int id) async {
-    await _client.from('ejercicio').delete().eq('id', id);
-  }
-
-  // Crear una nueva rutina
-  Future<void> createRoutine(String nombre) async {
-    await _client.from('rutina').insert({'nombre': nombre});
-  }
-
-  // Obtener todas las rutinas
   Future<List<Routine>> getRoutines() async {
-    final response = await _client.from('rutina').select();
-    return (response as List).map((e) => Routine.fromMap(e)).toList();
+    final userId = _userId;
+    if (userId == null) return [];
+    try {
+      final data = await _client
+          .from('rutina')
+          .select()
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+      return (data as List).map((e) => Routine.fromMap(e)).toList();
+    } catch (e) {
+      print('Error fetching routines: $e');
+      return [];
+    }
   }
 
-  // Asignar ejercicio a rutina con detalles
-  Future<void> addExerciseToRutina({
+  Future<void> updateRoutine(int routineId, String newName) async {
+    final userId = _userId;
+    if (userId == null) throw Exception('User not authenticated');
+    try {
+      await _client.from('rutina').update({'nombre': newName}).eq('id', routineId).eq('user_id', userId);
+    } catch (e) {
+      print('Error updating routine: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteRoutine(int routineId) async {
+    final userId = _userId;
+    if (userId == null) throw Exception('User not authenticated');
+    try {
+      await _deleteFromRelation(routineId: routineId);
+      await _client.from('rutina').delete().eq('id', routineId).eq('user_id', userId);
+    } catch (e) {
+      print('Error deleting routine: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<Exercise>> getExercisesForRoutine(int routineId) async {
+    final userId = _userId;
+    if (userId == null) return [];
+    try {
+      final data = await _client
+          .from('ejercicio_rutina')
+          .select('id_ejercicio, ejercicio:ejercicio_id(*)')
+          .eq('id_rutina', routineId);
+      return (data as List).map((e) => Exercise.fromMap(e['ejercicio'])).toList();
+    } catch (e) {
+      print('Error fetching routine exercises: $e');
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getRoutineExercisesDetails(int routineId) async {
+    final userId = _userId;
+    if (userId == null) return [];
+    try {
+      final data = await _client
+          .from('ejercicio_rutina')
+          .select('series, repeticiones, duracion, ejercicio:ejercicio_id(*)')
+          .eq('id_rutina', routineId);
+      return (data as List).cast<Map<String, dynamic>>();
+    } catch (e) {
+      print('Error fetching exercise details: $e');
+      return [];
+    }
+  }
+
+  Future<void> addExerciseToRoutine({
     required int rutinaId,
     required int ejercicioId,
     required int series,
     required int repeticiones,
-    int? duracion,
+    double? duracion,
   }) async {
-    await _client.from('ejerciciorutina').insert({
-      'rutina_id': rutinaId,
-      'ejercicio_id': ejercicioId,
-      'series': series,
-      'repeticiones': repeticiones,
-      'duracion': duracion,
-    });
+    final userId = _userId;
+    if (userId == null) throw Exception('User not authenticated');
+
+    final routine = await _client
+        .from('rutina')
+        .select()
+        .eq('id', rutinaId)
+        .eq('user_id', userId)
+        .maybeSingle();
+    if (routine == null) throw Exception('Routine not found or does not belong to user');
+
+    final exercise = await _client
+        .from('ejercicio')
+        .select()
+        .eq('id', ejercicioId)
+        .eq('user_id', userId)
+        .maybeSingle();
+    if (exercise == null) throw Exception('Exercise not found or does not belong to user');
+
+    try {
+      await _client.from('ejercicio_rutina').insert({
+        'id_rutina': rutinaId,
+        'id_ejercicio': ejercicioId,
+        'series': series,
+        'repeticiones': repeticiones,
+        'duracion': duracion,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      print('Error adding exercise to routine: $e');
+      rethrow;
+    }
   }
 
-  // Obtener ejercicios de una rutina con detalles
-  Future<List<Map<String, dynamic>>> getEjerciciosForRutina(
-    int rutinaId,
-  ) async {
-    final response = await _client
-        .from('ejerciciorutina')
-        .select('series, repeticiones, duracion, ejercicio (*)')
-        .eq('rutina_id', rutinaId);
-
-    return (response as List).map((item) {
-      final ejercicio = Exercise.fromMap(item['ejercicio']);
-      return {
-        'ejercicio': ejercicio,
-        'series': item['series'],
-        'repeticiones': item['repeticiones'],
-        'duracion': item['duracion'],
-      };
-    }).toList();
+  Future<void> removeAllExercisesFromRoutine(int routineId) async {
+    await _deleteFromRelation(routineId: routineId);
   }
 
-  // Eliminar un ejercicio de una rutina
-  Future<void> deleteExerciseFromRutina(int rutinaId, int ejercicioId) async {
-    await _client.from('ejerciciorutina').delete().match({
-      'rutina_id': rutinaId,
-      'ejercicio_id': ejercicioId,
-    });
+  Future<void> removeExerciseFromRoutine(int routineId, int exerciseId) async {
+    final userId = _userId;
+    if (userId == null) throw Exception('User not authenticated');
+    try {
+      await _client
+          .from('ejercicio_rutina')
+          .delete()
+          .eq('id_rutina', routineId)
+          .eq('id_ejercicio', exerciseId);
+    } catch (e) {
+      print('Error removing exercise from routine: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> _deleteFromRelation({required int routineId}) async {
+    final userId = _userId;
+    if (userId == null) throw Exception('User not authenticated');
+    final routine = await _client
+        .from('rutina')
+        .select()
+        .eq('id', routineId)
+        .eq('user_id', userId)
+        .maybeSingle();
+    if (routine == null) throw Exception('Routine not found or does not belong to user');
+
+    await _client.from('ejercicio_rutina').delete().eq('id_rutina', routineId);
   }
 }

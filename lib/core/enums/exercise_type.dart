@@ -25,7 +25,7 @@ extension ExerciseTypeExtension on ExerciseType {
       case 'intenso':
         return ExerciseType.intenso;
       default:
-        return ExerciseType.fuerza; // Valor por defecto
+        return ExerciseType.fuerza;
     }
   }
 }
