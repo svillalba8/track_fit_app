@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/enums/exercise_type.dart';
 import '../../models/exercise_model.dart';
 import '../../models/routine_model.dart';
@@ -41,6 +42,45 @@ class _RoutinePageState extends State<RoutinePage> {
       _routines = rutinas;
     });
   }
+
+  Future<void> _deleteExercise(int exerciseId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Confirmar eliminación'),
+        content: const Text('¿Estás seguro de que quieres eliminar este ejercicio?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false), // Devuelve false al cancelar
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true), // Devuelve true al confirmar
+            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await _exerciseService.deleteExercise(exerciseId);
+        await _loadExercises();
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Ejercicio eliminado correctamente')),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al eliminar ejercicio: $e')),
+          );
+        }
+      }
+    }
+  }
+
 
   Future<void> _showCreateExerciseDialog() async {
     final nombreController = TextEditingController();
@@ -453,11 +493,11 @@ class _RoutinePageState extends State<RoutinePage> {
         content: const Text('¿Estás seguro de que quieres eliminar esta rutina?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => context.pop(false),
             child: const Text('Cancelar'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => context.pop(true),
             child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
           ),
         ],
@@ -482,6 +522,8 @@ class _RoutinePageState extends State<RoutinePage> {
       }
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -547,7 +589,8 @@ class _RoutinePageState extends State<RoutinePage> {
           elevation: 3,
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             title: Text(
               ejercicio.nombre,
               style: const TextStyle(fontWeight: FontWeight.bold),
@@ -570,34 +613,46 @@ class _RoutinePageState extends State<RoutinePage> {
                   onPressed: () async {
                     final confirmed = await showDialog<bool>(
                       context: context,
-                      builder: (_) => AlertDialog(
+                      builder: (dialogContext) => AlertDialog(
                         title: const Text('Confirmar eliminación'),
                         content: Text('¿Eliminar ejercicio "${ejercicio.nombre}"?'),
                         actions: [
                           TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text('Cancelar')),
+                            onPressed: () {
+                              Navigator.of(dialogContext, rootNavigator: true).pop(false);
+                            },
+                            child: const Text('Cancelar'),
+                          ),
                           TextButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: const Text('Eliminar')),
+                            onPressed: () {
+                              Navigator.of(dialogContext, rootNavigator: true).pop(true);
+                            },
+                            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+                          ),
                         ],
                       ),
                     );
+
                     if (confirmed == true) {
                       try {
                         await _exerciseService.deleteExercise(ejercicio.id);
                         await _loadExercises();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Ejercicio eliminado')),
-                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Ejercicio eliminado correctamente')),
+                          );
+                        }
                       } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error al eliminar ejercicio: $e')),
-                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error al eliminar ejercicio: $e')),
+                          );
+                        }
                       }
                     }
                   },
                 ),
+
               ],
             ),
           ),
@@ -605,6 +660,7 @@ class _RoutinePageState extends State<RoutinePage> {
       },
     );
   }
+
 
   Widget _buildRoutinesList() {
     return _routines.isEmpty
