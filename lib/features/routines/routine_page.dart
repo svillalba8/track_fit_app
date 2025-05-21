@@ -280,7 +280,7 @@ class _RoutinePageState extends State<RoutinePage> {
                     final repes = int.tryParse(eSel.repeticionesController.text.trim()) ?? 0;
                     final duracion = int.tryParse(eSel.duracionController.text.trim());
 
-                    await _routineService.addExerciseToRutina(
+                    await _routineService.addExerciseToRoutine(
                       rutinaId: routine.id,
                       ejercicioId: eSel.ejercicio.id,
                       series: series,
@@ -421,7 +421,7 @@ class _RoutinePageState extends State<RoutinePage> {
                   final repes = int.tryParse(eSel.repeticionesController.text.trim()) ?? 0;
                   final duracion = int.tryParse(eSel.duracionController.text.trim());
 
-                  await _routineService.addExerciseToRutina(
+                  await _routineService.addExerciseToRoutine(
                     rutinaId: nuevaRutina!.id,
                     ejercicioId: eSel.ejercicio.id,
                     series: series,

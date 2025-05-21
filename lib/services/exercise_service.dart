@@ -10,14 +10,12 @@ class ExerciseService {
   Future<List<Exercise>> getExercises() async {
     final userId = _userId;
     if (userId == null) return [];
-
     try {
       final response = await _client
           .from('ejercicio')
           .select()
           .eq('user_id', userId)
           .order('created_at', ascending: false);
-
       return (response as List).map((e) => Exercise.fromMap(e)).toList();
     } catch (e) {
       print('Error fetching exercises: $e');
@@ -25,11 +23,9 @@ class ExerciseService {
     }
   }
 
-  Future<void> createExercise(
-      String nombre, ExerciseType tipo, String? descripcion) async {
+  Future<void> createExercise(String nombre, ExerciseType tipo, String? descripcion) async {
     final userId = _userId;
     if (userId == null) throw Exception('User not authenticated');
-
     try {
       await _client.from('ejercicio').insert({
         'nombre': nombre,
@@ -44,21 +40,15 @@ class ExerciseService {
     }
   }
 
-  Future<void> updateExercise(
-      int id, String nombre, ExerciseType tipo, String? descripcion) async {
+  Future<void> updateExercise(int id, String nombre, ExerciseType tipo, String? descripcion) async {
     final userId = _userId;
     if (userId == null) throw Exception('User not authenticated');
-
     try {
-      await _client
-          .from('ejercicio')
-          .update({
+      await _client.from('ejercicio').update({
         'nombre': nombre,
         'tipo': tipo.name,
         'descripcion': descripcion,
-      })
-          .eq('id', id)
-          .eq('user_id', userId);
+      }).eq('id', id).eq('user_id', userId);
     } catch (e) {
       print('Error updating exercise: $e');
       rethrow;
@@ -68,18 +58,11 @@ class ExerciseService {
   Future<void> deleteExercise(int id) async {
     final userId = _userId;
     if (userId == null) throw Exception('User not authenticated');
-
     try {
-      final response = await _client
-          .from('ejercicio')
-          .delete()
-          .eq('id', id)
-          .eq('user_id', userId);
-      print('Respuesta deleteExercise: $response');
+      await _client.from('ejercicio').delete().eq('id', id).eq('user_id', userId);
     } catch (e) {
-      print('Error al eliminar ejercicio: $e');
+      print('Error deleting exercise: $e');
       rethrow;
     }
   }
-
 }
