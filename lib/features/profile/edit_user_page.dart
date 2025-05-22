@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:track_fit_app/auth/validation/auth_validators.dart';
 import 'package:track_fit_app/auth/widgets/profile_field.dart';
 import 'package:track_fit_app/core/utils/snackbar_utils.dart';
+import 'package:track_fit_app/data/di.dart';
 import 'package:track_fit_app/models/usuario_model.dart';
 import 'package:track_fit_app/services/usuario_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/widgets/custom_button.dart';
 
 class EditUserPage extends StatefulWidget {
   final UsuarioModel usuario;
 
-  const EditUserPage({Key? key, required this.usuario}) : super(key: key);
+  const EditUserPage({super.key, required this.usuario});
 
   @override
   State<EditUserPage> createState() => _EditUserPageState();
@@ -22,6 +22,7 @@ class _EditUserPageState extends State<EditUserPage> {
   final _descripcionController = TextEditingController();
   final _pesoController = TextEditingController();
   final _estaturaController = TextEditingController();
+
   bool _isSaving = false;
   bool _isEditing = false;
 
@@ -43,7 +44,7 @@ class _EditUserPageState extends State<EditUserPage> {
     super.dispose();
   }
 
-  void _guardarCambios() async {
+  Future<void> _guardarCambios() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSaving = true);
@@ -56,13 +57,13 @@ class _EditUserPageState extends State<EditUserPage> {
         estatura: double.parse(_estaturaController.text.trim()),
       );
 
-      final api = UsuarioService(Supabase.instance.client);
-      await api.updateUsuario(updatedUser);
+      final usuarioService = getIt<UsuarioService>();
+      await usuarioService.updateUsuario(updatedUser);
 
       if (!mounted) return;
       Navigator.pop(context, updatedUser);
     } catch (e) {
-      showErrorSnackBar(context, 'Error al guardar: $e');
+      showErrorSnackBar(context, 'Error al guardar cambios');
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -75,15 +76,16 @@ class _EditUserPageState extends State<EditUserPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Datos personales'),
-        titleTextStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        titleTextStyle: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
         actions: [
           IconButton(
             icon: Icon(_isEditing ? Icons.close : Icons.edit),
             tooltip: _isEditing ? 'Cancelar edición' : 'Editar',
             onPressed: () {
-              setState(() {
-                _isEditing = !_isEditing;
-              });
+              setState(() => _isEditing = !_isEditing);
             },
           ),
         ],
@@ -125,7 +127,7 @@ class _EditUserPageState extends State<EditUserPage> {
                 const SizedBox(height: 24),
                 if (_isEditing)
                   CustomButton(
-                    text: _isSaving ? 'Cargando...' : 'Guardar cambios',
+                    text: _isSaving ? 'Guardando...' : 'Guardar cambios',
                     actualTheme: theme,
                     onPressed: _guardarCambios,
                   ),

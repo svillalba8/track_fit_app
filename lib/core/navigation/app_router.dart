@@ -10,8 +10,10 @@ import 'package:track_fit_app/core/utils/stream_listenable.dart';
 import 'package:track_fit_app/features/home/home_page.dart';
 import 'package:track_fit_app/features/profile/profile_page.dart';
 import 'package:track_fit_app/features/routines/routine_page.dart';
+import 'package:track_fit_app/features/settings/user_settings_page.dart';
 import 'package:track_fit_app/features/splash/splash_page.dart';
 import 'package:track_fit_app/features/trainer/trainer_page.dart';
+import 'package:track_fit_app/models/usuario_model.dart';
 
 /// Configuración de rutas usando GoRouter
 final GoRouter appRouter = GoRouter(
@@ -92,6 +94,15 @@ final GoRouter appRouter = GoRouter(
             GoRoute(
               path: AppRoutes.profile,
               builder: (_, __) => const ProfilePage(),
+              routes: [
+                GoRoute(
+                  path: AppRoutes.editUser,
+                  builder: (ctx, state) {
+                    final usuario = state.extra as UsuarioModel;
+                    return UserSettingsPage(usuario: usuario);
+                  },
+                ),
+              ],
             ),
           ],
         ),
