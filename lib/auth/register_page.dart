@@ -39,7 +39,17 @@ class _RegisterPageState extends State<RegisterPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               // Logo de la app
-              Image.asset(kLogoTrackFitBlancoMorado, height: 120),
+              Image.asset(
+                kLogoTrackFitBlancoSinFondo,
+                height: 120,
+                color:
+                    actualTheme.colorScheme.secondary ==
+                            Color(
+                              0xFFD9B79A,
+                            ) // Si es el color del cremaAzulmarino se utiliza otro color del actualTheme
+                        ? actualTheme.colorScheme.tertiary
+                        : actualTheme.colorScheme.secondary,
+              ),
               const SizedBox(height: 32),
 
               // Card del formulario

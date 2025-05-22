@@ -62,7 +62,17 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset(kLogoTrackFitBlancoMorado, height: 120),
+              Image.asset(
+                kLogoTrackFitBlancoSinFondo,
+                height: 120,
+                color:
+                    actualTheme.colorScheme.secondary ==
+                            Color(
+                              0xFFD9B79A,
+                            ) // Si es el color del cremaAzulmarino se utiliza otro color del actualTheme
+                        ? actualTheme.colorScheme.tertiary
+                        : actualTheme.colorScheme.secondary,
+              ),
               const SizedBox(height: 32),
               Card(
                 shape: RoundedRectangleBorder(
