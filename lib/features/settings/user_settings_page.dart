@@ -66,6 +66,7 @@ class UserSettingsPage extends StatelessWidget {
             },
           ),
           const SizedBox(height: 24), // separación visual
+          Divider(color: Colors.red.withValues(alpha: 0.5), height: 0.1),
           Container(
             color: Colors.red.withValues(alpha: 0.10),
             child: ListTile(
@@ -77,6 +78,7 @@ class UserSettingsPage extends StatelessWidget {
               onTap: () => _confirmLogout(context),
             ),
           ),
+          Divider(color: Colors.red.withValues(alpha: 0.5), height: 0.1),
         ],
       ),
     );

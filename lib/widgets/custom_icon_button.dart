@@ -20,6 +20,7 @@ class CustomIconButton extends StatelessWidget {
     if (texto != null) {
       return ElevatedButton.icon(
         style: ElevatedButton.styleFrom(
+          elevation: 5,
           backgroundColor: actualTheme.colorScheme.tertiary,
           padding: EdgeInsets.all(8),
           shape: RoundedRectangleBorder(

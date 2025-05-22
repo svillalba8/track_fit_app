@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:track_fit_app/core/constants.dart';
 import 'package:track_fit_app/core/utils/snackbar_utils.dart';
 import 'package:track_fit_app/data/di.dart';
-import 'package:track_fit_app/features/settings/user_settings_page.dart';
 import 'package:track_fit_app/models/progreso_model.dart';
 import 'package:track_fit_app/models/usuario_model.dart';
 import 'package:track_fit_app/services/progreso_service.dart';
@@ -65,7 +63,9 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final actualTheme = Theme.of(context);
+    const grosorCard = 0.5;
+    const sombraCard = 20.0;
 
     if (isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -87,7 +87,7 @@ class _ProfilePageState extends State<ProfilePage> {
               'assets/icons/engranaje_ajustes.png',
               width: 26,
               height: 26,
-              color: theme.colorScheme.secondary,
+              color: actualTheme.colorScheme.secondary,
             ),
             onPressed: () async {
               final updatedUsuario = await context.push<UsuarioModel>(
@@ -104,24 +104,30 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
 
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        padding: const EdgeInsets.symmetric(horizontal: 22.0),
         child: Column(
           children: [
             const SizedBox(height: 24),
             Card(
-              elevation: 4,
+              elevation: sombraCard,
+              color: Theme.of(context).colorScheme.primary,
+              shadowColor: Colors.black.withAlpha(255),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                  color: Theme.of(context).colorScheme.secondary,
+                  width: grosorCard,
+                ),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(22.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Usuario y descripción
                     Text(
                       usuario!.nombreUsuario,
-                      style: theme.textTheme.headlineMedium,
+                      style: actualTheme.textTheme.headlineMedium,
                     ),
                     if (usuario!.descripcion != null &&
                         usuario!.descripcion!.isNotEmpty)
@@ -129,19 +135,32 @@ class _ProfilePageState extends State<ProfilePage> {
                         padding: const EdgeInsets.only(top: 8.0),
                         child: Text(
                           usuario!.descripcion!,
-                          style: theme.textTheme.bodyLarge,
+                          style: actualTheme.textTheme.bodyLarge,
                         ),
                       ),
 
                     const SizedBox(height: 24),
-                    Divider(color: theme.dividerColor),
+                    Divider(color: actualTheme.dividerColor, thickness: 0.1),
 
                     // Información física
                     const SizedBox(height: 12),
-                    _infoRow('Peso', '${usuario!.peso} kg'),
-                    _infoRow('Estatura', '${usuario!.estatura} cm'),
-                    _infoRow('Género', usuario!.genero),
                     _infoRow(
+                      'assets/icons/peso_kg.png',
+                      'Peso',
+                      '${usuario!.peso} kg',
+                    ),
+                    _infoRow(
+                      'assets/icons/estatura.png',
+                      'Estatura',
+                      '${usuario!.estatura} cm',
+                    ),
+                    _infoRow(
+                      'assets/icons/generos.png',
+                      'Género',
+                      usuario!.genero,
+                    ),
+                    _infoRow(
+                      'assets/icons/objetivo.png',
                       'Peso Objetivo',
                       '${progreso?.objetivoPeso ?? 'No establecido'}',
                     ),
@@ -149,10 +168,13 @@ class _ProfilePageState extends State<ProfilePage> {
                     const SizedBox(height: 24),
 
                     // Botón de editar
-                    CustomButton(
-                      text: 'Comenzar Objetivo',
-                      actualTheme: theme,
-                      onPressed: () async {},
+                    Align(
+                      alignment: Alignment.center,
+                      child: CustomButton(
+                        text: 'Comenzar Objetivo',
+                        actualTheme: actualTheme,
+                        onPressed: () async {},
+                      ),
                     ),
                   ],
                 ),
@@ -164,11 +186,18 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _infoRow(String label, String value) {
+  Widget _infoRow(String iconString, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         children: [
+          Image.asset(
+            iconString,
+            width: 24,
+            height: 24,
+            color: Theme.of(context).colorScheme.secondary,
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
           ),
