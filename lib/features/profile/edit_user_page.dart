@@ -76,6 +76,10 @@ class _EditUserPageState extends State<EditUserPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Datos personales'),
+        titleTextStyle: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
         actions: [
           IconButton(
             icon: Icon(_isEditing ? Icons.close : Icons.edit),

@@ -21,16 +21,19 @@ class UsuarioService {
   }
 
   Future<void> updateUsuario(UsuarioModel usuario) async {
+    final updateData = {
+      'nombre_usuario': usuario.nombreUsuario,
+      'descripcion': usuario.descripcion,
+      'peso': usuario.peso,
+      'estatura': usuario.estatura,
+      'updated_at': DateTime.now().toIso8601String(),
+      if (usuario.idProgreso != null) 'id_progreso': usuario.idProgreso,
+    };
+
     final response =
         await supabase
             .from('usuarios')
-            .update({
-              'nombre_usuario': usuario.nombreUsuario,
-              'descripcion': usuario.descripcion,
-              'peso': usuario.peso,
-              'estatura': usuario.estatura,
-              'updated_at': DateTime.now().toIso8601String(),
-            })
+            .update(updateData)
             .eq('auth_user_id', usuario.authUsersId)
             .select()
             .maybeSingle();

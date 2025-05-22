@@ -8,12 +8,17 @@ class AppRoutes {
   static const routines = '/routines';
   static const trainer = '/trainer';
   static const profile = '/profile';
+  static const goal = '/goal-page';
+  static const editUser = 'edit-user';
 }
 
 // ICONOS / LOGO APLICACION
-const String kLogoTrackFitBlancoMorado = 'assets/logos/TrackFit_blanco_morado.png';
-const String kLogoTrackFitBlancoNegro = 'assets/logos/TrackFit_blanco_negro.png';
-const String kLogoTrackFitCremaAzulMarino = 'assets/logos/TrackFit_crema_azulmarino.png';
+const String kLogoTrackFitBlancoMorado =
+    'assets/logos/TrackFit_blanco_morado.png';
+const String kLogoTrackFitBlancoNegro =
+    'assets/logos/TrackFit_blanco_negro.png';
+const String kLogoTrackFitCremaAzulMarino =
+    'assets/logos/TrackFit_crema_azulmarino.png';
 const String kLogoTrackFitCremaRosa = 'assets/logos/TrackFit_crema_rosa.png';
 const String kLogoTrackFitRosaNegro = 'assets/logos/TrackFit_rosa_negro.png';
 
@@ -26,6 +31,6 @@ const int kCaracteresMaximosDescripcion = 150;
 
 /// Géneros de usuario (Para introducción a base de datos RECORDAR en mayusculas)
 const String kGeneroHombre = 'Hombre';
-const String kGeneroMujer  = 'Mujer';
-const String kGeneroHombreMayus  = 'HOMBRE'; // EN BBDD -> 'HOMBRE'
-const String kGeneroMujerMayus  = 'MUJER'; // EN BBDD -> 'MUJER'
+const String kGeneroMujer = 'Mujer';
+const String kGeneroHombreMayus = 'HOMBRE'; // EN BBDD -> 'HOMBRE'
+const String kGeneroMujerMayus = 'MUJER'; // EN BBDD -> 'MUJER'

@@ -29,18 +29,13 @@ class HomePage extends StatelessWidget {
               snapshot.connectionState == ConnectionState.waiting
                   ? 'Cargando...'
                   : usuario != null
-                  ? 'Hola, ${usuario.nombreUsuario}'
-                  : 'Hola',
+                  ? 'Bienvenido, ${usuario.nombreUsuario}'
+                  : 'Bienvenido',
             ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.exit_to_app),
-                onPressed: () async {
-                  final supabase = getIt<SupabaseClient>();
-                  await supabase.auth.signOut();
-                },
-              ),
-            ],
+            titleTextStyle: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           body: const Center(child: Text('Bienvenido a tu app')),
         );
