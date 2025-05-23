@@ -57,7 +57,7 @@ class TrainerPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Entrenador-GPT',
+                    'L.I.F.T', // Live Intelligent Fitness Trainer
                     style: TextStyle(
                       fontSize: 20,
                       color: actualTheme.colorScheme.secondary,

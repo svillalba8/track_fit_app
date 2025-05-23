@@ -7,7 +7,7 @@ class ChatNotifier extends ChangeNotifier {
 
   List<Message> messageList = [
     Message(
-      text: 'Hola tu entrenador personal, me llamo Entrenador-GPT, ¿en que puedo ayudarte?',
+      text: '¡Hola! Soy tu entrenador personal. ¿En qué puedo ayudarte hoy?',
       fromWho: FromWho.his,
     ),
   ];
