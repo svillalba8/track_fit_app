@@ -5,8 +5,10 @@ import 'package:track_fit_app/core/themes/theme_extensions.dart';
 import 'package:track_fit_app/features/trainer/widgets/his_message_bubble.dart';
 import 'package:track_fit_app/features/trainer/widgets/message_field_box.dart';
 import 'package:track_fit_app/features/trainer/widgets/my_message_bubble.dart';
+import 'package:track_fit_app/features/trainer/widgets/quick_calculator_actions.dart';
 import 'package:track_fit_app/models/message.dart';
 import 'package:track_fit_app/notifiers/chat_notifier.dart';
+import 'package:track_fit_app/widgets/custom_icon_button.dart';
 
 class TrainerPage extends StatelessWidget {
   const TrainerPage({super.key});
@@ -77,21 +79,10 @@ class TrainerPage extends StatelessWidget {
           ),
           actions: [
             // Botones de acceso directo
-            IconButton(
-              icon: Image.asset(
-                'assets/icons/calculadora.png',
-                width: 26,
-                height: 26,
-                color: actualTheme.colorScheme.secondary,
-              ),
-              tooltip: 'Calculadora de %graso',
-              onPressed: () {
-                /* navegar a ejercicios */
-              },
-            ),
-            IconButton(
+            QuickCalculatorsActions(actualTheme: actualTheme),
+            CustomIconButton(
               icon: Icon(Icons.settings, size: 28),
-              tooltip: 'Ajustes',
+              actualTheme: actualTheme,
               onPressed: () {
                 /* abrir configuración */
               },
