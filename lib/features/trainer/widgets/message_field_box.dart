@@ -9,18 +9,18 @@ class MessageFieldBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final textController = TextEditingController();
     final focusNode = FocusNode();
-
-    final colors = Theme.of(context).colorScheme;
+    final ThemeData actualTheme = Theme.of(context);
 
     final outLineInputBorder = OutlineInputBorder(
-      borderSide: BorderSide(color: colors.primary),
+      borderSide: BorderSide(color: actualTheme.colorScheme.secondary),
       borderRadius: BorderRadius.circular(10),
     );
 
     final inputDecoration = InputDecoration(
-      hintText: 'Write your message here!',
+      hintText: 'Pregunta lo que quieras!',
       enabledBorder: outLineInputBorder,
       filled: true,
+      fillColor: actualTheme.colorScheme.primaryFixed,
       suffixIcon: IconButton(
         icon: Icon(Icons.send_rounded),
         onPressed: () {

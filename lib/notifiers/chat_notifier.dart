@@ -7,7 +7,7 @@ class ChatNotifier extends ChangeNotifier {
 
   List<Message> messageList = [
     Message(
-      text: 'Hola soy CHAT-GPT, en que puedo ayudarte?',
+      text: 'Hola tu entrenador personal, me llamo Entrenador-GPT, ¿en que puedo ayudarte?',
       fromWho: FromWho.his,
     ),
   ];
@@ -18,7 +18,7 @@ class ChatNotifier extends ChangeNotifier {
 
     await hisReplay(newMessage.text);
 
-    notifyListeners(); // Función similiar a SetState() {}
+    notifyListeners();
     moveScrollToBottom();
   }
 

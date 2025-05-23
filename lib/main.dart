@@ -60,7 +60,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Mi App con Supabase',
       routerConfig: appRouter,
-      theme: AppThemes.themeForLogo(LogoType.blancoMorado).copyWith(
+      theme: AppThemes.themeForLogo(LogoType.rosaNegro).copyWith(
         textSelectionTheme: TextSelectionThemeData(
           cursorColor: Theme.of(context).colorScheme.onSecondary,
           selectionHandleColor: Theme.of(context).colorScheme.onSecondary,

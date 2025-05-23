@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:track_fit_app/core/constants.dart';
+import 'package:track_fit_app/core/themes/theme_extensions.dart';
 import 'package:track_fit_app/features/trainer/widgets/his_message_bubble.dart';
 import 'package:track_fit_app/features/trainer/widgets/message_field_box.dart';
 import 'package:track_fit_app/features/trainer/widgets/my_message_bubble.dart';
@@ -20,6 +21,16 @@ class TrainerPage extends StatelessWidget {
         preferredSize: Size.fromHeight(65),
         child: AppBar(
           automaticallyImplyLeading: false,
+          bottom: PreferredSize(
+            preferredSize: Size.fromHeight(1),
+            child: Divider(
+              height: 1,
+              thickness: 1,
+              color: actualTheme.colorScheme.onSurface.withAlpha(
+                (0.40 * 255).round(),
+              ),
+            ),
+          ),
           flexibleSpace: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -97,32 +108,45 @@ class _ChatView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final chatProvider = context.watch<ChatNotifier>();
+    final actualTheme = Theme.of(context);
+    final backgroundExtension = actualTheme.extension<ChatBackground>();
+    final backgroundAsset =
+        backgroundExtension?.assetPath ??
+        'assets/backgrounds/default_chat_bg.png';
 
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                controller: chatProvider.chatScrollController,
-                itemCount: chatProvider.messageList.length,
-                itemBuilder: (context, index) {
-                  final message = chatProvider.messageList[index];
+    return Container(
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage(backgroundAsset),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+          child: Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  controller: chatProvider.chatScrollController,
+                  itemCount: chatProvider.messageList.length,
+                  itemBuilder: (context, index) {
+                    final message = chatProvider.messageList[index];
 
-                  return (message.fromWho == FromWho.his)
-                      ? HisMessageBubble(message: message)
-                      : MyMessageBubble(message: message);
-                },
+                    return (message.fromWho == FromWho.his)
+                        ? HisMessageBubble(message: message)
+                        : MyMessageBubble(message: message);
+                  },
+                ),
               ),
-            ),
-            MessageFieldBox(
-              // OPCION A
-              // onValue: (value) => chatProvider.sendMessage(value),
-              // OPCION B
-              onValue: chatProvider.sendMessage,
-            ),
-          ],
+              MessageFieldBox(
+                // OPCION A
+                // onValue: (value) => chatProvider.sendMessage(value),
+                // OPCION B
+                onValue: chatProvider.sendMessage,
+              ),
+            ],
+          ),
         ),
       ),
     );
