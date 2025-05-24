@@ -123,4 +123,29 @@ class AuthValidators {
     }
     return null;
   }
+
+  /// Fecha de nacimiento: obligatoria, no en el futuro, edad entre 13 y 120 años
+  static String? birthDateValidator(DateTime? birthDate) {
+    if (birthDate == null) {
+      return 'Selecciona tu fecha de nacimiento.';
+    }
+    final today = DateTime.now();
+    if (birthDate.isAfter(today)) {
+      return 'La fecha no puede ser en el futuro.';
+    }
+    final age =
+        today.year -
+        birthDate.year -
+        ((today.month < birthDate.month ||
+                (today.month == birthDate.month && today.day < birthDate.day))
+            ? 1
+            : 0);
+    if (age < 13) {
+      return 'Debes tener al menos 13 años.';
+    }
+    if (age > 120) {
+      return 'Introduce una fecha válida.';
+    }
+    return null;
+  }
 }

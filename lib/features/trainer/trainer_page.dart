@@ -8,6 +8,7 @@ import 'package:track_fit_app/features/trainer/widgets/my_message_bubble.dart';
 import 'package:track_fit_app/features/trainer/widgets/quick_calculator_actions.dart';
 import 'package:track_fit_app/models/message.dart';
 import 'package:track_fit_app/notifiers/chat_notifier.dart';
+import 'package:track_fit_app/widgets/custom_divider.dart';
 import 'package:track_fit_app/widgets/custom_icon_button.dart';
 
 class TrainerPage extends StatelessWidget {
@@ -25,13 +26,7 @@ class TrainerPage extends StatelessWidget {
           automaticallyImplyLeading: false,
           bottom: PreferredSize(
             preferredSize: Size.fromHeight(1),
-            child: Divider(
-              height: 1,
-              thickness: 1,
-              color: actualTheme.colorScheme.onSurface.withAlpha(
-                (0.40 * 255).round(),
-              ),
-            ),
+            child: CustomDivider(),
           ),
           flexibleSpace: Container(
             decoration: BoxDecoration(

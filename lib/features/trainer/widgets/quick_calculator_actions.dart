@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:track_fit_app/features/trainer/service/body_fat_form.dart';
+import 'package:track_fit_app/widgets/custom_divider.dart';
 import 'package:track_fit_app/widgets/custom_icon_button.dart';
+
+// Niveles de popup
+enum PopupLevel { menu, form }
 
 class QuickCalculatorsActions extends StatefulWidget {
   final ThemeData actualTheme;
@@ -16,6 +20,9 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
   OverlayEntry? _overlayEntry;
   bool _useMetric = true;
 
+  PopupLevel _level = PopupLevel.menu;
+  String? _selectedCalculator;
+
   void _toggleMenu() {
     if (_overlayEntry == null) {
       _overlayEntry = _createOverlayEntry();
@@ -23,6 +30,8 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
     } else {
       _overlayEntry!.remove();
       _overlayEntry = null;
+      _level = PopupLevel.menu;
+      _selectedCalculator = null;
     }
   }
 
@@ -35,142 +44,219 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
       Offset.zero,
       ancestor: overlay,
     );
+
     const double menuWidth = 180;
+    const double formWidth = 280;
     const double closeSize = 26;
-    // NO TOCAR POSICIÓN
-    double left = position.dx + (size.width / 2) - (menuWidth / 1.15);
-    left = left.clamp(16.0, overlay.size.width - menuWidth - 16.0);
-    final double top = position.dy + (size.height / 2) - (closeSize / 1.1);
+
+    final double centerX = position.dx + size.width / 2;
+    final double initialLeftUnclamped = centerX - (menuWidth / 1.17);
+    final double initialLeft = initialLeftUnclamped.clamp(
+      16.0,
+      overlay.size.width - menuWidth - 16.0,
+    );
+
+    final double top = position.dy + (size.height / 2) - (closeSize / 1.06);
 
     return OverlayEntry(
-      builder:
-          (context) => Positioned(
-            left: left,
-            top: top,
-            width: menuWidth,
-            child: Material(
-              elevation: 4,
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: widget.actualTheme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() => _useMetric = !_useMetric);
-                              _overlayEntry?.markNeedsBuild();
-                            },
-                            child: Icon(
-                              _useMetric
-                                  ? Icons
-                                      .straighten_rounded // Ejemplo: icono métrico
-                                  : Icons
-                                      .height_rounded, // Ejemplo: icono imperial
-                              size: 32,
-                              color: widget.actualTheme.colorScheme.secondary,
-                            ),
-                          ),
-                        ),
+      builder: (context) {
+        final double popupWidth =
+            _level == PopupLevel.menu ? menuWidth : formWidth;
 
-                        SizedBox(width: _useMetric ? 8 : 2),
+        // Empiezas con la misma izquierda del menú
+        double left = initialLeft;
 
-                        Expanded(
-                          child: Text(
-                            _useMetric ? 'kg / cm' : 'lb / in',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: _toggleMenu,
-                          child: Icon(
-                            Icons.close_rounded,
-                            size: 26,
-                            color: widget.actualTheme.colorScheme.onSurface,
-                          ),
-                        ),
-                      ],
-                    ),
+        // Si es el popup de formulario, lo desplazas 20px a la izquierda
+        if (_level == PopupLevel.form) {
+          left -= 100; // ajusta este valor a tu gusto
+        }
 
-                    SizedBox(height: 24),
+        // Luego aseguras los márgenes mínimos y máximos
+        left = left.clamp(16.0, overlay.size.width - popupWidth - 16.0);
 
-                    Center(
-                      child: Text(
-                        'TIPO',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: widget.actualTheme.colorScheme.secondary,
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 6),
-
-                    Divider(
-                      height: 1,
-                      thickness: 1,
-                      color: widget.actualTheme.colorScheme.secondary.withAlpha(
-                        (0.4 * 255).round(),
-                      ),
-                    ),
-
-                    SizedBox(height: 12),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _menuIcon(
-                          'assets/icons/porcentaje.png',
-                          () => context.go(
-                            '/calculator/percentFat',
-                            extra: {'useMetric': _useMetric},
-                          ),
-                        ),
-                        _menuIcon(
-                          'assets/icons/bmi.png',
-                          () => context.go(
-                            '/calculator/bmi',
-                            extra: {'useMetric': _useMetric},
-                          ),
-                        ),
-                        _menuIcon(
-                          'assets/icons/macros.png',
-                          () => context.go(
-                            '/calculator/macros',
-                            extra: {'useMetric': _useMetric},
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
+        return Positioned(
+          left: left,
+          top: top,
+          width: popupWidth,
+          child: Material(
+            elevation: 4,
+            borderRadius: BorderRadius.circular(12),
+            child:
+                _level == PopupLevel.menu
+                    ? _buildMenuContent()
+                    : _buildFormContent(),
           ),
+        );
+      },
     );
   }
 
-  Widget _menuIcon(String assetPath, VoidCallback onTap) {
+  Widget _buildMenuContent() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: widget.actualTheme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Encabezado: cambio de unidades y cerrar
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  setState(() => _useMetric = !_useMetric);
+                  _overlayEntry?.markNeedsBuild();
+                },
+                child: Icon(
+                  _useMetric ? Icons.straighten_rounded : Icons.height_rounded,
+                  size: 32,
+                  color: widget.actualTheme.colorScheme.secondary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _useMetric ? 'kg / cm' : 'lb / in',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              GestureDetector(
+                onTap: _toggleMenu,
+                child: Icon(
+                  Icons.close_rounded,
+                  size: 26,
+                  color: widget.actualTheme.colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          const Center(
+            child: Text(
+              'TIPO',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+          ),
+
+          const SizedBox(height: 6),
+          CustomDivider(),
+          const SizedBox(height: 12),
+
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _menuIcon('assets/icons/porcentaje.png', 'GRASA', () {
+                setState(() {
+                  _level = PopupLevel.form;
+                  _selectedCalculator = '% de grasa';
+                });
+                _overlayEntry?.markNeedsBuild();
+              }),
+              const SizedBox(height: 12),
+              _menuIcon('assets/icons/bmi.png', 'IMC', () {
+                setState(() {
+                  _level = PopupLevel.form;
+                  _selectedCalculator = 'IMC';
+                });
+                _overlayEntry?.markNeedsBuild();
+              }),
+              const SizedBox(height: 12),
+              _menuIcon('assets/icons/macros.png', 'MACROS', () {
+                setState(() {
+                  _level = PopupLevel.form;
+                  _selectedCalculator = 'macros';
+                });
+                _overlayEntry?.markNeedsBuild();
+              }),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormContent() {
+    final actualTheme = Theme.of(context);
+
+    // Selecciona el widget de formulario según lo elegido
+    late final Widget form;
+    switch (_selectedCalculator) {
+      case '% de grasa':
+        form = BodyFatForm(useMetric: _useMetric);
+        break;
+      case 'IMC':
+        // form = BmiForm(useMetric: _useMetric);
+        break;
+      case 'macros':
+        // form = MacrosForm(useMetric: _useMetric);
+        break;
+      default:
+        form = const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: widget.actualTheme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Flecha de retroceso y título dinámico
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _selectedCalculator?.toUpperCase() ?? '',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  setState(() => _level = PopupLevel.menu);
+                  _overlayEntry?.markNeedsBuild();
+                },
+                child: Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: actualTheme.colorScheme.secondary,
+                  size: 24,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          CustomDivider(),
+          const SizedBox(height: 12),
+          // Aquí se inserta el formulario correspondiente
+          form,
+        ],
+      ),
+    );
+  }
+
+  Widget _menuIcon(String assetPath, String label, VoidCallback onTap) {
     return GestureDetector(
-      onTap: () {
-        onTap();
-        _toggleMenu();
-      },
-      child: Image.asset(
-        assetPath,
-        width: 32,
-        height: 32,
-        color: widget.actualTheme.colorScheme.onSurface,
+      onTap: onTap,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Image.asset(
+            assetPath,
+            width: 32,
+            height: 32,
+            color: widget.actualTheme.colorScheme.onSurface,
+          ),
+          const SizedBox(width: 8),
+          Text(label),
+        ],
       ),
     );
   }
