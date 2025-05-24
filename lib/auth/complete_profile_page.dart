@@ -22,6 +22,9 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
   bool _loading = true;
   String _selectedGender = '';
 
+  // NUEVA VARIABLE PARA FECHA DE NACIMIENTO
+  DateTime? _birthDate;
+
   final TextEditingController _usernameCtrl = TextEditingController();
   final TextEditingController _descriptionCtrl = TextEditingController();
   final TextEditingController _weightCtrl = TextEditingController();
@@ -38,14 +41,13 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
 
   Widget _genderSelector() {
     final actualTheme = Theme.of(context);
-
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         ChoiceChip(
           label: const Text(kGeneroHombre),
           selected: _selectedGender == kGeneroHombre,
-          backgroundColor: actualTheme.colorScheme.tertiary,
+          backgroundColor: actualTheme.colorScheme.primary,
           selectedColor: actualTheme.colorScheme.primary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -60,20 +62,18 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
           labelStyle: TextStyle(
             color:
                 _selectedGender == kGeneroHombre
-                    ? actualTheme.colorScheme.onPrimary
-                    : actualTheme.colorScheme.onSurface,
+                    ? actualTheme.colorScheme.secondary
+                    : actualTheme.colorScheme.secondary,
           ),
-          onSelected: (_) {
-            setState(() {
-              _selectedGender = kGeneroHombreMayus;
-            });
-          },
+          onSelected: (_) => setState(() => _selectedGender = kGeneroHombre),
         ),
+
         const SizedBox(width: 16),
 
         ChoiceChip(
           label: const Text(kGeneroMujer),
-          backgroundColor: actualTheme.colorScheme.tertiary,
+          selected: _selectedGender == kGeneroMujer,
+          backgroundColor: actualTheme.colorScheme.primary,
           selectedColor: actualTheme.colorScheme.primary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -88,15 +88,10 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
           labelStyle: TextStyle(
             color:
                 _selectedGender == kGeneroMujer
-                    ? actualTheme.colorScheme.onPrimary
-                    : actualTheme.colorScheme.onSurface,
+                    ? actualTheme.colorScheme.secondary
+                    : actualTheme.colorScheme.secondary,
           ),
-          selected: _selectedGender == kGeneroMujer,
-          onSelected: (_) {
-            setState(() {
-              _selectedGender = kGeneroMujerMayus;
-            });
-          },
+          onSelected: (_) => setState(() => _selectedGender = kGeneroMujer),
         ),
       ],
     );
@@ -201,13 +196,57 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                   validator: AuthValidators.descriptionValidator,
                 ),
 
+                const SizedBox(height: 8),
+
+                // NUEVO CAMPO: FECHA DE NACIMIENTO
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 16,
+                  ),
+                  decoration: BoxDecoration(
+                    color: actualTheme.colorScheme.tertiary,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color:
+                          _birthDate == null
+                              ? actualTheme.colorScheme.onSurface.withAlpha(
+                                (0.4 * 255).round(),
+                              )
+                              : actualTheme.colorScheme.primary,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _birthDate == null
+                              ? 'Fecha de nacimiento'
+                              : formatSpanishDate(_birthDate!),
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.calendar_month_rounded,
+                          size: 32,
+                          color: actualTheme.colorScheme.onSurface,
+                        ),
+                        onPressed: _pickBirthDate,
+                      ),
+                    ],
+                  ),
+                ),
+
                 const SizedBox(height: 24),
 
                 CustomButton(
                   text: _loading ? 'Guardando...' : 'Guardar perfil',
                   actualTheme: Theme.of(context),
                   onPressed: () {
-                    // 1) Validamos todos los campos y nos quedamos con el primer error
+                    // 1) Validamos campos y fecha
                     final errorMessage =
                         AuthValidators.usernameValidator(_usernameCtrl.text) ??
                         AuthValidators.nameValidator(_nameCtrl.text) ??
@@ -215,17 +254,13 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                         AuthValidators.weightValidator(_weightCtrl.text) ??
                         AuthValidators.heightValidator(_heightCtrl.text) ??
                         AuthValidators.genderValidator(_selectedGender) ??
-                        AuthValidators.descriptionValidator(
-                          _descriptionCtrl.text,
-                        );
+                        AuthValidators.birthDateValidator(_birthDate);
 
-                    // 2) Si hay error, lo mostramos y salimos
                     if (errorMessage != null) {
                       showErrorSnackBar(context, errorMessage);
                       return;
                     }
 
-                    // 3) Si todo OK, continuamos
                     _submit();
                   },
                 ),
@@ -260,6 +295,10 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
           _nameCtrl.text = data?['nombre'] ?? '';
           _lastnameCtrl.text = data?['apellidos'] ?? '';
           _selectedGender = _genderCtrl.text;
+          // CARGAMOS FECHA EXISTENTE
+          if (data?['fecha_nac'] != null) {
+            _birthDate = DateTime.parse(data!['fecha_nac']);
+          }
         }
       });
     } catch (error) {
@@ -267,6 +306,40 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error cargando perfil: $error')));
+    }
+  }
+
+  Future<void> _pickBirthDate() async {
+    final actualTheme = Theme.of(context);
+    final today = DateTime.now();
+    final initial = _birthDate ?? DateTime(today.year - 25);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(2000),
+      lastDate: today,
+      cancelText: 'Cancelar',
+      confirmText: 'Aceptar',
+      builder: (context, child) {
+        return Localizations.override(
+          context: context,
+          child: Theme(
+            data: actualTheme.copyWith(
+              // Solo sobreescribimos el TextButtonTheme
+              textButtonTheme: TextButtonThemeData(
+                style: TextButton.styleFrom(
+                  foregroundColor: actualTheme.colorScheme.secondary,
+                ),
+              ),
+            ),
+            child: child!,
+          ),
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() => _birthDate = picked);
     }
   }
 
@@ -278,7 +351,6 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
     final user = supabase.auth.currentUser!;
 
     try {
-      // comprobamos que no exista ya el username
       final existing =
           await supabase
               .from('usuarios')
@@ -287,14 +359,12 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
               .maybeSingle();
 
       if (existing != null) {
-        // Ya hay un perfil con ese nombre de usuario
         if (!mounted) return;
         showErrorSnackBar(context, 'El nombre de usuario ya está en uso');
         setState(() => _loading = false);
         return;
       }
 
-      // si todo esta bien, continuamos
       final dateNowIso = DateTime.now().toIso8601String();
       final data = {
         'auth_user_id': user.id,
@@ -305,6 +375,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
         'genero': _selectedGender,
         'nombre': _nameCtrl.text.trim(),
         'apellidos': _lastnameCtrl.text.trim(),
+        'fecha_nac': _birthDate!.toIso8601String().split('T').first, // AÑADIDO
         'created_at': dateNowIso,
         'updated_at': dateNowIso,
       };
@@ -327,16 +398,11 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
   /// Traduce los mensajes de PostgREST a textos amigables
   String _mapProfileError(String apiMsg) {
     switch (apiMsg) {
-      // Violación de PK o unique sobre auth_user_id
       case 'duplicate key value violates unique constraint "usuarios_pkey"':
       case 'duplicate key value violates unique constraint "usuarios_auth_user_id_unique"':
         return 'Ya existe un perfil para este usuario.';
-
-      // Si tienes unique en nombre de usuario
       case 'duplicate key value violates unique constraint "usuarios_nombre_usuario_key"':
         return 'El nombre de usuario ya está en uso.';
-
-      // Campos obligatorios
       case 'null value in column "nombre_usuario" violates not-null constraint':
         return 'El nombre de usuario es obligatorio.';
       case 'null value in column "nombre" violates not-null constraint':
@@ -349,17 +415,37 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
         return 'El peso es obligatorio.';
       case 'null value in column "estatura" violates not-null constraint':
         return 'La estatura es obligatoria.';
+      case 'null value in column "fecha_nac" violates not-null constraint':
+        return 'Selecciona tu fecha de nacimiento.';
       case 'null value in column "created_at" violates not-null constraint':
       case 'null value in column "updated_at" violates not-null constraint':
         return 'Ha ocurrido un problema con las fechas del registro.';
-
-      // Fallos de parseo de números
       case 'invalid input syntax for type double precision':
         return 'Peso y estatura deben ser números válidos.';
-
-      // Cualquier otro error
       default:
         return 'No se pudo guardar el perfil: $apiMsg';
     }
+  }
+
+  // Helper para la visualización de la fecha
+  String formatSpanishDate(DateTime date) {
+    const meses = [
+      'enero',
+      'febrero',
+      'marzo',
+      'abril',
+      'mayo',
+      'junio',
+      'julio',
+      'agosto',
+      'septiembre',
+      'octubre',
+      'noviembre',
+      'diciembre',
+    ];
+    final day = date.day;
+    final month = meses[date.month - 1];
+    final year = date.year;
+    return '$day de $month de $year';
   }
 }

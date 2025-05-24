@@ -21,8 +21,10 @@ const String kLogoTrackFitCremaAzulMarino =
     'assets/logos/TrackFit_crema_azulmarino.png';
 const String kLogoTrackFitCremaRosa = 'assets/logos/TrackFit_crema_rosa.png';
 const String kLogoTrackFitRosaNegro = 'assets/logos/TrackFit_rosa_negro.png';
-const String kLogoTrackFitBlancoSinFondo = 'assets/logos/TrackFit_blanco_sin_fondo.png';
-const String kLogoTrackFitBlancoSinFondoSinLetras = 'assets/logos/TrackFit_blanco_sin_fondo_sin_letra.png';
+const String kLogoTrackFitBlancoSinFondo =
+    'assets/logos/TrackFit_blanco_sin_fondo.png';
+const String kLogoTrackFitBlancoSinFondoSinLetras =
+    'assets/logos/TrackFit_blanco_sin_fondo_sin_letra.png';
 
 // RANGOS MINIMOS Y MAXIMOS PARA AUTH
 const double kPesoMinimo = 42;
@@ -36,3 +38,9 @@ const String kGeneroHombre = 'Hombre';
 const String kGeneroMujer = 'Mujer';
 const String kGeneroHombreMayus = 'HOMBRE'; // EN BBDD -> 'HOMBRE'
 const String kGeneroMujerMayus = 'MUJER'; // EN BBDD -> 'MUJER'
+
+// IMAGENES / AVATARES DEL ENTRENADOR PERSONAL
+const String kavatarEntrenadorPersonal1 = 'assets/images/entrenador_personal.jpg';
+const String kavatarEntrenadorPersonal2 = 'assets/images/entrenador_personal_2.jpg';
+const String kavatarEntrenadoraPersonal1 = 'assets/images/entrenadora_personal.jpg';
+const String kavatarEntrenadoraPersonal2 = 'assets/images/entrenadora_personal_2.jpg';

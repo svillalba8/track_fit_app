@@ -7,12 +7,22 @@ import 'package:track_fit_app/core/themes/app_themes.dart';
 import 'package:track_fit_app/core/themes/logo_type.dart';
 import 'package:track_fit_app/data/di.dart';
 import 'package:track_fit_app/notifiers/auth_user_notifier.dart';
+import 'package:track_fit_app/notifiers/chat_notifier.dart';
 
-Future<void> main() async {
+/// Separa toda la inicialización en este método:
+Future<void> initializeApp() async {
+  // 1. Inicializa el binding de Flutter para que los plugins y servicios estén disponibles
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load();
 
-  // Inicializar Supabase
+  // 2. Carga el .env (opcionalmente con nombre de archivo)
+  try {
+    await dotenv.load();
+  } catch (e) {
+    // Aquí podrías reportar/loguear el error si falla la carga
+    debugPrint('No se pudo cargar .env: $e');
+  }
+
+  // 3. Inicializa Supabase con las variables del .env
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL']!,
     anonKey: dotenv.env['SUPABASE_KEY']!,
@@ -22,13 +32,21 @@ Future<void> main() async {
     ),
   );
 
-  // Inyectar dependencias
+  // 4. Registra tus dependencias (GetIt, Riverpod, etc.)
   setupDependencies();
+}
 
-  // Arranca la aplicación con GoRouter
+Future<void> main() async {
+  // Llama a la inicialización
+  await initializeApp();
+
+  // 5. Arranca la app inyectando tu provider de autenticación
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => AuthUserNotifier(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthUserNotifier()),
+        ChangeNotifierProvider(create: (_) => ChatNotifier()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -42,7 +60,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Mi App con Supabase',
       routerConfig: appRouter,
-      theme: AppThemes.themeForLogo(LogoType.blancoMorado).copyWith(
+      theme: AppThemes.themeForLogo(LogoType.rosaNegro).copyWith(
         textSelectionTheme: TextSelectionThemeData(
           cursorColor: Theme.of(context).colorScheme.onSecondary,
           selectionHandleColor: Theme.of(context).colorScheme.onSecondary,
