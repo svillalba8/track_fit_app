@@ -9,6 +9,7 @@ class UsuarioModel {
   final String apellidos;
   final String authUsersId;
   final int? idProgreso;
+  final DateTime fechaNac;
 
   UsuarioModel({
     required this.id,
@@ -21,6 +22,7 @@ class UsuarioModel {
     required this.apellidos,
     required this.authUsersId,
     required this.idProgreso,
+    required this.fechaNac,
   });
 
   factory UsuarioModel.fromJson(Map<String, dynamic> json) {
@@ -35,6 +37,7 @@ class UsuarioModel {
       apellidos: json['apellidos'] as String,
       authUsersId: json['auth_user_id'] as String,
       idProgreso: json['id_progreso'] as int?,
+      fechaNac: DateTime.parse(json['fecha_nac'] as String),
     );
   }
 
@@ -49,6 +52,7 @@ class UsuarioModel {
     String? apellidos,
     String? authUsersId,
     int? idProgreso,
+    DateTime? fechaNac,
   }) {
     return UsuarioModel(
       id: id ?? this.id,
@@ -61,6 +65,18 @@ class UsuarioModel {
       apellidos: apellidos ?? this.apellidos,
       authUsersId: authUsersId ?? this.authUsersId,
       idProgreso: idProgreso ?? this.idProgreso,
+      fechaNac: fechaNac ?? this.fechaNac,
     );
+  }
+
+  int? getEdad() {
+    final today = DateTime.now();
+    int edad = today.year - fechaNac.year;
+    // Si no ha cumplido este año, se resta uno
+    if (today.month < fechaNac.month ||
+        (today.month == fechaNac.month && today.day < fechaNac.day)) {
+      edad--;
+    }
+    return edad;
   }
 }

@@ -49,7 +49,7 @@ class _BodyFatFormState extends State<BodyFatForm> {
         // Rellenar solo los campos que necesitas
         setState(() {
           _gender = usuario.genero;
-          //_ageCtrl.text = usuario.edad.toString();
+          _ageCtrl.text = usuario.getEdad().toString();
           _weightCtrl.text = usuario.peso.toString();
           _heightCtrl.text = usuario.estatura.toString();
         });
@@ -96,6 +96,7 @@ class _BodyFatFormState extends State<BodyFatForm> {
   Widget build(BuildContext context) {
     final heightLabel = widget.useMetric ? 'cm' : 'in';
     final weightLabel = widget.useMetric ? 'kg' : 'lb';
+    final ThemeData actualTheme = Theme.of(context);
 
     return Form(
       key: _formKey,
@@ -114,7 +115,12 @@ class _BodyFatFormState extends State<BodyFatForm> {
                     )
                     : const Icon(Icons.download_rounded),
             label: const Text('Cargar mis datos'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: actualTheme.colorScheme.secondary,
+              foregroundColor: actualTheme.colorScheme.primary,
+            ),
           ),
+
           const SizedBox(height: 16),
 
           // Selector Sexo
@@ -127,6 +133,7 @@ class _BodyFatFormState extends State<BodyFatForm> {
             decoration: const InputDecoration(labelText: 'Sexo'),
             onChanged: (v) => setState(() => _gender = v!),
           ),
+
           const SizedBox(height: 12),
 
           // Edad
@@ -136,6 +143,7 @@ class _BodyFatFormState extends State<BodyFatForm> {
             keyboardType: TextInputType.number,
             validator: (v) => (v == null || v.isEmpty) ? 'Obligatorio' : null,
           ),
+
           const SizedBox(height: 12),
 
           // Peso
@@ -145,6 +153,7 @@ class _BodyFatFormState extends State<BodyFatForm> {
             keyboardType: TextInputType.number,
             validator: (v) => (v == null || v.isEmpty) ? 'Obligatorio' : null,
           ),
+
           const SizedBox(height: 12),
 
           // Altura
@@ -154,12 +163,17 @@ class _BodyFatFormState extends State<BodyFatForm> {
             keyboardType: TextInputType.number,
             validator: (v) => (v == null || v.isEmpty) ? 'Obligatorio' : null,
           ),
+
           const SizedBox(height: 20),
 
           // Botón calcular
-          ElevatedButton(
+          ElevatedButton.icon(
             onPressed: _calculateBodyFat,
-            child: const Text('Calcular % Grasa'),
+            label: const Text('Calcular % Grasa'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: actualTheme.colorScheme.secondary,
+              foregroundColor: actualTheme.colorScheme.primary,
+            ),
           ),
 
           if (_result != null) ...[
