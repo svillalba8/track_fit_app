@@ -1,10 +1,15 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/core/constants.dart';
 import 'package:track_fit_app/data/di.dart'; // getIt
-import 'package:track_fit_app/services/usuario_service.dart'; // UsuarioService
+import 'package:track_fit_app/widgets/profield_center_field.dart';
+import 'package:track_fit_app/services/usuario_service.dart';
+import 'package:track_fit_app/widgets/custom_divider.dart';
+import 'package:track_fit_app/widgets/custom_icon_button.dart';
+import 'package:track_fit_app/widgets/profile_selector.dart'; // UsuarioService
 
 class BodyFatForm extends StatefulWidget {
   final bool useMetric;
@@ -17,12 +22,152 @@ class BodyFatForm extends StatefulWidget {
 class _BodyFatFormState extends State<BodyFatForm> {
   final _formKey = GlobalKey<FormState>();
   String _gender = kGeneroMujer;
+  final opcionesSexo = [kGeneroHombre, kGeneroMujer];
   final _ageCtrl = TextEditingController();
   final _weightCtrl = TextEditingController();
   final _heightCtrl = TextEditingController();
 
   double? _result;
   bool _loadingProfile = false;
+  double gridAspect = 1.1; // ratio por defecto: ancho ÷ alto
+
+  void _updateGridAspect() {
+    // Si el form aún no está inicializado, salimos
+    final formState = _formKey.currentState;
+    if (formState == null) return;
+
+    // Hacemos una validación *sin* mostrar SnackBars:
+    final isValid = formState.validate();
+    setState(() {
+      gridAspect = isValid ? 1.1 : 1.02; // NO TOCAR
+    });
+  }
+
+  @override
+  void dispose() {
+    _ageCtrl.dispose();
+    _weightCtrl.dispose();
+    _heightCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData actualTheme = Theme.of(context);
+
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Botón para cargar datos del usuario
+          ElevatedButton.icon(
+            onPressed: _loadingProfile ? null : _loadProfile,
+            icon:
+                _loadingProfile
+                    ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                    : const Icon(Icons.download_rounded),
+            label: const Text('Cargar mis datos'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: actualTheme.colorScheme.secondary,
+              foregroundColor: actualTheme.colorScheme.primary,
+            ),
+          ),
+
+          // Grid 2x2 limpio:
+          GridView.count(
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: gridAspect,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            children: [
+              // Selector Sexo
+              ProfileSelector(
+                label: 'Sexo',
+                value: _gender,
+                items: opcionesSexo,
+                onChanged: (val) {
+                  setState(() => _gender = val);
+                  _updateGridAspect();
+                },
+              ),
+
+              // Edad
+              ProfileCenterField(
+                controller: _ageCtrl,
+                label: 'Edad',
+                validator: emptyFieldValidator,
+              ),
+
+              // Peso
+              ProfileCenterField(
+                controller: _weightCtrl,
+                label: 'Peso ()',
+                validator: emptyFieldValidator,
+              ),
+
+              // Altura
+              ProfileCenterField(
+                controller: _heightCtrl,
+                label: 'Altura ()',
+                validator: emptyFieldValidator,
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 20),
+
+          // Botón calcular
+          ElevatedButton.icon(
+            onPressed: () {
+              _updateGridAspect();
+              _calculateBodyFat();
+            },
+            label: const Text('Calcular % Grasa'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: actualTheme.colorScheme.secondary,
+              foregroundColor: actualTheme.colorScheme.primary,
+            ),
+          ),
+
+          if (_result != null) ...[
+            const SizedBox(height: 12),
+            CustomDivider(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Resultado: ${_result!.toStringAsFixed(1)}% de grasa',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                CustomIconButton(
+                  icon: Icon(Icons.copy_all_rounded),
+                  actualTheme: actualTheme,
+                  onPressed: () {
+                    // 1) Formamos el texto a copiar
+                    final textToCopy =
+                        '${_result!.toStringAsFixed(1)}% de grasa';
+                    // 2) Lo guardamos en el portapapeles
+                    Clipboard.setData(ClipboardData(text: textToCopy));
+                    // 3) Mensaje corto al usuario
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Resultado copiado')),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 
   Future<void> _loadProfile() async {
     setState(() => _loadingProfile = true);
@@ -48,7 +193,10 @@ class _BodyFatFormState extends State<BodyFatForm> {
       } else {
         // Rellenar solo los campos que necesitas
         setState(() {
-          _gender = usuario.genero;
+          _gender =
+              [kGeneroMujer, kGeneroHombre].contains(usuario.genero)
+                  ? usuario.genero
+                  : kGeneroMujer;
           _ageCtrl.text = usuario.getEdad().toString();
           _weightCtrl.text = usuario.peso.toString();
           _heightCtrl.text = usuario.estatura.toString();
@@ -84,107 +232,11 @@ class _BodyFatFormState extends State<BodyFatForm> {
     setState(() => _result = bf);
   }
 
-  @override
-  void dispose() {
-    _ageCtrl.dispose();
-    _weightCtrl.dispose();
-    _heightCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final heightLabel = widget.useMetric ? 'cm' : 'in';
-    final weightLabel = widget.useMetric ? 'kg' : 'lb';
-    final ThemeData actualTheme = Theme.of(context);
-
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Botón para cargar datos del usuario
-          ElevatedButton.icon(
-            onPressed: _loadingProfile ? null : _loadProfile,
-            icon:
-                _loadingProfile
-                    ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                    : const Icon(Icons.download_rounded),
-            label: const Text('Cargar mis datos'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: actualTheme.colorScheme.secondary,
-              foregroundColor: actualTheme.colorScheme.primary,
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Selector Sexo
-          DropdownButtonFormField<String>(
-            value: _gender,
-            items:
-                [kGeneroMujer, kGeneroHombre]
-                    .map((g) => DropdownMenuItem(value: g, child: Text(g)))
-                    .toList(),
-            decoration: const InputDecoration(labelText: 'Sexo'),
-            onChanged: (v) => setState(() => _gender = v!),
-          ),
-
-          const SizedBox(height: 12),
-
-          // Edad
-          TextFormField(
-            controller: _ageCtrl,
-            decoration: const InputDecoration(labelText: 'Edad'),
-            keyboardType: TextInputType.number,
-            validator: (v) => (v == null || v.isEmpty) ? 'Obligatorio' : null,
-          ),
-
-          const SizedBox(height: 12),
-
-          // Peso
-          TextFormField(
-            controller: _weightCtrl,
-            decoration: InputDecoration(labelText: 'Peso ($weightLabel)'),
-            keyboardType: TextInputType.number,
-            validator: (v) => (v == null || v.isEmpty) ? 'Obligatorio' : null,
-          ),
-
-          const SizedBox(height: 12),
-
-          // Altura
-          TextFormField(
-            controller: _heightCtrl,
-            decoration: InputDecoration(labelText: 'Altura ($heightLabel)'),
-            keyboardType: TextInputType.number,
-            validator: (v) => (v == null || v.isEmpty) ? 'Obligatorio' : null,
-          ),
-
-          const SizedBox(height: 20),
-
-          // Botón calcular
-          ElevatedButton.icon(
-            onPressed: _calculateBodyFat,
-            label: const Text('Calcular % Grasa'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: actualTheme.colorScheme.secondary,
-              foregroundColor: actualTheme.colorScheme.primary,
-            ),
-          ),
-
-          if (_result != null) ...[
-            const SizedBox(height: 16),
-            Text(
-              'Resultado: ${_result!.toStringAsFixed(1)}% de grasa',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ],
-        ],
-      ),
-    );
+  /// Valida que un campo no esté vacío.
+  static String? emptyFieldValidator(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Obligatorio';
+    }
+    return null;
   }
 }
