@@ -5,7 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 /// Envía [message] a ChatGPT y devuelve la respuesta generada.
-Future<String> chatWithTrainer(String message) async {
+Future<String> chatWithTrainer(String message, {String? userName}) async {
   final String apiKey = dotenv.env['OPENAI_API_KEY']!;
 
   /// Prompt de sistema para FitCoachGPT
@@ -28,7 +28,16 @@ Future<String> chatWithTrainer(String message) async {
   final Map<String, dynamic> body = {
     'model': model,
     'messages': [
-      {'role': 'system', 'content': kFitCoachSystemPrompt},
+      {
+        'role': 'system',
+        'content':
+            kFitCoachSystemPrompt +
+            (userName != null
+                ? '\n7. Ten encuenta que el usuario se llama "$userName".'
+                : ''),
+      },
+      if (userName != null)
+        {'role': 'system', 'content': 'El nombre de usuario es $userName.'},
       {'role': 'user', 'content': message},
     ],
     // Opcional: controlar longitud y coste
