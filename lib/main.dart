@@ -3,8 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/core/navigation/app_router.dart';
-import 'package:track_fit_app/core/themes/app_themes.dart';
-import 'package:track_fit_app/core/themes/logo_type.dart';
+import 'package:track_fit_app/core/themes/theme_notifier.dart';
 import 'package:track_fit_app/data/di.dart';
 import 'package:track_fit_app/notifiers/auth_user_notifier.dart';
 import 'package:track_fit_app/notifiers/chat_notifier.dart';
@@ -38,14 +37,18 @@ Future<void> initializeApp() async {
 
 Future<void> main() async {
   // Llama a la inicialización
+  WidgetsFlutterBinding.ensureInitialized();
   await initializeApp();
 
-  // 5. Arranca la app inyectando tu provider de autenticación
+  final themeNotifier =
+      await ThemeNotifier.create(); // carga desde SharedPreferences
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthUserNotifier()),
         ChangeNotifierProvider(create: (_) => ChatNotifier()),
+        ChangeNotifierProvider(create: (_) => themeNotifier),
       ],
       child: const MyApp(),
     ),
@@ -57,16 +60,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeNotifier = context.watch<ThemeNotifier>();
+
     return MaterialApp.router(
       title: 'Mi App con Supabase',
       routerConfig: appRouter,
-      theme: AppThemes.themeForLogo(LogoType.rosaNegro).copyWith(
+      theme: themeNotifier.themeData.copyWith(
         textSelectionTheme: TextSelectionThemeData(
-          cursorColor: Theme.of(context).colorScheme.onSecondary,
-          selectionHandleColor: Theme.of(context).colorScheme.onSecondary,
+          cursorColor: themeNotifier.themeData.colorScheme.onSecondary,
+          selectionHandleColor: themeNotifier.themeData.colorScheme.onSecondary,
         ),
       ),
-      // Para ocultar el teclado al tocar fuera
       builder: (context, child) {
         return GestureDetector(
           behavior: HitTestBehavior.translucent,

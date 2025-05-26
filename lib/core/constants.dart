@@ -9,7 +9,9 @@ class AppRoutes {
   static const trainer = '/trainer';
   static const profile = '/profile';
   static const goal = '/goal-page';
-  static const editUser = 'edit-user';
+  static const settings = '/profile/settings';
+  static const editUser = '/profile/settings/edit-user';
+  static const themeSelector = '/profile/settings/theme';
 }
 
 // ICONOS / LOGO APLICACION
@@ -40,7 +42,11 @@ const String kGeneroHombreMayus = 'HOMBRE'; // EN BBDD -> 'HOMBRE'
 const String kGeneroMujerMayus = 'MUJER'; // EN BBDD -> 'MUJER'
 
 // IMAGENES / AVATARES DEL ENTRENADOR PERSONAL
-const String kavatarEntrenadorPersonal1 = 'assets/images/entrenador_personal.jpg';
-const String kavatarEntrenadorPersonal2 = 'assets/images/entrenador_personal_2.jpg';
-const String kavatarEntrenadoraPersonal1 = 'assets/images/entrenadora_personal.jpg';
-const String kavatarEntrenadoraPersonal2 = 'assets/images/entrenadora_personal_2.jpg';
+const String kavatarEntrenadorPersonal1 =
+    'assets/images/entrenador_personal.jpg';
+const String kavatarEntrenadorPersonal2 =
+    'assets/images/entrenador_personal_2.jpg';
+const String kavatarEntrenadoraPersonal1 =
+    'assets/images/entrenadora_personal.jpg';
+const String kavatarEntrenadoraPersonal2 =
+    'assets/images/entrenadora_personal_2.jpg';

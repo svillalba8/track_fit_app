@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:track_fit_app/core/constants.dart';
 import 'package:track_fit_app/models/usuario_model.dart';
 import 'package:track_fit_app/features/profile/edit_user_page.dart';
 
@@ -54,18 +55,30 @@ class UserSettingsPage extends StatelessWidget {
             leading: const Icon(Icons.person),
             title: const Text('Datos personales'),
             onTap: () async {
-              final updatedUsuario = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => EditUserPage(usuario: usuario),
-                ),
+              final updatedUsuario = await context.push<UsuarioModel>(
+                AppRoutes.editUser,
+                extra: usuario,
               );
-              if (updatedUsuario != null && updatedUsuario is UsuarioModel) {
-                Navigator.pop(context, updatedUsuario);
+              if (updatedUsuario != null) {
+                context.pop(
+                  updatedUsuario,
+                ); // Esto hará que el usuario actualizado vuelva a ProfilePage
               }
             },
           ),
+
           const SizedBox(height: 24), // separación visual
+
+          ListTile(
+            leading: const Icon(Icons.color_lens),
+            title: const Text('Cambiar tema'),
+            onTap: () {
+              context.push(AppRoutes.themeSelector);
+            },
+          ),
+
+          const SizedBox(height: 24), // separación visual
+
           Divider(color: Colors.red.withValues(alpha: 0.5), height: 0.1),
           Container(
             color: Colors.red.withValues(alpha: 0.10),

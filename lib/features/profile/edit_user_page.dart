@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:track_fit_app/auth/validation/auth_validators.dart';
 import 'package:track_fit_app/auth/widgets/profile_field.dart';
 import 'package:track_fit_app/core/utils/snackbar_utils.dart';
@@ -26,13 +27,17 @@ class _EditUserPageState extends State<EditUserPage> {
   bool _isSaving = false;
   bool _isEditing = false;
 
+  late final UsuarioModel usuario;
+
   @override
   void initState() {
     super.initState();
-    _nombreUsuarioController.text = widget.usuario.nombreUsuario;
-    _descripcionController.text = widget.usuario.descripcion ?? '';
-    _pesoController.text = widget.usuario.peso.toString();
-    _estaturaController.text = widget.usuario.estatura.toString();
+    usuario = widget.usuario;
+
+    _nombreUsuarioController.text = usuario.nombreUsuario;
+    _descripcionController.text = usuario.descripcion ?? '';
+    _pesoController.text = usuario.peso.toString();
+    _estaturaController.text = usuario.estatura.toString();
   }
 
   @override
@@ -50,7 +55,7 @@ class _EditUserPageState extends State<EditUserPage> {
     setState(() => _isSaving = true);
 
     try {
-      final updatedUser = widget.usuario.copyWith(
+      final updatedUser = usuario.copyWith(
         nombreUsuario: _nombreUsuarioController.text.trim(),
         descripcion: _descripcionController.text.trim(),
         peso: double.parse(_pesoController.text.trim()),

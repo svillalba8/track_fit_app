@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:track_fit_app/core/constants.dart';
 import 'package:track_fit_app/core/utils/snackbar_utils.dart';
 import 'package:track_fit_app/data/di.dart';
 import 'package:track_fit_app/models/progreso_model.dart';
@@ -91,12 +92,13 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             onPressed: () async {
               final updatedUsuario = await context.push<UsuarioModel>(
-                '/profile/edit-user',
-                extra: usuario!,
+                AppRoutes.settings,
+                extra: usuario,
               );
-              if (updatedUsuario is UsuarioModel) {
-                setState(() => usuario = updatedUsuario);
-                showNeutralSnackBar(context, 'Datos actualizados');
+              if (updatedUsuario != null) {
+                setState(() {
+                  usuario = updatedUsuario;
+                });
               }
             },
           ),

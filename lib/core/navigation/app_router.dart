@@ -8,6 +8,7 @@ import 'package:track_fit_app/core/constants.dart';
 import 'package:track_fit_app/core/navigation/main_scaffold.dart';
 import 'package:track_fit_app/core/utils/stream_listenable.dart';
 import 'package:track_fit_app/features/home/home_page.dart';
+import 'package:track_fit_app/features/profile/edit_user_page.dart';
 import 'package:track_fit_app/features/profile/profile_page.dart';
 import 'package:track_fit_app/features/routines/routine_page.dart';
 import 'package:track_fit_app/features/settings/user_settings_page.dart';
@@ -96,11 +97,21 @@ final GoRouter appRouter = GoRouter(
               builder: (_, __) => const ProfilePage(),
               routes: [
                 GoRoute(
-                  path: AppRoutes.editUser,
-                  builder: (ctx, state) {
-                    final usuario = state.extra as UsuarioModel;
+                  path: 'settings', // se convierte en '/profile/settings'
+                  builder: (context, state) {
+                    final usuario = state.extra! as UsuarioModel;
                     return UserSettingsPage(usuario: usuario);
                   },
+                  routes: [
+                    GoRoute(
+                      path:
+                          'edit-user', // se convierte en '/profile/settings/edit-user'
+                      builder: (context, state) {
+                        final usuario = state.extra! as UsuarioModel;
+                        return EditUserPage(usuario: usuario);
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
