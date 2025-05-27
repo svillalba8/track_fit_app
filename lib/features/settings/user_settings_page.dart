@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/core/constants.dart';
 import 'package:track_fit_app/models/usuario_model.dart';
-import 'package:track_fit_app/features/profile/edit_user_page.dart';
 
 class UserSettingsPage extends StatelessWidget {
   final UsuarioModel usuario;
@@ -19,11 +18,11 @@ class UserSettingsPage extends StatelessWidget {
             content: const Text('¿Estás seguro de que deseas cerrar sesión?'),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context, false),
+                onPressed: () => context.pop(false),
                 child: const Text('Cancelar'),
               ),
               TextButton(
-                onPressed: () => Navigator.pop(context, true),
+                onPressed: () => context.pop(true),
                 child: const Text('Cerrar sesión'),
               ),
             ],
@@ -33,8 +32,8 @@ class UserSettingsPage extends StatelessWidget {
     if (shouldLogout == true) {
       await Supabase.instance.client.auth.signOut();
       if (context.mounted) {
-        // Navegar fuera del stack, por ejemplo al login
-        context.go('/login'); // Asegúrate de tener esta ruta
+        // Navegar fuera del stack, al login
+        context.go('/login');
       }
     }
   }

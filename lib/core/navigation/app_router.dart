@@ -113,7 +113,8 @@ final GoRouter appRouter = GoRouter(
                       },
                     ),
                     GoRoute(
-                      path: 'theme', // solo 'theme', no ruta absoluta aquí
+                      path:
+                          'theme', // se convierte en '/profile/settings/theme'
                       builder: (context, state) => const ThemeSelectorPage(),
                     ),
                   ],

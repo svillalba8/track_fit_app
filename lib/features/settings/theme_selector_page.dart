@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:track_fit_app/core/themes/logo_type.dart';
 import 'package:track_fit_app/core/themes/theme_notifier.dart';
@@ -24,7 +25,7 @@ class ThemeSelectorPage extends StatelessWidget {
                   return GestureDetector(
                     onTap: () {
                       themeNotifier.setLogo(logo);
-                      Navigator.pop(context);
+                      context.go('/profile');
                     },
                     child: Card(
                       margin: const EdgeInsets.symmetric(
@@ -73,7 +74,7 @@ class ThemeSelectorPage extends StatelessWidget {
                               onChanged: (selected) {
                                 if (selected != null) {
                                   themeNotifier.setLogo(selected);
-                                  Navigator.pop(context);
+                                  context.go('/profile');
                                 }
                               },
                             ),
