@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:track_fit_app/features/trainer/service/bmi_form.dart';
 import 'package:track_fit_app/features/trainer/service/body_fat_form.dart';
 import 'package:track_fit_app/widgets/custom_divider.dart';
 import 'package:track_fit_app/widgets/custom_icon_button.dart';
@@ -188,7 +189,7 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
         form = BodyFatForm(useMetric: _useMetric);
         break;
       case 'IMC':
-        // form = BmiForm(useMetric: _useMetric);
+        form = BmiForm(useMetric: _useMetric);
         break;
       case 'macros':
         // form = MacrosForm(useMetric: _useMetric);
