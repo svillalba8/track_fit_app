@@ -10,6 +10,25 @@ enum LogoType {
   blancoSinFondoSinletras, // SOLO VISUAL (No para los temas)
 }
 
+extension LogoDisplay on LogoType {
+  String get displayName {
+    switch (this) {
+      case LogoType.blancoMorado:
+        return 'Blanco y Morado';
+      case LogoType.blancoNegro:
+        return 'Blanco y Negro';
+      case LogoType.cremaAzulMarino:
+        return 'Crema y Azul Marino';
+      case LogoType.cremaRosa:
+        return 'Crema y Rosa';
+      case LogoType.rosaNegro:
+        return 'Rosa y Negro';
+      default:
+        return name;
+    }
+  }
+}
+
 extension LogoAsset on LogoType {
   String get assetPath {
     switch (this) {
