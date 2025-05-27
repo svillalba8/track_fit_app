@@ -7,7 +7,7 @@ enum LogoType {
   cremaRosa,
   rosaNegro,
   blancoSinFondo, // SOLO VISUAL (No para los temas)
-  blancoSinFondoSinletras // SOLO VISUAL (No para los temas)
+  blancoSinFondoSinletras, // SOLO VISUAL (No para los temas)
 }
 
 extension LogoAsset on LogoType {
@@ -27,6 +27,16 @@ extension LogoAsset on LogoType {
         return kLogoTrackFitBlancoSinFondo;
       case LogoType.blancoSinFondoSinletras:
         return kLogoTrackFitBlancoSinFondoSinLetras;
+    }
+  }
+
+  bool get isTheme {
+    switch (this) {
+      case LogoType.blancoSinFondo:
+      case LogoType.blancoSinFondoSinletras:
+        return false;
+      default:
+        return true;
     }
   }
 }

@@ -11,6 +11,7 @@ import 'package:track_fit_app/features/home/home_page.dart';
 import 'package:track_fit_app/features/profile/edit_user_page.dart';
 import 'package:track_fit_app/features/profile/profile_page.dart';
 import 'package:track_fit_app/features/routines/routine_page.dart';
+import 'package:track_fit_app/features/settings/theme_selector_page.dart';
 import 'package:track_fit_app/features/settings/user_settings_page.dart';
 import 'package:track_fit_app/features/splash/splash_page.dart';
 import 'package:track_fit_app/features/trainer/trainer_page.dart';
@@ -110,6 +111,10 @@ final GoRouter appRouter = GoRouter(
                         final usuario = state.extra! as UsuarioModel;
                         return EditUserPage(usuario: usuario);
                       },
+                    ),
+                    GoRoute(
+                      path: 'theme', // solo 'theme', no ruta absoluta aquí
+                      builder: (context, state) => const ThemeSelectorPage(),
                     ),
                   ],
                 ),

@@ -14,7 +14,7 @@ class ThemeSelectorPage extends StatelessWidget {
       appBar: AppBar(title: const Text('Seleccionar tema')),
       body: ListView(
         children:
-            LogoType.values.map((logo) {
+            LogoType.values.where((logo) => logo.isTheme).map((logo) {
               return RadioListTile<LogoType>(
                 title: Text(logo.name),
                 value: logo,
