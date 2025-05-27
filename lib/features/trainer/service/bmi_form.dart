@@ -116,7 +116,7 @@ class _BmiFormState extends State<BmiForm> {
                   icon: const Icon(Icons.copy_all_rounded),
                   actualTheme: theme,
                   onPressed: () {
-                    final textToCopy = '${_result!.toStringAsFixed(1)}';
+                    final textToCopy = _result!.toStringAsFixed(1);
                     Clipboard.setData(ClipboardData(text: textToCopy));
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Resultado copiado')),
