@@ -117,6 +117,7 @@ class AppThemes {
             onPrimary: cream,
             secondary: cream,
             onSecondary: sand, // Cambiado para el chat
+            secondaryFixed: tealDark,
             tertiary: bronze,
             onTertiary: tealbright,
             primaryFixed: teal,

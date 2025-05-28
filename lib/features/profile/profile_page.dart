@@ -112,12 +112,12 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 24),
             Card(
               elevation: sombraCard,
-              color: Theme.of(context).colorScheme.primary,
+              color: actualTheme.colorScheme.primary,
               shadowColor: Colors.black.withAlpha(255),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
                 side: BorderSide(
-                  color: Theme.of(context).colorScheme.secondary,
+                  color: actualTheme.colorScheme.secondary,
                   width: grosorCard,
                 ),
               ),
@@ -129,7 +129,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     // Usuario y descripción
                     Text(
                       usuario!.nombreUsuario,
-                      style: actualTheme.textTheme.headlineMedium,
+                      style: actualTheme.textTheme.headlineMedium?.copyWith(
+                        color: actualTheme.colorScheme.secondary,
+                      ),
                     ),
                     if (usuario!.descripcion != null &&
                         usuario!.descripcion!.isNotEmpty)
@@ -137,12 +139,17 @@ class _ProfilePageState extends State<ProfilePage> {
                         padding: const EdgeInsets.only(top: 8.0),
                         child: Text(
                           usuario!.descripcion!,
-                          style: actualTheme.textTheme.bodyLarge,
+                          style: actualTheme.textTheme.bodyLarge?.copyWith(
+                            color: actualTheme.colorScheme.secondary,
+                          ),
                         ),
                       ),
 
                     const SizedBox(height: 24),
-                    Divider(color: actualTheme.dividerColor, thickness: 0.1),
+                    Divider(
+                      color: actualTheme.colorScheme.secondary,
+                      thickness: 0.1,
+                    ),
 
                     // Información física
                     const SizedBox(height: 12),

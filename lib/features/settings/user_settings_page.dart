@@ -40,6 +40,8 @@ class UserSettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final actualTheme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ajustes'),
@@ -51,17 +53,21 @@ class UserSettingsPage extends StatelessWidget {
       body: ListView(
         children: [
           ListTile(
-            leading: const Icon(Icons.person),
-            title: const Text('Datos personales'),
+            leading: Icon(
+              Icons.person,
+              color: actualTheme.colorScheme.secondaryFixed,
+            ),
+            title: Text(
+              'Datos personales',
+              style: TextStyle(color: actualTheme.colorScheme.secondaryFixed),
+            ),
             onTap: () async {
               final updatedUsuario = await context.push<UsuarioModel>(
                 AppRoutes.editUser,
                 extra: usuario,
               );
               if (updatedUsuario != null) {
-                context.pop(
-                  updatedUsuario,
-                ); // Esto hará que el usuario actualizado vuelva a ProfilePage
+                context.pop(updatedUsuario);
               }
             },
           ),
@@ -69,8 +75,14 @@ class UserSettingsPage extends StatelessWidget {
           const SizedBox(height: 24), // separación visual
 
           ListTile(
-            leading: const Icon(Icons.color_lens),
-            title: const Text('Cambiar tema'),
+            leading: Icon(
+              Icons.color_lens,
+              color: actualTheme.colorScheme.secondaryFixed,
+            ),
+            title: Text(
+              'Cambiar tema',
+              style: TextStyle(color: actualTheme.colorScheme.secondaryFixed),
+            ),
             onTap: () {
               context.push(AppRoutes.themeSelector);
             },
