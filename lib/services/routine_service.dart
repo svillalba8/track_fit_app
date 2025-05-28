@@ -83,14 +83,17 @@ class RoutineService {
     try {
       final data = await _client
           .from('ejercicio_rutina')
-          .select('series, repeticiones, duracion, ejercicio:ejercicio_id(*)')
+          .select('series, repeticiones, duracion, ejercicio:ejercicio(*)') // Cambiado a ejercicio:ejercicio(*)
           .eq('id_rutina', routineId);
+      print('Data obtained for routine $routineId: $data'); // Log para depuración
       return (data as List).cast<Map<String, dynamic>>();
     } catch (e) {
       print('Error fetching exercise details: $e');
       return [];
     }
   }
+
+
 
   Future<void> addExerciseToRoutine({
     required int rutinaId,
@@ -119,6 +122,19 @@ class RoutineService {
     if (exercise == null) throw Exception('Exercise not found or does not belong to user');
 
     try {
+      // Verificar si el ejercicio ya está en la rutina
+      final existingExercise = await _client
+          .from('ejercicio_rutina')
+          .select()
+          .eq('id_rutina', rutinaId)
+          .eq('id_ejercicio', ejercicioId)
+          .maybeSingle();
+
+      if (existingExercise != null) {
+        print('Exercise already in routine');
+        return;
+      }
+
       await _client.from('ejercicio_rutina').insert({
         'id_rutina': rutinaId,
         'id_ejercicio': ejercicioId,
@@ -132,6 +148,7 @@ class RoutineService {
       rethrow;
     }
   }
+
 
   Future<void> removeAllExercisesFromRoutine(int routineId) async {
     await _deleteFromRelation(routineId: routineId);
