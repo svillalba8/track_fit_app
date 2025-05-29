@@ -41,7 +41,7 @@ Future<String> chatWithTrainer(String message, {String? userName}) async {
       {'role': 'user', 'content': message},
     ],
     // Opcional: controlar longitud y coste
-    'max_tokens': 200, // Si falta info cambiar a 200–250
+    'max_tokens': 400,
     'temperature': 0.7,
   };
 

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/core/constants.dart';
+import 'package:track_fit_app/core/utils/snackbar_utils.dart';
 import 'package:track_fit_app/data/di.dart'; // getIt
 import 'package:track_fit_app/widgets/profield_center_field.dart';
 import 'package:track_fit_app/services/usuario_service.dart';
@@ -16,7 +17,7 @@ class BodyFatForm extends StatefulWidget {
   const BodyFatForm({super.key, required this.useMetric});
 
   @override
-  _BodyFatFormState createState() => _BodyFatFormState();
+  State<BodyFatForm> createState() => _BodyFatFormState();
 }
 
 class _BodyFatFormState extends State<BodyFatForm> {
@@ -94,7 +95,6 @@ class _BodyFatFormState extends State<BodyFatForm> {
                 items: opcionesSexo,
                 onChanged: (val) {
                   setState(() => _gender = val);
-                  _updateGridAspect();
                 },
               ),
 
@@ -187,9 +187,8 @@ class _BodyFatFormState extends State<BodyFatForm> {
     try {
       final usuario = await userService.fetchUsuarioByAuthId(authUser.id);
       if (usuario == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Usuario no encontrado')));
+        if (!mounted) return;
+        showNeutralSnackBar(context, 'Usuario no encontrado');
       } else {
         // Rellenar solo los campos que necesitas
         setState(() {
@@ -203,9 +202,8 @@ class _BodyFatFormState extends State<BodyFatForm> {
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Error al cargar datos')));
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Error al cargar datos');
     } finally {
       setState(() => _loadingProfile = false);
     }

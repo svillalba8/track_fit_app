@@ -13,7 +13,7 @@ class QuickCalculatorsActions extends StatefulWidget {
   const QuickCalculatorsActions({super.key, required this.actualTheme});
 
   @override
-  _QuickCalculatorsActionsState createState() =>
+  State<QuickCalculatorsActions> createState() =>
       _QuickCalculatorsActionsState();
 }
 
@@ -145,7 +145,7 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
 
           const SizedBox(height: 6),
           CustomDivider(),
-          const SizedBox(height: 12),
+          const SizedBox(height: 18),
 
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -157,7 +157,9 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
                 });
                 _overlayEntry?.markNeedsBuild();
               }),
-              const SizedBox(height: 12),
+
+              const SizedBox(height: 18),
+
               _menuIcon('assets/icons/bmi.png', 'IMC', () {
                 setState(() {
                   _level = PopupLevel.form;
@@ -165,7 +167,9 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
                 });
                 _overlayEntry?.markNeedsBuild();
               }),
-              const SizedBox(height: 12),
+
+              const SizedBox(height: 18),
+
               _menuIcon('assets/icons/macros.png', 'MACROS', () {
                 setState(() {
                   _level = PopupLevel.form;

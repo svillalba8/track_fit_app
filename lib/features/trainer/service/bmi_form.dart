@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:track_fit_app/core/utils/snackbar_utils.dart';
 import 'package:track_fit_app/data/di.dart';
 import 'package:track_fit_app/services/usuario_service.dart';
 import 'package:track_fit_app/widgets/custom_divider.dart';
@@ -14,7 +15,7 @@ class BmiForm extends StatefulWidget {
   const BmiForm({super.key, required this.useMetric});
 
   @override
-  _BmiFormState createState() => _BmiFormState();
+  State<BmiForm> createState() => _BmiFormState();
 }
 
 class _BmiFormState extends State<BmiForm> {
@@ -68,7 +69,7 @@ class _BmiFormState extends State<BmiForm> {
               foregroundColor: theme.colorScheme.primary,
             ),
           ),
-          
+
           GridView.count(
             crossAxisCount: 2,
             crossAxisSpacing: 12,
@@ -149,9 +150,8 @@ class _BmiFormState extends State<BmiForm> {
     try {
       final usuario = await userService.fetchUsuarioByAuthId(authUser.id);
       if (usuario == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Usuario no encontrado')));
+        if (!mounted) return;
+        showNeutralSnackBar(context, 'Usuario no encontrado');
       } else {
         setState(() {
           _weightCtrl.text = usuario.peso.toString();
@@ -159,9 +159,8 @@ class _BmiFormState extends State<BmiForm> {
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Error al cargar datos')));
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Error al cargar datos');
     } finally {
       setState(() => _loadingProfile = false);
     }
