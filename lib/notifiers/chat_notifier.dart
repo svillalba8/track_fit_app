@@ -9,6 +9,8 @@ class ChatNotifier extends ChangeNotifier {
   ChatNotifier() {
     // Arrancamos aquí la carga del nombre y el mensaje de bienvenida
     loadUserName();
+    // Comprobamos el estado del reto diario
+    initDailyChallenge();
   }
 
   final ScrollController chatScrollController = ScrollController();
@@ -237,5 +239,17 @@ class ChatNotifier extends ChangeNotifier {
     if (_retoId == null && _retoError == null) {
       await _createTodayChallenge();
     }
+  }
+
+  Future<void> initDailyChallenge() async {
+    try {
+      await ensureTodayChallengeExists();
+      // Tras esto, _retoId, _retoTexto y _retoCompletado ya estarán con los valores correctos.
+    } catch (e) {
+      // Opcional: si quieres capturar errores de arranque
+      _retoError = 'Error al inicializar reto diario: $e';
+    }
+    // Notifico para que la UI actualice el icono desde el primer build.
+    notifyListeners();
   }
 }
