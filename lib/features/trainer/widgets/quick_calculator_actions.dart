@@ -109,11 +109,11 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
             children: [
               GestureDetector(
                 onTap: () {
-                  setState(() => _useMetric = !_useMetric);
+                  // setState(() => _useMetric = !_useMetric); Actualizacion futura
                   _overlayEntry?.markNeedsBuild();
                 },
                 child: Icon(
-                  _useMetric ? Icons.straighten_rounded : Icons.height_rounded,
+                  _useMetric ? Icons.straighten_rounded : Icons.height_rounded, // Implementacion futura
                   size: 32,
                   color: widget.actualTheme.colorScheme.secondary,
                 ),

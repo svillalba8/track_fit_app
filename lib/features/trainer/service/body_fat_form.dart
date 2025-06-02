@@ -108,14 +108,14 @@ class _BodyFatFormState extends State<BodyFatForm> {
               // Peso
               ProfileCenterField(
                 controller: _weightCtrl,
-                label: 'Peso ()',
+                label: 'Peso (kg)',
                 validator: emptyFieldValidator,
               ),
 
               // Altura
               ProfileCenterField(
                 controller: _heightCtrl,
-                label: 'Altura ()',
+                label: 'Altura (cm)',
                 validator: emptyFieldValidator,
               ),
             ],
