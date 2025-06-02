@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:track_fit_app/core/constants.dart';
 import 'package:track_fit_app/core/themes/theme_extensions.dart';
+import 'package:track_fit_app/features/trainer/service/daily_challenge_dialog.dart';
 import 'package:track_fit_app/features/trainer/widgets/his_message_bubble.dart';
 import 'package:track_fit_app/features/trainer/widgets/message_field_box.dart';
 import 'package:track_fit_app/features/trainer/widgets/my_message_bubble.dart';
@@ -11,11 +12,17 @@ import 'package:track_fit_app/notifiers/chat_notifier.dart';
 import 'package:track_fit_app/widgets/custom_divider.dart';
 import 'package:track_fit_app/widgets/custom_icon_button.dart';
 
-class TrainerPage extends StatelessWidget {
+class TrainerPage extends StatefulWidget {
   const TrainerPage({super.key});
 
   @override
+  State<TrainerPage> createState() => _TrainerPageState();
+}
+
+class _TrainerPageState extends State<TrainerPage> {
+  @override
   Widget build(BuildContext context) {
+    final retoCompletado = context.watch<ChatNotifier>().retoCompletado;
     final ThemeData actualTheme = Theme.of(context);
 
     return Scaffold(
@@ -45,7 +52,7 @@ class TrainerPage extends StatelessWidget {
               // Avatar del entrenador
               CircleAvatar(
                 radius: 28,
-                backgroundImage: AssetImage(kavatarEntrenadorPersonal1),
+                backgroundImage: AssetImage(kAvatarEntrenadorPersonal),
               ),
               SizedBox(width: 12),
               // Nombre y estado debajo
@@ -76,10 +83,23 @@ class TrainerPage extends StatelessWidget {
             // Botones de acceso directo
             QuickCalculatorsActions(actualTheme: actualTheme),
             CustomIconButton(
-              icon: Icon(Icons.settings, size: 28),
+              icon:
+                  retoCompletado
+                      ? Image.asset(
+                        'assets/icons/objetivo_diario_cumplido.png',
+                        width: 24,
+                        height: 24,
+                        color: actualTheme.colorScheme.secondary,
+                      )
+                      : Image.asset(
+                        'assets/icons/objetivo_diario.png',
+                        width: 24,
+                        height: 24,
+                        color: actualTheme.colorScheme.secondary,
+                      ),
               actualTheme: actualTheme,
               onPressed: () {
-                /* abrir configuración */
+                DailyChallengeDialog.show(context);
               },
             ),
           ],

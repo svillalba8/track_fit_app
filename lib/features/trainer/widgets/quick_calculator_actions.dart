@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:track_fit_app/features/trainer/service/bmi_form.dart';
 import 'package:track_fit_app/features/trainer/service/body_fat_form.dart';
+import 'package:track_fit_app/features/trainer/service/macros_form.dart';
 import 'package:track_fit_app/widgets/custom_divider.dart';
 import 'package:track_fit_app/widgets/custom_icon_button.dart';
 
@@ -11,7 +13,7 @@ class QuickCalculatorsActions extends StatefulWidget {
   const QuickCalculatorsActions({super.key, required this.actualTheme});
 
   @override
-  _QuickCalculatorsActionsState createState() =>
+  State<QuickCalculatorsActions> createState() =>
       _QuickCalculatorsActionsState();
 }
 
@@ -107,11 +109,11 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
             children: [
               GestureDetector(
                 onTap: () {
-                  setState(() => _useMetric = !_useMetric);
+                  // setState(() => _useMetric = !_useMetric); Actualizacion futura
                   _overlayEntry?.markNeedsBuild();
                 },
                 child: Icon(
-                  _useMetric ? Icons.straighten_rounded : Icons.height_rounded,
+                  _useMetric ? Icons.straighten_rounded : Icons.height_rounded, // Implementacion futura
                   size: 32,
                   color: widget.actualTheme.colorScheme.secondary,
                 ),
@@ -143,7 +145,7 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
 
           const SizedBox(height: 6),
           CustomDivider(),
-          const SizedBox(height: 12),
+          const SizedBox(height: 18),
 
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -155,7 +157,9 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
                 });
                 _overlayEntry?.markNeedsBuild();
               }),
-              const SizedBox(height: 12),
+
+              const SizedBox(height: 18),
+
               _menuIcon('assets/icons/bmi.png', 'IMC', () {
                 setState(() {
                   _level = PopupLevel.form;
@@ -163,7 +167,9 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
                 });
                 _overlayEntry?.markNeedsBuild();
               }),
-              const SizedBox(height: 12),
+
+              const SizedBox(height: 18),
+
               _menuIcon('assets/icons/macros.png', 'MACROS', () {
                 setState(() {
                   _level = PopupLevel.form;
@@ -188,10 +194,10 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
         form = BodyFatForm(useMetric: _useMetric);
         break;
       case 'IMC':
-        // form = BmiForm(useMetric: _useMetric);
+        form = BmiForm(useMetric: _useMetric);
         break;
       case 'macros':
-        // form = MacrosForm(useMetric: _useMetric);
+        form = MacrosForm(useMetric: _useMetric, onCalculated: _toggleMenu);
         break;
       default:
         form = const SizedBox.shrink();

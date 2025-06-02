@@ -42,11 +42,4 @@ const String kGeneroHombreMayus = 'HOMBRE'; // EN BBDD -> 'HOMBRE'
 const String kGeneroMujerMayus = 'MUJER'; // EN BBDD -> 'MUJER'
 
 // IMAGENES / AVATARES DEL ENTRENADOR PERSONAL
-const String kavatarEntrenadorPersonal1 =
-    'assets/images/entrenador_personal.jpg';
-const String kavatarEntrenadorPersonal2 =
-    'assets/images/entrenador_personal_2.jpg';
-const String kavatarEntrenadoraPersonal1 =
-    'assets/images/entrenadora_personal.jpg';
-const String kavatarEntrenadoraPersonal2 =
-    'assets/images/entrenadora_personal_2.jpg';
+const String kAvatarEntrenadorPersonal = 'assets/images/avatar_lift.png';

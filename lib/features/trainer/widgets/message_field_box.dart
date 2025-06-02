@@ -1,48 +1,96 @@
 import 'package:flutter/material.dart';
 
-class MessageFieldBox extends StatelessWidget {
+class MessageFieldBox extends StatefulWidget {
   final ValueChanged<String> onValue;
 
   const MessageFieldBox({super.key, required this.onValue});
 
   @override
+  State<MessageFieldBox> createState() => _MessageFieldBoxState();
+}
+
+class _MessageFieldBoxState extends State<MessageFieldBox>
+    with SingleTickerProviderStateMixin {
+  late final TextEditingController _textController;
+  late final FocusNode _focusNode;
+  bool _hasText = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _textController =
+        TextEditingController()..addListener(() {
+          setState(() {
+            _hasText = _textController.text.trim().isNotEmpty;
+          });
+        });
+    _focusNode = FocusNode();
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _handleSubmit([String? value]) {
+    final text = (value ?? _textController.text).trim();
+    if (text.isEmpty) return;
+    widget.onValue(text);
+    _textController.clear();
+    _focusNode.requestFocus();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final textController = TextEditingController();
-    final focusNode = FocusNode();
-    final ThemeData actualTheme = Theme.of(context);
-
-    final outLineInputBorder = OutlineInputBorder(
+    final actualTheme = Theme.of(context);
+    final border = OutlineInputBorder(
       borderSide: BorderSide(color: actualTheme.colorScheme.secondary),
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(16),
     );
 
-    final inputDecoration = InputDecoration(
-      hintText: 'Pregunta lo que quieras!',
-      enabledBorder: outLineInputBorder,
-      filled: true,
-      fillColor: actualTheme.colorScheme.primaryFixed,
-      suffixIcon: IconButton(
-        icon: Icon(Icons.send_rounded),
-        onPressed: () {
-          final textValue = textController.value.text;
-          if (textValue.isNotEmpty) onValue(textValue);
-          textController.clear();
-        },
+    return AnimatedPadding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-    );
-
-    return TextFormField(
-      onTapOutside: (event) {
-        focusNode.unfocus();
-      },
-      focusNode: focusNode,
-      controller: textController,
-      decoration: inputDecoration,
-      onFieldSubmitted: (value) {
-        if (value.isNotEmpty) onValue(value);
-        textController.clear();
-        focusNode.requestFocus();
-      },
+      duration: const Duration(milliseconds: 150),
+      curve: Curves.easeOut,
+      child: TextFormField(
+        controller: _textController,
+        focusNode: _focusNode,
+        minLines: 1,
+        maxLines: 5,
+        keyboardType: TextInputType.multiline,
+        textInputAction: TextInputAction.send,
+        onFieldSubmitted: _handleSubmit,
+        decoration: InputDecoration(
+          hintText: 'Pregunta lo que quieras…',
+          filled: true,
+          fillColor: actualTheme.colorScheme.surface,
+          enabledBorder: border,
+          focusedBorder: border.copyWith(
+            borderSide: BorderSide(
+              color: actualTheme.colorScheme.primary,
+              width: 2,
+            ),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
+          suffixIcon:
+              _hasText
+                  ? IconButton(
+                    icon: Icon(Icons.send_rounded),
+                    color: actualTheme.colorScheme.secondary,
+                    onPressed: _handleSubmit,
+                    tooltip: 'Enviar mensaje',
+                  )
+                  : null,
+        ),
+        onTapOutside: (_) => _focusNode.unfocus(),
+      ),
     );
   }
 }
