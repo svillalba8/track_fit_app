@@ -36,23 +36,33 @@ class _ProfilePageState extends State<ProfilePage> {
     final supabase = getIt<SupabaseClient>();
     final authUser = supabase.auth.currentUser;
 
+    print("USER AUTH ID: ${authUser?.id}");
+
     if (authUser != null) {
       try {
         final dataUsuario = await userService.fetchUsuarioByAuthId(authUser.id);
         ProgresoModel? dataProgreso;
 
+        setState(() {
+          usuario = dataUsuario;
+        });
+
         if (dataUsuario != null && dataUsuario.idProgreso != null) {
-          dataProgreso = await progresoService.fetchProgresoById(
-            dataUsuario.idProgreso!,
-          );
+          try {
+            dataProgreso = await progresoService.fetchProgresoById(
+              dataUsuario.idProgreso!,
+            );
+          } catch (e) {
+            print("Error al cargar progreso: $e");
+          }
         }
 
         setState(() {
-          usuario = dataUsuario;
           progreso = dataProgreso;
           isLoading = false;
         });
       } catch (e) {
+        print("Error al cargar usuario: $e");
         setState(() => isLoading = false);
         showErrorSnackBar(context, 'Error al cargar usuario o progreso');
       }
@@ -260,7 +270,6 @@ class _ProfilePageState extends State<ProfilePage> {
                           const SizedBox(height: 12),
 
                           _buildProgressBar(context, progreso!, usuario!),
-
                           const SizedBox(height: 12),
 
                           Center(
@@ -331,61 +340,102 @@ Widget _buildProgressBar(
   ProgresoModel progreso,
   UsuarioModel usuario,
 ) {
-  double progresoValor = 0.0;
-
-  final DateTime ahora = DateTime.now();
+  final ahora = DateTime.now();
+  double progresoTiempo = 0.0;
 
   if (progreso.fechaObjetivo != null) {
-    final DateTime inicio = progreso.fechaComienzo;
-    final DateTime fin = progreso.fechaObjetivo!;
-
+    final inicio = progreso.fechaComienzo;
+    final fin = progreso.fechaObjetivo!;
     if (ahora.isBefore(inicio)) {
-      progresoValor = 0.0;
+      progresoTiempo = 0.0;
     } else if (ahora.isAfter(fin)) {
-      progresoValor = 1.0;
+      progresoTiempo = 1.0;
     } else {
-      final totalDuracion = fin.difference(inicio).inDays;
-      final transcurrido = ahora.difference(inicio).inDays;
-      progresoValor = (transcurrido / totalDuracion).clamp(0.0, 1.0);
+      final totalDias = fin.difference(inicio).inDays;
+      final diasTranscurridos = ahora.difference(inicio).inDays;
+      if (totalDias > 0) {
+        progresoTiempo = (diasTranscurridos / totalDias).clamp(0.0, 1.0);
+      }
     }
   }
 
-  // Color dinámico basado en el progreso
-  Color getProgressColor() {
-    if (progresoValor < 0.33) return Colors.red;
-    if (progresoValor < 0.66) return Colors.amber;
+  final pesoInicial = progreso.pesoInicial;
+  final pesoActual = progreso.pesoActual;
+  final pesoObjetivo = progreso.objetivoPeso;
+
+  double progresoPeso = 0.0;
+
+  if (pesoInicial != null) {
+    if (pesoInicial == pesoObjetivo) {
+      progresoPeso = 1.0;
+    } else if (pesoInicial > pesoObjetivo) {
+      progresoPeso = (pesoInicial - pesoActual) / (pesoInicial - pesoObjetivo);
+    } else {
+      progresoPeso = (pesoActual - pesoInicial) / (pesoObjetivo - pesoInicial);
+    }
+    progresoPeso = progresoPeso.clamp(0.0, 1.0);
+  }
+
+  // Helpers
+  Color getColor(double value) {
+    if (value < 0.33) return Colors.red;
+    if (value < 0.66) return Colors.amber;
     return Colors.green;
   }
 
-  // Mensaje motivacional
-  String getProgressMessage() {
-    if (progresoValor == 1.0) return '¡Objetivo alcanzado!';
-    if (progresoValor >= 0.66) return '¡Ya casi lo logras!';
-    if (progresoValor >= 0.33) return '¡Sigue así!';
-    return '¡Acabas de comenzar!';
+  String getMensaje(double value, String tipo) {
+    if (value == 1.0) {
+      return tipo == 'físico'
+          ? '¡Peso objetivo alcanzado!'
+          : '¡Tiempo completado!';
+    } else if (value >= 0.66) {
+      return '¡Ya casi lo logras!';
+    } else if (value >= 0.33) {
+      return '¡Buen progreso!';
+    } else {
+      return '¡Acabas de empezar!';
+    }
   }
+
+  final theme = Theme.of(context);
 
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
+      Text(
+        'Progreso físico: ${((progresoPeso) * 100).toStringAsFixed(1)}%',
+        style: theme.textTheme.bodyMedium,
+      ),
+      const SizedBox(height: 4),
       LinearProgressIndicator(
-        value: progresoValor,
+        value: progresoPeso,
         minHeight: 10,
         backgroundColor: Colors.grey.shade300,
-        valueColor: AlwaysStoppedAnimation<Color>(getProgressColor()),
-        borderRadius: BorderRadius.circular(8),
+        color: getColor(progresoPeso),
       ),
-      const SizedBox(height: 6),
+      const SizedBox(height: 4),
       Text(
-        '${(progresoValor * 100).toStringAsFixed(1)}% del tiempo transcurrido',
-        style: Theme.of(context).textTheme.bodySmall,
+        getMensaje(progresoPeso, 'físico'),
+        style: theme.textTheme.bodySmall,
       ),
+
+      const SizedBox(height: 16),
+
       Text(
-        getProgressMessage(),
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          fontWeight: FontWeight.bold,
-          color: getProgressColor(),
-        ),
+        'Progreso temporal: ${((progresoTiempo) * 100).toStringAsFixed(1)}%',
+        style: theme.textTheme.bodyMedium,
+      ),
+      const SizedBox(height: 4),
+      LinearProgressIndicator(
+        value: progresoTiempo,
+        minHeight: 10,
+        backgroundColor: Colors.grey.shade300,
+        color: getColor(progresoTiempo),
+      ),
+      const SizedBox(height: 4),
+      Text(
+        getMensaje(progresoTiempo, 'temporal'),
+        style: theme.textTheme.bodySmall,
       ),
     ],
   );
