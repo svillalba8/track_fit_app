@@ -77,3 +77,71 @@ Future<String> chatWithTrainer(String message, {String? userName}) async {
     return 'Error inesperado: $e';
   }
 }
+
+/// Obtiene un reto diario (mini‐reto de ejercicio) usando un prompt específico.
+Future<String> fetchDailyChallengeFromGPT() async {
+  final String apiKey = dotenv.env['OPENAI_API_KEY']!;
+
+  // Prompt de sistema específico para generar retos diarios:
+  const String kDailyChallengeSystemPrompt = r'''
+    Hoy tu tarea es COMBINAR todos estos requisitos:
+    1. Generar **un único enunciado** que sea **breve** y **conciso**.
+    2. El reto debe ser **fácil de realizar en casa** o en un espacio reducido, usando solo el propio peso corporal.
+    3. Ofrecer **un ejemplo concreto** (p. ej. “Haz 20 sentadillas”, “Mantén plancha 3 minutos” o “5 minutos de saltos de tijera”).
+    4. No agregues explicaciones adicionales;
+    5. Devuelve solo el texto del reto, sin formato extra (sin numeración, sin subtítulos, sin viñetas).
+
+    Ejemplos de salida deseada:
+    - “Haz 20 sentadillas en 2 series.”
+    - “Mantén una plancha estática durante 3 minutos.”
+    - “Realiza 5 minutos de saltos de tijera.”
+
+    Responde con un único enunciado corto y directo que cumpla todos los puntos.
+  ''';
+
+  // Usamos el mismo modelo que en chatWithTrainer (gpt-3.5-turbo), o cambia a gpt-4 si prefieres.
+  const String model = 'gpt-3.5-turbo';
+  final Uri uri = Uri.parse('https://api.openai.com/v1/chat/completions');
+
+  // Construimos el body con nuestro prompt de sistema y un contenido de usuario estático:
+  final Map<String, dynamic> body = {
+    'model': model,
+    'messages': [
+      {'role': 'system', 'content': kDailyChallengeSystemPrompt},
+      {'role': 'user', 'content': 'Genera el reto de hoy.'},
+    ],
+    'max_tokens': 100, // Un reto breve no necesita muchos tokens
+    'temperature': 0.7, // Ligera aleatoriedad
+  };
+
+  try {
+    final http.Response resp = await http
+        .post(
+          uri,
+          headers: {
+            'Authorization': 'Bearer $apiKey',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode(body),
+        )
+        .timeout(const Duration(seconds: 60));
+
+    if (resp.statusCode == 200) {
+      // 1. Decodificamos la respuesta como UTF-8
+      final raw = resp.bodyBytes;
+      final utf8Body = utf8.decode(raw);
+      // 2. Parseamos JSON
+      final decoded = jsonDecode(utf8Body) as Map<String, dynamic>;
+      // 3. Extraemos el texto generado
+      final String reply =
+          decoded['choices'][0]['message']['content'] as String;
+      return reply.trim();
+    } else {
+      return 'Error ${resp.statusCode}: ${resp.body}';
+    }
+  } on TimeoutException {
+    return 'Error: la petición tardó demasiado tiempo.';
+  } catch (e) {
+    return 'Error inesperado: $e';
+  }
+}
