@@ -19,11 +19,18 @@ class ProgresoService {
     return ProgresoModel.fromJson(response);
   }
 
-  Future<ProgresoModel> createProgreso(double objetivoPeso) async {
+  Future<ProgresoModel> createProgreso({
+    required double objetivoPeso,
+    required double pesoInicial,
+  }) async {
     final response =
         await supabase
             .from('progreso')
-            .insert({'objetivo_peso': objetivoPeso})
+            .insert({
+              'objetivo_peso': objetivoPeso,
+              'peso_inicial': pesoInicial,
+              'fecha_comienzo': DateTime.now().toIso8601String(),
+            })
             .select()
             .single();
 
@@ -34,7 +41,12 @@ class ProgresoService {
     final response =
         await supabase
             .from('progreso')
-            .update({'objetivo_peso': progreso.objetivoPeso})
+            .update({
+              'objetivo_peso': progreso.objetivoPeso,
+              'peso_inicial': progreso.pesoInicial,
+              'peso_actual': progreso.pesoActual,
+              'fecha_objetivo': progreso.fechaObjetivo?.toIso8601String(),
+            })
             .eq('id', progreso.id)
             .select()
             .single();

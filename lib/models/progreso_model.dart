@@ -4,6 +4,7 @@ class ProgresoModel {
   final double objetivoPeso;
   final DateTime? fechaObjetivo;
   final double pesoActual;
+  final double? pesoInicial;
 
   ProgresoModel({
     required this.id,
@@ -11,6 +12,7 @@ class ProgresoModel {
     required this.objetivoPeso,
     this.fechaObjetivo,
     required this.pesoActual,
+    this.pesoInicial,
   });
 
   factory ProgresoModel.fromJson(Map<String, dynamic> json) => ProgresoModel(
@@ -22,6 +24,10 @@ class ProgresoModel {
             ? DateTime.tryParse(json['fecha_objetivo'] as String)
             : null,
     pesoActual: (json['peso_actual'] as num).toDouble(),
+    pesoInicial:
+        json['peso_inicial'] != null
+            ? (json['peso_inicial'] as num).toDouble()
+            : null,
   );
 
   ProgresoModel copyWith({
@@ -30,6 +36,7 @@ class ProgresoModel {
     double? objetivoPeso,
     DateTime? fechaObjetivo,
     double? pesoActual,
+    double? pesoInicial,
   }) {
     return ProgresoModel(
       id: id ?? this.id,
@@ -37,6 +44,7 @@ class ProgresoModel {
       objetivoPeso: objetivoPeso ?? this.objetivoPeso,
       fechaObjetivo: fechaObjetivo ?? this.fechaObjetivo,
       pesoActual: pesoActual ?? this.pesoActual,
+      pesoInicial: pesoInicial ?? this.pesoInicial,
     );
   }
 }
