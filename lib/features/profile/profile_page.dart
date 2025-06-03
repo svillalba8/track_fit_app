@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/core/constants.dart';
 import 'package:track_fit_app/core/utils/snackbar_utils.dart';
@@ -307,6 +308,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
             ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -340,6 +342,7 @@ Widget _buildProgressBar(
   ProgresoModel progreso,
   UsuarioModel usuario,
 ) {
+  final dateFormatter = DateFormat('dd/MM/yyyy');
   final ahora = DateTime.now();
   double progresoTiempo = 0.0;
 
@@ -407,11 +410,14 @@ Widget _buildProgressBar(
         style: theme.textTheme.bodyMedium,
       ),
       const SizedBox(height: 4),
-      LinearProgressIndicator(
-        value: progresoPeso,
-        minHeight: 10,
-        backgroundColor: Colors.grey.shade300,
-        color: getColor(progresoPeso),
+      ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: LinearProgressIndicator(
+          value: progresoPeso,
+          minHeight: 10,
+          backgroundColor: Colors.grey.shade300,
+          color: getColor(progresoPeso),
+        ),
       ),
       const SizedBox(height: 4),
       Text(
@@ -426,17 +432,87 @@ Widget _buildProgressBar(
         style: theme.textTheme.bodyMedium,
       ),
       const SizedBox(height: 4),
-      LinearProgressIndicator(
-        value: progresoTiempo,
-        minHeight: 10,
-        backgroundColor: Colors.grey.shade300,
-        color: getColor(progresoTiempo),
+      ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: LinearProgressIndicator(
+          value: progresoTiempo,
+          minHeight: 10,
+          backgroundColor: Colors.grey.shade300,
+          color: getColor(progresoTiempo),
+        ),
       ),
       const SizedBox(height: 4),
       Text(
         getMensaje(progresoTiempo, 'temporal'),
         style: theme.textTheme.bodySmall,
       ),
+
+      const SizedBox(height: 8),
+
+      // Mostrar fechas si existe fecha objetivo
+      if (progreso.fechaObjetivo != null) ...[
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Inicio: ${dateFormatter.format(progreso.fechaComienzo)}',
+              style: theme.textTheme.bodySmall,
+            ),
+            Text(
+              'Objetivo: ${dateFormatter.format(progreso.fechaObjetivo!)}',
+              style: theme.textTheme.bodySmall,
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 8),
+
+        //Fecha inicio y fecha objetivo
+        Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 2,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Fecha de inicio:',
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      dateFormatter.format(progreso.fechaComienzo),
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Fecha objetivo:',
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      progreso.fechaObjetivo != null
+                          ? dateFormatter.format(progreso.fechaObjetivo!)
+                          : 'Sin fecha',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     ],
   );
 }
