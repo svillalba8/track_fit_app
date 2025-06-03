@@ -277,8 +277,20 @@ class _ProfilePageState extends State<ProfilePage> {
                             child: CustomButton(
                               text: 'Actualizar objetivo',
                               actualTheme: actualTheme,
-                              onPressed: () {
-                                // Aquí puedes navegar a una pantalla de edición de objetivo
+                              onPressed: () async {
+                                final nuevoObjetivo = await context
+                                    .push<double?>(
+                                      AppRoutes.goal,
+                                      extra: progreso,
+                                    );
+
+                                if (nuevoObjetivo != null && progreso != null) {
+                                  setState(() {
+                                    progreso = progreso!.copyWith(
+                                      objetivoPeso: nuevoObjetivo,
+                                    );
+                                  });
+                                }
                               },
                             ),
                           ),
@@ -449,70 +461,49 @@ Widget _buildProgressBar(
 
       const SizedBox(height: 8),
 
-      // Mostrar fechas si existe fecha objetivo
-      if (progreso.fechaObjetivo != null) ...[
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Inicio: ${dateFormatter.format(progreso.fechaComienzo)}',
-              style: theme.textTheme.bodySmall,
-            ),
-            Text(
-              'Objetivo: ${dateFormatter.format(progreso.fechaObjetivo!)}',
-              style: theme.textTheme.bodySmall,
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 8),
-
-        //Fecha inicio y fecha objetivo
-        Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 2,
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Fecha de inicio:',
-                      style: Theme.of(context).textTheme.labelSmall,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      dateFormatter.format(progreso.fechaComienzo),
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Fecha objetivo:',
-                      style: Theme.of(context).textTheme.labelSmall,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      progreso.fechaObjetivo != null
-                          ? dateFormatter.format(progreso.fechaObjetivo!)
-                          : 'Sin fecha',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-              ],
-            ),
+      //Fecha inicio y fecha objetivo
+      Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 2,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Fecha de inicio:',
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    dateFormatter.format(progreso.fechaComienzo),
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Fecha objetivo:',
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    progreso.fechaObjetivo != null
+                        ? dateFormatter.format(progreso.fechaObjetivo!)
+                        : 'Sin fecha',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
-      ],
+      ),
     ],
   );
 }

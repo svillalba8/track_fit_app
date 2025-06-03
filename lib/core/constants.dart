@@ -8,7 +8,7 @@ class AppRoutes {
   static const routines = '/routines';
   static const trainer = '/trainer';
   static const profile = '/profile';
-  static const goal = '/goal-page';
+  static const goal = '/profile/edit-goal';
   static const settings = '/profile/settings';
   static const editUser = '/profile/settings/edit-user';
   static const themeSelector = '/profile/settings/theme';
