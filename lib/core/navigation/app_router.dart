@@ -8,6 +8,7 @@ import 'package:track_fit_app/core/constants.dart';
 import 'package:track_fit_app/core/navigation/main_scaffold.dart';
 import 'package:track_fit_app/core/utils/stream_listenable.dart';
 import 'package:track_fit_app/features/home/home_page.dart';
+import 'package:track_fit_app/features/profile/edit_goal_page.dart';
 import 'package:track_fit_app/features/profile/edit_user_page.dart';
 import 'package:track_fit_app/features/profile/profile_page.dart';
 import 'package:track_fit_app/features/routines/routine_page.dart';
@@ -15,6 +16,7 @@ import 'package:track_fit_app/features/settings/theme_selector_page.dart';
 import 'package:track_fit_app/features/settings/user_settings_page.dart';
 import 'package:track_fit_app/features/splash/splash_page.dart';
 import 'package:track_fit_app/features/trainer/trainer_page.dart';
+import 'package:track_fit_app/models/progreso_model.dart';
 import 'package:track_fit_app/models/usuario_model.dart';
 
 /// Configuración de rutas usando GoRouter
@@ -118,6 +120,13 @@ final GoRouter appRouter = GoRouter(
                       builder: (context, state) => const ThemeSelectorPage(),
                     ),
                   ],
+                ),
+                GoRoute(
+                  path: 'edit-goal',
+                  builder: (context, state) {
+                    final progreso = state.extra as ProgresoModel?;
+                    return EditGoalPage(progreso: progreso);
+                  },
                 ),
               ],
             ),
