@@ -71,7 +71,6 @@ class _EditExerciseDialogState extends State<EditExerciseDialog> {
         ),
         ElevatedButton(
           onPressed: () async {
-            // Aquí actualizas en la base de datos, por ejemplo llamando a tu servicio:
             await ExerciseService().updateExercise(
               widget.ejercicio.id,
               _nombreController.text,
