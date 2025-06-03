@@ -11,9 +11,9 @@ class Routine {
 
   factory Routine.fromMap(Map<String, dynamic> map) {
     return Routine(
-      id: int.parse(map['id'].toString()), // más robusto ante String/int
+      id: int.parse(map['id'].toString()),
       nombre: map['nombre'] as String,
-      userId: map['user_id'] as String?,   // más explícito
+      userId: map['user_id'] as String?,
     );
   }
 

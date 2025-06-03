@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/enums/exercise_type.dart';
 import '../../models/exercise_model.dart';
 import '../../models/routine_model.dart';
@@ -20,6 +21,7 @@ class _RoutinePageState extends State<RoutinePage> {
   List<Exercise> _exercises = [];
   List<Routine> _routines = [];
   bool _showExercises = true;
+  final Map<int, List<Map<String, dynamic>>> _routineExercisesDetails = {};
 
   @override
   void initState() {
@@ -37,9 +39,51 @@ class _RoutinePageState extends State<RoutinePage> {
 
   Future<void> _loadRoutines() async {
     final rutinas = await _routineService.getRoutines();
+    for (var rutina in rutinas) {
+      final details = await _routineService.getRoutineExercisesDetails(rutina.id);
+      _routineExercisesDetails[rutina.id] = details;
+    }
     setState(() {
       _routines = rutinas;
     });
+  }
+
+  Future<void> _deleteExercise(int exerciseId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Confirmar eliminación'),
+        content: const Text('¿Estás seguro de que quieres eliminar este ejercicio?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await _exerciseService.deleteExercise(exerciseId);
+        await _loadExercises();
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Ejercicio eliminado correctamente')),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al eliminar ejercicio: $e')),
+          );
+        }
+      }
+    }
   }
 
   Future<void> _showCreateExerciseDialog() async {
@@ -51,37 +95,67 @@ class _RoutinePageState extends State<RoutinePage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Crear Ejercicio"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nombreController,
-              decoration: const InputDecoration(labelText: 'Nombre'),
-            ),
-            DropdownButton<ExerciseType>(
-              value: selectedType,
-              onChanged: (value) {
-                setState(() {
-                  selectedType = value!;
-                });
-              },
-              items: ExerciseType.values.map((tipo) {
-                return DropdownMenuItem(
-                  value: tipo,
-                  child: Text(tipo.name),
-                );
-              }).toList(),
-            ),
-            TextField(
-              controller: descripcionController,
-              decoration: const InputDecoration(labelText: 'Descripción'),
-            ),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nombreController,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<ExerciseType>(
+                value: selectedType,
+                onChanged: (value) {
+                  setState(() {
+                    selectedType = value!;
+                  });
+                },
+                items: ExerciseType.values.map((tipo) {
+                  return DropdownMenuItem(
+                    value: tipo,
+                    child: Text(_getExerciseTypeName(tipo)),
+                  );
+                }).toList(),
+                decoration: const InputDecoration(
+                  labelText: 'Tipo de ejercicio',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: descripcionController,
+                decoration: const InputDecoration(
+                  labelText: 'Descripción',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+            ],
+          ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).primaryColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
             onPressed: () async {
+              if (nombreController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Por favor ingresa un nombre')),
+                );
+                return;
+              }
               await _exerciseService.createExercise(
                 nombreController.text,
                 selectedType,
@@ -97,6 +171,19 @@ class _RoutinePageState extends State<RoutinePage> {
     );
   }
 
+  String _getExerciseTypeName(ExerciseType type) {
+    switch (type) {
+      case ExerciseType.fuerza:
+        return 'Fuerza';
+      case ExerciseType.cardio:
+        return 'Cardio';
+      case ExerciseType.intenso:
+        return 'Intenso';
+      default:
+        return type.name;
+    }
+  }
+
   Future<void> _showEditExerciseDialog(Exercise exercise) async {
     final nombreController = TextEditingController(text: exercise.nombre);
     final descripcionController = TextEditingController(text: exercise.descripcion ?? '');
@@ -106,37 +193,67 @@ class _RoutinePageState extends State<RoutinePage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Editar Ejercicio"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nombreController,
-              decoration: const InputDecoration(labelText: 'Nombre'),
-            ),
-            DropdownButton<ExerciseType>(
-              value: selectedType,
-              onChanged: (value) {
-                setState(() {
-                  selectedType = value!;
-                });
-              },
-              items: ExerciseType.values.map((tipo) {
-                return DropdownMenuItem(
-                  value: tipo,
-                  child: Text(tipo.name),
-                );
-              }).toList(),
-            ),
-            TextField(
-              controller: descripcionController,
-              decoration: const InputDecoration(labelText: 'Descripción'),
-            ),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nombreController,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<ExerciseType>(
+                value: selectedType,
+                onChanged: (value) {
+                  setState(() {
+                    selectedType = value!;
+                  });
+                },
+                items: ExerciseType.values.map((tipo) {
+                  return DropdownMenuItem(
+                    value: tipo,
+                    child: Text(_getExerciseTypeName(tipo)),
+                  );
+                }).toList(),
+                decoration: const InputDecoration(
+                  labelText: 'Tipo de ejercicio',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: descripcionController,
+                decoration: const InputDecoration(
+                  labelText: 'Descripción',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+            ],
+          ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).primaryColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
             onPressed: () async {
+              if (nombreController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Por favor ingresa un nombre')),
+                );
+                return;
+              }
               await _exerciseService.updateExercise(
                 exercise.id,
                 nombreController.text,
@@ -167,11 +284,8 @@ class _RoutinePageState extends State<RoutinePage> {
 
     final ejerciciosSeleccionados = <EjercicioSeleccionadoService>[];
 
-    // Cargar ejercicios existentes en la rutina
     for (var ejercicio in ejerciciosEnRutina) {
       final eSel = EjercicioSeleccionadoService(ejercicio);
-      // Aquí deberías cargar los valores actuales (series, repeticiones, duración)
-      // Esto depende de cómo obtengas estos datos de la rutina existente
       ejerciciosSeleccionados.add(eSel);
     }
 
@@ -188,9 +302,13 @@ class _RoutinePageState extends State<RoutinePage> {
               children: [
                 TextField(
                   controller: nombreController,
-                  decoration: const InputDecoration(labelText: 'Nombre rutina'),
+                  decoration: const InputDecoration(
+                    labelText: 'Nombre rutina',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
-                DropdownButton<Exercise>(
+                const SizedBox(height: 16),
+                DropdownButtonFormField<Exercise>(
                   value: selectedExercise,
                   isExpanded: true,
                   onChanged: (value) {
@@ -201,8 +319,19 @@ class _RoutinePageState extends State<RoutinePage> {
                   items: ejerciciosDisponibles.map((e) {
                     return DropdownMenuItem(value: e, child: Text(e.nombre));
                   }).toList(),
+                  decoration: const InputDecoration(
+                    labelText: 'Seleccionar ejercicio',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
+                const SizedBox(height: 16),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                   onPressed: () {
                     if (selectedExercise != null &&
                         !ejerciciosSeleccionados.any((e) => e.ejercicio.id == selectedExercise!.id)) {
@@ -213,38 +342,64 @@ class _RoutinePageState extends State<RoutinePage> {
                   },
                   child: const Text('Añadir ejercicio'),
                 ),
+                const SizedBox(height: 16),
                 ...ejerciciosSeleccionados.map((eSel) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Divider(),
-                        Text(eSel.ejercicio.nombre, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        TextField(
-                          controller: eSel.seriesController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: 'Series'),
+                    child: Card(
+                      elevation: 2,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  eSel.ejercicio.nombre,
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () {
+                                    setState(() {
+                                      ejerciciosSeleccionados.remove(eSel);
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                            const Divider(),
+                            TextField(
+                              controller: eSel.seriesController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: 'Series',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: eSel.repeticionesController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: 'Repeticiones',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: eSel.duracionController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: 'Duración (segundos)',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ],
                         ),
-                        TextField(
-                          controller: eSel.repeticionesController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: 'Repeticiones'),
-                        ),
-                        TextField(
-                          controller: eSel.duracionController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: 'Duración (segundos)'),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () {
-                            setState(() {
-                              ejerciciosSeleccionados.remove(eSel);
-                            });
-                          },
-                        ),
-                      ],
+                      ),
                     ),
                   );
                 }).toList(),
@@ -256,7 +411,13 @@ class _RoutinePageState extends State<RoutinePage> {
               onPressed: () => Navigator.pop(context),
               child: const Text('Cancelar'),
             ),
-            TextButton(
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
               onPressed: () async {
                 final nombre = nombreController.text.trim();
 
@@ -268,13 +429,9 @@ class _RoutinePageState extends State<RoutinePage> {
                 }
 
                 try {
-                  // Actualizar nombre de la rutina
                   await _routineService.updateRoutine(routine.id, nombre);
-
-                  // Eliminar todos los ejercicios actuales de la rutina
                   await _routineService.removeAllExercisesFromRoutine(routine.id);
 
-                  // Añadir los ejercicios seleccionados
                   for (var eSel in ejerciciosSeleccionados) {
                     final series = int.tryParse(eSel.seriesController.text.trim()) ?? 0;
                     final repes = int.tryParse(eSel.repeticionesController.text.trim()) ?? 0;
@@ -335,9 +492,13 @@ class _RoutinePageState extends State<RoutinePage> {
               children: [
                 TextField(
                   controller: nombreController,
-                  decoration: const InputDecoration(labelText: 'Nombre rutina'),
+                  decoration: const InputDecoration(
+                    labelText: 'Nombre rutina',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
-                DropdownButton<Exercise>(
+                const SizedBox(height: 16),
+                DropdownButtonFormField<Exercise>(
                   value: selectedExercise,
                   isExpanded: true,
                   onChanged: (value) {
@@ -348,8 +509,19 @@ class _RoutinePageState extends State<RoutinePage> {
                   items: ejerciciosDisponibles.map((e) {
                     return DropdownMenuItem(value: e, child: Text(e.nombre));
                   }).toList(),
+                  decoration: const InputDecoration(
+                    labelText: 'Seleccionar ejercicio',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
+                const SizedBox(height: 16),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                   onPressed: () {
                     if (selectedExercise != null &&
                         !ejerciciosSeleccionados.any((e) => e.ejercicio.id == selectedExercise!.id)) {
@@ -360,38 +532,64 @@ class _RoutinePageState extends State<RoutinePage> {
                   },
                   child: const Text('Añadir ejercicio'),
                 ),
+                const SizedBox(height: 16),
                 ...ejerciciosSeleccionados.map((eSel) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Divider(),
-                        Text(eSel.ejercicio.nombre, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        TextField(
-                          controller: eSel.seriesController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: 'Series'),
+                    child: Card(
+                      elevation: 2,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  eSel.ejercicio.nombre,
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () {
+                                    setState(() {
+                                      ejerciciosSeleccionados.remove(eSel);
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                            const Divider(),
+                            TextField(
+                              controller: eSel.seriesController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: 'Series',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: eSel.repeticionesController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: 'Repeticiones',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: eSel.duracionController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: 'Duración (segundos)',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ],
                         ),
-                        TextField(
-                          controller: eSel.repeticionesController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: 'Repeticiones'),
-                        ),
-                        TextField(
-                          controller: eSel.duracionController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: 'Duración (segundos)'),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () {
-                            setState(() {
-                              ejerciciosSeleccionados.remove(eSel);
-                            });
-                          },
-                        ),
-                      ],
+                      ),
                     ),
                   );
                 }).toList(),
@@ -403,7 +601,13 @@ class _RoutinePageState extends State<RoutinePage> {
               onPressed: () => Navigator.pop(context),
               child: const Text('Cancelar'),
             ),
-            TextButton(
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
               onPressed: () async {
                 final nombre = nombreController.text.trim();
 
@@ -453,11 +657,11 @@ class _RoutinePageState extends State<RoutinePage> {
         content: const Text('¿Estás seguro de que quieres eliminar esta rutina?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => context.pop(false),
             child: const Text('Cancelar'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => context.pop(true),
             child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
           ),
         ],
@@ -486,56 +690,82 @@ class _RoutinePageState extends State<RoutinePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Rutinas y Ejercicios')),
-      body: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _showExercises = true;
-                  });
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _showExercises ? Theme.of(context).primaryColor : Colors.grey,
+      appBar: AppBar(
+        title: const Text('Rutinas y Ejercicios'),
+        centerTitle: true,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _showExercises = true;
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _showExercises ? Theme.of(context).primaryColor : Colors.grey,
+                    foregroundColor: Theme.of(context).colorScheme.secondary,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('Ejercicios'),
                 ),
-                child: const Text('Ejercicios'),
-              ),
-              const SizedBox(width: 20),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _showExercises = false;
-                  });
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: !_showExercises ? Theme.of(context).primaryColor : Colors.grey,
+                const SizedBox(width: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _showExercises = false;
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: !_showExercises ? Theme.of(context).primaryColor : Colors.grey,
+                    foregroundColor: Theme.of(context).colorScheme.secondary,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('Rutinas'),
                 ),
-                child: const Text('Rutinas'),
-              ),
-            ],
-          ),
-          CustomButton(
-            text: _showExercises ? 'Crear Ejercicio' : 'Crear Rutina',
-            onPressed: _showExercises ? _showCreateExerciseDialog : _showCreateRoutineDialog,
-            actualTheme: Theme.of(context),
-          ),
-          const SizedBox(height: 20),
-          Expanded(
-            child: _showExercises
-                ? _buildExercisesList()
-                : _buildRoutinesList(),
-          ),
-        ],
+              ],
+            ),
+            const SizedBox(height: 20),
+            CustomButton(
+              text: _showExercises ? 'Crear Ejercicio' : 'Crear Rutina',
+              onPressed: _showExercises ? _showCreateExerciseDialog : _showCreateRoutineDialog,
+              actualTheme: Theme.of(context),
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: _showExercises
+                  ? _buildExercisesList()
+                  : _buildRoutinesList(),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildExercisesList() {
     return _exercises.isEmpty
-        ? const Center(child: Text('No hay ejercicios'))
+        ? const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.fitness_center, size: 64, color: Colors.grey),
+          SizedBox(height: 16),
+          Text('No hay ejercicios', style: TextStyle(fontSize: 18)),
+        ],
+      ),
+    )
         : ListView.builder(
       itemCount: _exercises.length,
       itemBuilder: (context, index) {
@@ -545,19 +775,37 @@ class _RoutinePageState extends State<RoutinePage> {
             borderRadius: BorderRadius.circular(12),
           ),
           elevation: 3,
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          margin: const EdgeInsets.symmetric(vertical: 8),
           child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            contentPadding: const EdgeInsets.all(16),
             title: Text(
               ejercicio.nombre,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
-            subtitle: Text(
-              ejercicio.tipo.name,
-              style: TextStyle(color: Colors.grey[700]),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 4),
+                Text(
+                  _getExerciseTypeName(ejercicio.tipo),
+                  style: TextStyle(
+                    color: _getTypeColor(ejercicio.tipo),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (ejercicio.descripcion != null && ejercicio.descripcion!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: Text(
+                      ejercicio.descripcion!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
             ),
-            trailing: Wrap(
-              spacing: 8,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
                   icon: const Icon(Icons.edit, color: Colors.blueAccent),
@@ -570,30 +818,41 @@ class _RoutinePageState extends State<RoutinePage> {
                   onPressed: () async {
                     final confirmed = await showDialog<bool>(
                       context: context,
-                      builder: (_) => AlertDialog(
+                      builder: (dialogContext) => AlertDialog(
                         title: const Text('Confirmar eliminación'),
                         content: Text('¿Eliminar ejercicio "${ejercicio.nombre}"?'),
                         actions: [
                           TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text('Cancelar')),
+                            onPressed: () {
+                              Navigator.of(dialogContext, rootNavigator: true).pop(false);
+                            },
+                            child: const Text('Cancelar'),
+                          ),
                           TextButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: const Text('Eliminar')),
+                            onPressed: () {
+                              Navigator.of(dialogContext, rootNavigator: true).pop(true);
+                            },
+                            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+                          ),
                         ],
                       ),
                     );
+
                     if (confirmed == true) {
                       try {
                         await _exerciseService.deleteExercise(ejercicio.id);
                         await _loadExercises();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Ejercicio eliminado')),
-                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Ejercicio eliminado correctamente')),
+                          );
+                        }
                       } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error al eliminar ejercicio: $e')),
-                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error al eliminar ejercicio: $e')),
+                          );
+                        }
                       }
                     }
                   },
@@ -606,38 +865,150 @@ class _RoutinePageState extends State<RoutinePage> {
     );
   }
 
+  Color _getTypeColor(ExerciseType type) {
+    switch (type) {
+      case ExerciseType.fuerza:
+        return Colors.blue;
+      case ExerciseType.cardio:
+        return Colors.green;
+      case ExerciseType.intenso:
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
   Widget _buildRoutinesList() {
     return _routines.isEmpty
-        ? const Center(child: Text('No hay rutinas'))
+        ? const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.list_alt, size: 64, color: Colors.grey),
+          SizedBox(height: 16),
+          Text('No hay rutinas', style: TextStyle(fontSize: 18)),
+        ],
+      ),
+    )
         : ListView.builder(
       itemCount: _routines.length,
       itemBuilder: (context, index) {
         final routine = _routines[index];
+        final exercisesDetails = _routineExercisesDetails[routine.id] ?? [];
+
         return Card(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
           elevation: 3,
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            title: Text(
-              routine.nombre,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            trailing: Wrap(
-              spacing: 8,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.blueAccent),
-                  onPressed: () => _showEditRoutineDialog(routine),
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            children: [
+              ExpansionTile(
+                title: Text(
+                  routine.nombre,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.redAccent),
-                  onPressed: () => _deleteRoutine(routine.id),
-                ),
-              ],
-            ),
+                children: [
+                  if (exercisesDetails.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Divider(),
+                          Text(
+                            'Ejercicios:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          ...exercisesDetails.map((detail) {
+                            final exercise = Exercise.fromMap(detail['ejercicio']);
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4.0),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: Colors.grey[100],
+                                ),
+                                padding: const EdgeInsets.all(8),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(Icons.fitness_center, size: 16, color: _getTypeColor(exercise.tipo)),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            exercise.nombre,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Theme.of(context).colorScheme.secondary,
+                                            ),
+                                          ),
+                                          Text(
+                                            '${_getExerciseTypeName(exercise.tipo)}',
+                                            style: TextStyle(
+                                              color: _getTypeColor(exercise.tipo),
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          Text(
+                                            'Series: ${detail['series']}, Repeticiones: ${detail['repeticiones']}, Duración: ${detail['duracion'] ?? 0} segundos',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Theme.of(context).colorScheme.secondary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ],
+                      ),
+                    ),
+                  if (exercisesDetails.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Text(
+                        'No hay ejercicios en esta rutina',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                      ),
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.blueAccent),
+                          onPressed: () => _showEditRoutineDialog(routine),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.redAccent),
+                          onPressed: () => _deleteRoutine(routine.id),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         );
       },

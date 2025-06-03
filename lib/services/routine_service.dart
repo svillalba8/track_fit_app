@@ -67,9 +67,12 @@ class RoutineService {
     if (userId == null) return [];
     try {
       final data = await _client
-          .from('ejercicio_rutina')
-          .select('id_ejercicio, ejercicio:ejercicio_id(*)')
-          .eq('id_rutina', routineId);
+          .from('ejercicio_rufina')
+          .select('''
+            id_ejercicio, 
+            ejercicio:ejercicio(id, nombre, tipo, descripcion)
+          ''')
+          .eq('id_rufina', routineId);
       return (data as List).map((e) => Exercise.fromMap(e['ejercicio'])).toList();
     } catch (e) {
       print('Error fetching routine exercises: $e');
@@ -82,9 +85,15 @@ class RoutineService {
     if (userId == null) return [];
     try {
       final data = await _client
-          .from('ejercicio_rutina')
-          .select('series, repeticiones, duracion, ejercicio:ejercicio_id(*)')
-          .eq('id_rutina', routineId);
+          .from('ejercicio_rufina')
+          .select('''
+            series, 
+            repeticiones, 
+            duzacion,  // Corrected column name
+            ejercicio:ejercicio_id(id, nombre, tipo, descripcion)
+          ''')
+          .eq('id_rufina', routineId);
+
       return (data as List).cast<Map<String, dynamic>>();
     } catch (e) {
       print('Error fetching exercise details: $e');
@@ -119,12 +128,12 @@ class RoutineService {
     if (exercise == null) throw Exception('Exercise not found or does not belong to user');
 
     try {
-      await _client.from('ejercicio_rutina').insert({
-        'id_rutina': rutinaId,
+      await _client.from('ejercicio_rufina').insert({
+        'id_rufina': rutinaId,
         'id_ejercicio': ejercicioId,
         'series': series,
         'repeticiones': repeticiones,
-        'duracion': duracion,
+        'duzacion': duracion,
         'created_at': DateTime.now().toIso8601String(),
       });
     } catch (e) {
