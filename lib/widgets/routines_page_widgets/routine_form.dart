@@ -14,40 +14,51 @@ void showRoutineForm(
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
+    backgroundColor: Theme.of(context).colorScheme.surface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
     builder: (ctx) {
       return StatefulBuilder(
         builder: (ctx, setState) {
+          final theme = Theme.of(context);
+          final colorScheme = theme.colorScheme;
           final isButtonEnabled = nameController.text.trim().isNotEmpty;
 
           return Padding(
             padding: EdgeInsets.only(
-              top: 20,
+              top: 24,
               left: 20,
               right: 20,
               bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
             ),
-            child: Wrap(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   routine == null ? 'Nueva Rutina' : 'Editar Rutina',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Nombre'),
-                  onChanged: (_) => setState(() {}),
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 20),
-                // Aquí se pasa una función sincrónica
+                TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    labelText: 'Nombre',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+                const SizedBox(height: 30),
                 CustomButton(
                   text: 'Guardar',
+                  actualTheme: theme,
                   onPressed: isButtonEnabled
                       ? () {
                     final name = nameController.text.trim();
-                    // Ejecuta la función async sin await
+
                     final future = routine == null
                         ? service.createRoutine(name)
                         : service.updateRoutine(routine.id, name);
@@ -57,8 +68,7 @@ void showRoutineForm(
                       onSaved();
                     });
                   }
-                      : () {}, // si quieres que no haga nada cuando no está habilitado
-                  actualTheme: Theme.of(context), // recuerda que CustomButton lo requiere
+                      : () {}, // Botón deshabilitado visualmente
                 ),
               ],
             ),
