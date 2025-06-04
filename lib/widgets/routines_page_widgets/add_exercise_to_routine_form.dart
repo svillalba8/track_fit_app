@@ -3,6 +3,7 @@ import '../../models/routines_models/exercise_model.dart';
 import '../../models/routines_models/routine_model.dart';
 import '../../services/routines_services/exercise_service.dart';
 import '../../services/routines_services/routine_service.dart';
+import '../custom_button.dart';
 
 void showAddExerciseToRoutineForm(
     BuildContext context,
@@ -20,100 +21,119 @@ void showAddExerciseToRoutineForm(
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
+    backgroundColor: Theme.of(context).colorScheme.surface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
     builder: (ctx) {
       return StatefulBuilder(
         builder: (ctx, setState) {
+          final theme = Theme.of(context);
           final isButtonEnabled = selectedExercise != null;
 
           return Padding(
             padding: EdgeInsets.only(
-              top: 20,
+              top: 24,
               left: 20,
               right: 20,
               bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
             ),
-            child: Wrap(
-              children: [
-                Text(
-                  'Añadir ejercicio a ${routine.nombre}',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 10),
-                DropdownButton<Exercise>(
-                  isExpanded: true,
-                  hint: const Text("Selecciona un ejercicio"),
-                  value: selectedExercise,
-                  items: exercises
-                      .map(
-                        (e) => DropdownMenuItem(value: e, child: Text(e.nombre)),
-                  )
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      selectedExercise = value;
-                    });
-                  },
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: seriesController,
-                  decoration: const InputDecoration(labelText: 'Series'),
-                  keyboardType: TextInputType.number,
-                ),
-                TextField(
-                  controller: repsController,
-                  decoration: const InputDecoration(labelText: 'Repeticiones'),
-                  keyboardType: TextInputType.number,
-                ),
-                TextField(
-                  controller: durationController,
-                  decoration: const InputDecoration(labelText: 'Duración (segundos)'),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton.icon(
-                  onPressed: isButtonEnabled
-                      ? () async {
-                    await routineService.addExerciseToRoutine(
-                      routineId: routine.id,
-                      exerciseId: selectedExercise!.id,
-                      series: int.tryParse(seriesController.text) ?? 0,
-                      reps: int.tryParse(repsController.text) ?? 0,
-                      duration: int.tryParse(durationController.text) ?? 0,
-                    );
-                    Navigator.pop(ctx);
-                    onSaved();
-                  }
-                      : null,
-                  icon: const Icon(Icons.check),
-                  label: const Text('Guardar'),
-                  style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.resolveWith<Color?>(
-                          (states) {
-                        if (states.contains(MaterialState.disabled)) {
-                          return Theme.of(context).colorScheme.onSurface.withOpacity(0.12);
-                        }
-                        return Theme.of(context).colorScheme.primary;
-                      },
-                    ),
-                    foregroundColor: MaterialStateProperty.resolveWith<Color?>(
-                          (states) {
-                        if (states.contains(MaterialState.disabled)) {
-                          return Theme.of(context).colorScheme.onSurface.withOpacity(0.38);
-                        }
-                        return Theme.of(context).colorScheme.onPrimary;
-                      },
-                    ),
-                    padding: MaterialStateProperty.all(const EdgeInsets.symmetric(vertical: 16)),
-                    shape: MaterialStateProperty.all(
-                      RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Añadir ejercicio a "${routine.nombre}"',
+                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 20),
+
+                  Text(
+                    'Selecciona un ejercicio',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 10),
+
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: exercises.map((exercise) {
+                      final isSelected = selectedExercise == exercise;
+
+                      return ChoiceChip(
+                        label: Text(
+                          exercise.nombre,
+                          style: TextStyle(
+                            color: isSelected
+                                ? theme.colorScheme.onPrimary
+                                : theme.colorScheme.onSurface,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                        selected: isSelected,
+                        selectedColor: theme.colorScheme.primary,
+                        backgroundColor: theme.colorScheme.surfaceVariant ?? theme.colorScheme.surface,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        onSelected: (_) {
+                          setState(() {
+                            selectedExercise = isSelected ? null : exercise;
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  TextField(
+                    controller: seriesController,
+                    decoration: InputDecoration(
+                      labelText: 'Series',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: repsController,
+                    decoration: InputDecoration(
+                      labelText: 'Repeticiones',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: durationController,
+                    decoration: InputDecoration(
+                      labelText: 'Duración (segundos)',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  CustomButton(
+                    text: 'Guardar',
+                    actualTheme: theme,
+                    onPressed: isButtonEnabled
+                        ? () async {
+                      await routineService.addExerciseToRoutine(
+                        routineId: routine.id,
+                        exerciseId: selectedExercise!.id,
+                        series: int.tryParse(seriesController.text) ?? 0,
+                        reps: int.tryParse(repsController.text) ?? 0,
+                        duration: int.tryParse(durationController.text) ?? 0,
+                      );
+                      Navigator.pop(ctx);
+                      onSaved();
+                    }
+                        : () {},
+                  ),
+                ],
+              ),
             ),
           );
         },
