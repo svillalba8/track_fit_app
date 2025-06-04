@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import '../../../core/enums/exercise_type.dart';
 import '../../models/routines_models/exercise_model.dart';
@@ -28,6 +29,17 @@ void showExerciseForm(
           final colorScheme = theme.colorScheme;
           final isButtonEnabled = nameController.text.trim().isNotEmpty;
 
+          IconData iconForType(ExerciseType type) {
+            switch (type) {
+              case ExerciseType.fuerza:
+                return Icons.fitness_center;
+              case ExerciseType.cardio:
+                return Icons.directions_run;
+              case ExerciseType.intenso:
+                return Icons.whatshot;
+            }
+          }
+
           return Padding(
             padding: EdgeInsets.only(
               top: 24,
@@ -35,119 +47,123 @@ void showExerciseForm(
               right: 20,
               bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  exercise == null ? 'Nuevo Ejercicio' : 'Editar Ejercicio',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Nombre',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    exercise == null ? 'Nuevo Ejercicio' : 'Editar Ejercicio',
+                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                   ),
-                  onChanged: (_) => setState(() {}),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: descController,
-                  decoration: InputDecoration(
-                    labelText: 'Descripción',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      labelText: 'Nombre',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
+                    onChanged: (_) => setState(() {}),
                   ),
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'Tipo de ejercicio',
-                  style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: ExerciseType.values.map((type) {
-                    final isSelected = type == selectedType;
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: descController,
+                    decoration: InputDecoration(
+                      labelText: 'Descripción',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Tipo de ejercicio',
+                    style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: ExerciseType.values.map((type) {
+                      final isSelected = type == selectedType;
 
-                    IconData icon;
-                    switch (type) {
-                      case ExerciseType.fuerza:
-                        icon = Icons.fitness_center;
-                        break;
-                      case ExerciseType.cardio:
-                        icon = Icons.directions_run;
-                        break;
-                      case ExerciseType.intenso:
-                        icon = Icons.whatshot;
-                        break;
-                    }
-
-                    return ChoiceChip(
-                      selected: isSelected,
-                      onSelected: (_) => setState(() => selectedType = type),
-                      label: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            icon,
-                            size: 18,
-                            color: isSelected
-                                ? colorScheme.onTertiary
-                                : colorScheme.onSurface.withOpacity(0.8),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            type.name[0].toUpperCase() + type.name.substring(1),
-                            style: TextStyle(
+                      return GestureDetector(
+                        onTap: () => setState(() => selectedType = type),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isSelected ? colorScheme.tertiary : colorScheme.surface.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(30),
+                            border: Border.all(
                               color: isSelected
-                                  ? colorScheme.onTertiary
-                                  : colorScheme.onSurface.withOpacity(0.8),
+                                  ? colorScheme.tertiary
+                                  : colorScheme.onSurface.withOpacity(0.2),
                             ),
+                            boxShadow: isSelected
+                                ? [
+                              BoxShadow(
+                                color: colorScheme.tertiary.withOpacity(0.4),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              )
+                            ]
+                                : null,
                           ),
-                        ],
-                      ),
-                      selectedColor: colorScheme.tertiary,
-                      backgroundColor: colorScheme.surface.withOpacity(0.05),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        side: BorderSide(
-                          color: isSelected
-                              ? colorScheme.tertiary
-                              : colorScheme.onSurface.withOpacity(0.2),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                iconForType(type),
+                                size: 18,
+                                color: isSelected ? colorScheme.onTertiary : colorScheme.onSurface.withOpacity(0.8),
+                              ),
+                              const SizedBox(width: 6),
+                              AnimatedDefaultTextStyle(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                                style: TextStyle(
+                                  color: isSelected ? colorScheme.onTertiary : colorScheme.onSurface.withOpacity(0.8),
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                ),
+                                child: Text(type.name[0].toUpperCase() + type.name.substring(1)),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 30),
-                CustomButton(
-                  text: 'Guardar',
-                  actualTheme: theme,
-                  onPressed: isButtonEnabled
-                      ? () {
-                    final name = nameController.text.trim();
-                    final desc = descController.text.trim();
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 30),
+                  AnimatedOpacity(
+                    duration: const Duration(milliseconds: 400),
+                    opacity: isButtonEnabled ? 1 : 0.5,
+                    child: CustomButton(
+                      text: 'Guardar',
+                      actualTheme: theme,
+                      onPressed: isButtonEnabled
+                          ? () {
+                        final name = nameController.text.trim();
+                        final desc = descController.text.trim();
 
-                    final future = exercise == null
-                        ? service.createExercise(name, selectedType, desc)
-                        : service.updateExercise(exercise.id, name, selectedType, desc);
+                        final future = exercise == null
+                            ? service.createExercise(name, selectedType, desc)
+                            : service.updateExercise(exercise.id, name, selectedType, desc);
 
-                    future.then((_) {
-                      Navigator.pop(ctx);
-                      onSaved();
-                    });
-                  }
-                      : () {}, // Deshabilitado si vacío
-                ),
-              ],
+                        future.then((_) {
+                          Navigator.pop(ctx);
+                          onSaved();
+                        });
+                      }
+                          : () {},
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },
@@ -155,3 +171,5 @@ void showExerciseForm(
     },
   );
 }
+
+
