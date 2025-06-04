@@ -9,6 +9,7 @@ import 'package:track_fit_app/features/trainer/widgets/my_message_bubble.dart';
 import 'package:track_fit_app/features/trainer/widgets/quick_calculator_actions.dart';
 import 'package:track_fit_app/models/message.dart';
 import 'package:track_fit_app/notifiers/chat_notifier.dart';
+import 'package:track_fit_app/notifiers/daily_challenge_notifier.dart';
 import 'package:track_fit_app/widgets/custom_divider.dart';
 import 'package:track_fit_app/widgets/custom_icon_button.dart';
 
@@ -22,7 +23,7 @@ class TrainerPage extends StatefulWidget {
 class _TrainerPageState extends State<TrainerPage> {
   @override
   Widget build(BuildContext context) {
-    final retoCompletado = context.watch<ChatNotifier>().retoCompletado;
+    final retoCompletado = context.watch<DailyChallengeNotifier>().retoCompletado;
     final ThemeData actualTheme = Theme.of(context);
 
     return Scaffold(

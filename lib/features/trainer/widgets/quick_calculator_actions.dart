@@ -20,7 +20,7 @@ class QuickCalculatorsActions extends StatefulWidget {
 class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
   final LayerLink _layerLink = LayerLink();
   OverlayEntry? _overlayEntry;
-  bool _useMetric = true;
+  final bool _useMetric = true;
 
   PopupLevel _level = PopupLevel.menu;
   String? _selectedCalculator;

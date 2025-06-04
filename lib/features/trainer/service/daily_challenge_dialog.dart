@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:track_fit_app/core/utils/snackbar_utils.dart';
-import 'package:track_fit_app/notifiers/chat_notifier.dart';
+import 'package:track_fit_app/notifiers/daily_challenge_notifier.dart';
 
 /// Clase estática que encapsula todo el flujo de diálogos del reto diario.
 class DailyChallengeDialog {
   static const String _kTituloRetoDiario = '🏅 Reto del día 🏅';
 
   static Future<void> show(BuildContext context) async {
-    final chatProvider = context.read<ChatNotifier>();
+    final chatProvider = context.read<DailyChallengeNotifier>();
     final theme = Theme.of(context);
 
     // 1) Disparamos la lógica para comprobar/crear el reto
