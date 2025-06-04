@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../widgets/custom_button.dart';
 
 class WorkoutSessionPage extends StatefulWidget {
   final String routineName;
@@ -16,15 +18,61 @@ class WorkoutSessionPage extends StatefulWidget {
 
 class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
   int currentIndex = 0;
+  static const int restDuration = 30;
+  int restTimeLeft = restDuration;
+  bool isResting = false;
+  Timer? restTimer;
+
+  void _startRest() {
+    setState(() {
+      isResting = true;
+      restTimeLeft = restDuration;
+    });
+
+    restTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (restTimeLeft > 0) {
+        setState(() {
+          restTimeLeft--;
+        });
+      } else {
+        restTimer?.cancel();
+        if (currentIndex < widget.exercises.length - 1) {
+          setState(() {
+            currentIndex++;
+            isResting = false;
+          });
+        } else {
+          setState(() {
+            isResting = false;
+          });
+          _showCompletionDialog();
+        }
+      }
+    });
+  }
 
   void _nextExercise() {
     if (currentIndex < widget.exercises.length - 1) {
+      _startRest();
+    } else {
+      _showCompletionDialog();
+    }
+  }
+
+  void _continueAfterRest() {
+    restTimer?.cancel();
+    if (currentIndex < widget.exercises.length - 1) {
       setState(() {
         currentIndex++;
+        isResting = false;
       });
     } else {
       _showCompletionDialog();
     }
+  }
+
+  void _skipRest() {
+    _continueAfterRest();
   }
 
   void _showCompletionDialog() {
@@ -47,7 +95,15 @@ class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
   }
 
   @override
+  void dispose() {
+    restTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     final currentExercise = widget.exercises.isNotEmpty
         ? widget.exercises[currentIndex]
         : null;
@@ -57,19 +113,42 @@ class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Entrenando: ${widget.routineName}'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Column(
+        child: isResting
+            ? Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Descanso: $restTimeLeft segundos',
+              style: theme.textTheme.headlineMedium,
+              textAlign: TextAlign.center,
+            ),
+            const Spacer(),
+            CustomButton(
+              text: 'Continuar',
+              actualTheme: theme,
+              onPressed: restTimeLeft == 0 ? _continueAfterRest : () {},
+            ),
+            const SizedBox(height: 10),
+            CustomButton(
+              text: 'Saltar descanso',
+              actualTheme: theme,
+              onPressed: _skipRest,
+            ),
+          ],
+        )
+            : Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
               widget.exercises.isNotEmpty
                   ? 'Ejercicio ${currentIndex + 1} de ${widget.exercises.length}'
                   : 'No hay ejercicios disponibles.',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              style: theme.textTheme.titleMedium?.copyWith(
                 color: widget.exercises.isNotEmpty ? null : Colors.red,
               ),
             ),
@@ -85,7 +164,7 @@ class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
                     children: [
                       Text(
                         ejercicio['nombre'] ?? 'Sin nombre',
-                        style: Theme.of(context).textTheme.titleLarge,
+                        style: theme.textTheme.titleLarge,
                       ),
                       const SizedBox(height: 10),
                       Text('Series: ${currentExercise['series']}'),
@@ -96,16 +175,10 @@ class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
                 ),
               ),
             const Spacer(),
-            ElevatedButton(
-              onPressed: widget.exercises.isEmpty ? null : _nextExercise,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: Text(currentIndex < widget.exercises.length - 1 ? 'Siguiente' : 'Finalizar'),
+            CustomButton(
+              text: currentIndex < widget.exercises.length - 1 ? 'Siguiente' : 'Finalizar',
+              actualTheme: theme,
+              onPressed: widget.exercises.isEmpty ? () {} : _nextExercise,
             ),
           ],
         ),
