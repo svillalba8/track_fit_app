@@ -1,9 +1,9 @@
-
 import 'package:flutter/material.dart';
 import '../../../core/enums/exercise_type.dart';
 import '../../models/routines_models/exercise_model.dart';
 import '../../services/routines_services/exercise_service.dart';
 import '../custom_button.dart';
+import '../selectable_animated_container.dart';
 
 void showExerciseForm(
     BuildContext context,
@@ -90,50 +90,41 @@ void showExerciseForm(
                     children: ExerciseType.values.map((type) {
                       final isSelected = type == selectedType;
 
-                      return GestureDetector(
+                      return SelectableAnimatedContainer(
+                        isSelected: isSelected,
                         onTap: () => setState(() => selectedType = type),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: isSelected ? colorScheme.tertiary : colorScheme.surface.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(30),
-                            border: Border.all(
-                              color: isSelected
-                                  ? colorScheme.tertiary
-                                  : colorScheme.onSurface.withOpacity(0.2),
+                        selectedColor: colorScheme.tertiary,
+                        unselectedColor: colorScheme.surface.withOpacity(0.05),
+                        selectedBorderColor: colorScheme.tertiary,
+                        unselectedBorderColor: colorScheme.onSurface.withOpacity(0.2),
+                        selectedShadow: [
+                          BoxShadow(
+                            color: colorScheme.tertiary.withOpacity(0.4),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          )
+                        ],
+                        borderRadius: BorderRadius.circular(30),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              iconForType(type),
+                              size: 18,
+                              color: isSelected ? colorScheme.onTertiary : colorScheme.onSurface.withOpacity(0.8),
                             ),
-                            boxShadow: isSelected
-                                ? [
-                              BoxShadow(
-                                color: colorScheme.tertiary.withOpacity(0.4),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              )
-                            ]
-                                : null,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                iconForType(type),
-                                size: 18,
+                            const SizedBox(width: 6),
+                            AnimatedDefaultTextStyle(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                              style: TextStyle(
                                 color: isSelected ? colorScheme.onTertiary : colorScheme.onSurface.withOpacity(0.8),
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                               ),
-                              const SizedBox(width: 6),
-                              AnimatedDefaultTextStyle(
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeInOut,
-                                style: TextStyle(
-                                  color: isSelected ? colorScheme.onTertiary : colorScheme.onSurface.withOpacity(0.8),
-                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                                ),
-                                child: Text(type.name[0].toUpperCase() + type.name.substring(1)),
-                              ),
-                            ],
-                          ),
+                              child: Text(type.name[0].toUpperCase() + type.name.substring(1)),
+                            ),
+                          ],
                         ),
                       );
                     }).toList(),
@@ -171,5 +162,3 @@ void showExerciseForm(
     },
   );
 }
-
-

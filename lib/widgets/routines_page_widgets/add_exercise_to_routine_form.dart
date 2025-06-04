@@ -5,6 +5,7 @@ import '../../models/routines_models/routine_model.dart';
 import '../../services/routines_services/exercise_service.dart';
 import '../../services/routines_services/routine_service.dart';
 import '../custom_button.dart';
+import '../selectable_animated_container.dart';
 
 void showAddExerciseToRoutineForm(
     BuildContext context,
@@ -89,39 +90,30 @@ void showAddExerciseToRoutineForm(
                           runSpacing: 12,
                           children: exercisesByType[type]!.map((exercise) {
                             final isSelected = selectedExercise == exercise;
-                            return GestureDetector(
+                            return SelectableAnimatedContainer(
+                              isSelected: isSelected,
                               onTap: () {
                                 setState(() {
                                   selectedExercise = isSelected ? null : exercise;
                                 });
                               },
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeInOut,
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: isSelected ? theme.colorScheme.primary : theme.colorScheme.surfaceVariant ?? theme.colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: isSelected
-                                      ? [
-                                    BoxShadow(
-                                      color: theme.colorScheme.primary.withOpacity(0.6),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
-                                    )
-                                  ]
-                                      : [],
-                                  border: Border.all(
-                                    color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline,
-                                    width: 1.5,
-                                  ),
-                                ),
-                                child: Text(
-                                  exercise.nombre,
-                                  style: TextStyle(
-                                    color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                  ),
+                              selectedColor: theme.colorScheme.primary,
+                              unselectedColor: theme.colorScheme.surfaceVariant ?? theme.colorScheme.surface,
+                              selectedBorderColor: theme.colorScheme.primary,
+                              unselectedBorderColor: theme.colorScheme.outline,
+                              selectedShadow: [
+                                BoxShadow(
+                                  color: theme.colorScheme.primary.withOpacity(0.6),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                )
+                              ],
+                              borderRadius: BorderRadius.circular(12),
+                              child: Text(
+                                exercise.nombre,
+                                style: TextStyle(
+                                  color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                                 ),
                               ),
                             );
