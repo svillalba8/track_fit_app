@@ -18,7 +18,7 @@ class WorkoutSessionPage extends StatefulWidget {
 
 class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
   int currentIndex = 0;
-  static const int restDuration = 30;
+  static const int restDuration = 180;
   int restTimeLeft = restDuration;
   bool isResting = false;
   Timer? restTimer;
