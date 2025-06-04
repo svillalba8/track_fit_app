@@ -37,8 +37,6 @@ class _ProfilePageState extends State<ProfilePage> {
     final supabase = getIt<SupabaseClient>();
     final authUser = supabase.auth.currentUser;
 
-    print("USER AUTH ID: ${authUser?.id}");
-
     if (authUser != null) {
       try {
         final dataUsuario = await userService.fetchUsuarioByAuthId(authUser.id);
@@ -278,17 +276,15 @@ class _ProfilePageState extends State<ProfilePage> {
                               text: 'Actualizar objetivo',
                               actualTheme: actualTheme,
                               onPressed: () async {
-                                final nuevoObjetivo = await context
-                                    .push<double?>(
+                                final nuevoProgreso = await context
+                                    .push<ProgresoModel?>(
                                       AppRoutes.goal,
                                       extra: progreso,
                                     );
 
-                                if (nuevoObjetivo != null && progreso != null) {
+                                if (nuevoProgreso != null) {
                                   setState(() {
-                                    progreso = progreso!.copyWith(
-                                      objetivoPeso: nuevoObjetivo,
-                                    );
+                                    progreso = nuevoProgreso;
                                   });
                                 }
                               },
