@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../core/enums/exercise_type.dart';
-import '../../models/exercise_model.dart';
-import '../../models/routine_model.dart';
-import '../../services/exercise_service.dart';
-import '../../services/routine_service.dart';
+import '../../models/routines_models/exercise_model.dart';
+import '../../models/routines_models/routine_model.dart';
+import '../../services/routines_services/exercise_service.dart';
+import '../../services/routines_services/routine_service.dart';
 import '../../widgets/routines_page_widgets/add_exercise_to_routine_form.dart';
 import '../../widgets/routines_page_widgets/exercise_form.dart';
 import '../../widgets/routines_page_widgets/routine_form.dart';

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../models/exercise_model.dart';
-import '../../../models/routine_model.dart';
-import '../../../services/exercise_service.dart';
-import '../../../services/routine_service.dart';
+import '../../models/routines_models/exercise_model.dart';
+import '../../models/routines_models/routine_model.dart';
+import '../../services/routines_services/exercise_service.dart';
+import '../../services/routines_services/routine_service.dart';
 
 void showAddExerciseToRoutineForm(
     BuildContext context,

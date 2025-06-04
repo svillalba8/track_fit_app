@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/exercise_model.dart';
+import '../../models/routines_models/exercise_model.dart';
 
 class EjercicioSeleccionadoService {
   final Exercise ejercicio;
