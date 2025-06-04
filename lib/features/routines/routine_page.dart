@@ -1,14 +1,15 @@
-// routine_page.dart
 import 'package:flutter/material.dart';
 import '../../core/enums/exercise_type.dart';
 import '../../models/exercise_model.dart';
 import '../../models/routine_model.dart';
 import '../../services/exercise_service.dart';
 import '../../services/routine_service.dart';
-import '../../widgets/add_exercise_to_routine_form.dart';
-import '../../widgets/exercise_form.dart';
-import '../../widgets/routine_form.dart';
-import '../../widgets/section_card.dart';
+import '../../widgets/routines_page_widgets/add_exercise_to_routine_form.dart';
+import '../../widgets/routines_page_widgets/exercise_form.dart';
+import '../../widgets/routines_page_widgets/routine_form.dart';
+import '../../widgets/routines_page_widgets/section_card.dart';
+import 'workout_session_page.dart';
+import '../../widgets/custom_button.dart';
 
 class RoutinePage extends StatefulWidget {
   const RoutinePage({super.key});
@@ -41,6 +42,7 @@ class _RoutinePageState extends State<RoutinePage> {
 
   void _showRoutineDetails(Routine routine) async {
     final exercisesData = await _routineService.getExercisesByRoutine(routine.id);
+    final theme = Theme.of(context);
 
     showModalBottomSheet(
       context: context,
@@ -51,12 +53,13 @@ class _RoutinePageState extends State<RoutinePage> {
       builder: (ctx) => Padding(
         padding: const EdgeInsets.all(16),
         child: SizedBox(
-          height: MediaQuery.of(context).size.height * 0.6,
+          height: MediaQuery.of(context).size.height * 0.7,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
                 'Ejercicios de "${routine.nombre}"',
-                style: Theme.of(context).textTheme.titleLarge,
+                style: theme.textTheme.titleLarge,
               ),
               const SizedBox(height: 12),
               Expanded(
@@ -76,6 +79,24 @@ class _RoutinePageState extends State<RoutinePage> {
                   },
                 ),
               ),
+              const SizedBox(height: 16),
+              CustomButton(
+                text: 'Empezar',
+                onPressed: exercisesData.isEmpty ? () {} : () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => WorkoutSessionPage(
+                        routineName: routine.nombre,
+                        exercises: exercisesData,
+                      ),
+                    ),
+                  );
+                },
+                actualTheme: Theme.of(context),
+              )
+
             ],
           ),
         ),
@@ -85,8 +106,12 @@ class _RoutinePageState extends State<RoutinePage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Rutinas y Ejercicios'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('Rutinas y Ejercicios'),
+        centerTitle: true,
+      ),
       body: RefreshIndicator(
         onRefresh: _fetchData,
         child: ListView(
@@ -100,7 +125,15 @@ class _RoutinePageState extends State<RoutinePage> {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    IconButton(icon: const Icon(Icons.edit), onPressed: () => showExerciseForm(context, _exerciseService, _fetchData, exercise: e)),
+                    IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () => showExerciseForm(
+                        context,
+                        _exerciseService,
+                        _fetchData,
+                        exercise: e,
+                      ),
+                    ),
                     IconButton(
                       icon: const Icon(Icons.delete_outline),
                       onPressed: () async {
@@ -122,8 +155,25 @@ class _RoutinePageState extends State<RoutinePage> {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    IconButton(icon: const Icon(Icons.add), onPressed: () => showAddExerciseToRoutineForm(context, r, _exerciseService, _routineService, _fetchData)),
-                    IconButton(icon: const Icon(Icons.edit), onPressed: () => showRoutineForm(context, _routineService, _fetchData, routine: r)),
+                    IconButton(
+                      icon: const Icon(Icons.add),
+                      onPressed: () => showAddExerciseToRoutineForm(
+                        context,
+                        r,
+                        _exerciseService,
+                        _routineService,
+                        _fetchData,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () => showRoutineForm(
+                        context,
+                        _routineService,
+                        _fetchData,
+                        routine: r,
+                      ),
+                    ),
                     IconButton(
                       icon: const Icon(Icons.delete_outline),
                       onPressed: () async {

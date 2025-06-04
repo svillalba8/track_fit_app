@@ -1,8 +1,8 @@
 // widgets/exercise_form.dart
 import 'package:flutter/material.dart';
-import '../../core/enums/exercise_type.dart';
-import '../../models/exercise_model.dart';
-import '../../services/exercise_service.dart';
+import '../../../core/enums/exercise_type.dart';
+import '../../../models/exercise_model.dart';
+import '../../../services/exercise_service.dart';
 
 void showExerciseForm(
     BuildContext context,

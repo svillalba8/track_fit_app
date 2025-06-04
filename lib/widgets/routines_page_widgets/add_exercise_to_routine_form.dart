@@ -1,9 +1,9 @@
 // widgets/add_exercise_to_routine_form.dart
 import 'package:flutter/material.dart';
-import '../../models/exercise_model.dart';
-import '../../models/routine_model.dart';
-import '../../services/exercise_service.dart';
-import '../../services/routine_service.dart';
+import '../../../models/exercise_model.dart';
+import '../../../models/routine_model.dart';
+import '../../../services/exercise_service.dart';
+import '../../../services/routine_service.dart';
 
 void showAddExerciseToRoutineForm(
     BuildContext context,
