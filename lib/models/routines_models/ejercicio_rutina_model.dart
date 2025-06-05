@@ -25,7 +25,7 @@ class EjercicioRutina {
       createdAt: DateTime.parse(map['created_at']),
       series: map['series'] as int,
       repeticiones: map['repeticiones'] as int?,
-      duracion: map['duzacion'] as double?,
+      duracion: map['duracion'] as double?,
     );
   }
 
