@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../core/enums/exercise_type.dart';
-import '../models/exercise_model.dart';
+import '../../core/enums/exercise_type.dart';
+import '../../models/routines_models/exercise_model.dart';
 
 class ExerciseService {
   final SupabaseClient _client = Supabase.instance.client;
