@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/auth/widgets/profile_field.dart';
 import 'package:track_fit_app/core/utils/snackbar_utils.dart';
 import 'package:track_fit_app/models/progreso_model.dart';
+import 'package:track_fit_app/services/progreso_service.dart';
 import 'package:track_fit_app/widgets/custom_button.dart';
 
 class EditGoalPage extends StatefulWidget {
@@ -70,6 +73,7 @@ class _EditGoalPageState extends State<EditGoalPage> {
             : null;
 
     if (objetivo == null) {
+      if (!mounted) return;
       showErrorSnackBar(context, 'Introduce un objetivo válido');
       return;
     }
@@ -79,7 +83,31 @@ class _EditGoalPageState extends State<EditGoalPage> {
       fechaObjetivo: fechaObjetivo,
     );
 
-    context.pop(actualizado);
+    setState(() => _isSaving = true);
+
+    try {
+      final progresoService = GetIt.I<ProgresoService>();
+
+      final actualizadoEnBBDD = await progresoService.updateProgreso(
+        actualizado,
+      );
+
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      showSuccessSnackBar(context, 'Objetivo actualizado');
+      context.pop(actualizadoEnBBDD);
+    } on PostgrestException catch (e) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      debugPrint('Error Supabase: ${e.message}');
+      showErrorSnackBar(context, 'Error al guardar cambios: ${e.message}');
+    } catch (e, stacktrace) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      debugPrint('Error inesperado al guardar progreso: $e');
+      debugPrintStack(stackTrace: stacktrace);
+      showErrorSnackBar(context, 'Error al guardar cambios');
+    }
   }
 
   Future<void> _seleccionarFecha() async {
