@@ -73,8 +73,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             ),
             child: GridView.count(
               crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
               childAspectRatio: 0.87,
               children: [
                 // Card 1: Rutina recomendada

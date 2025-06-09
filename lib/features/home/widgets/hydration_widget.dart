@@ -10,15 +10,15 @@ class HydrationWidget extends StatelessWidget {
     // Obtenemos el HydrationNotifier
     final hydration = context.watch<HydrationNotifier>();
 
-const int kCapacidadTotalMl = 8000;
-const int kCantidadAguaVaso = 250;
-const int kCantidadAguaBotella = 1000;
+    const int kCapacidadTotalMl = 8000;
+    const int kCantidadAguaVaso = 250;
+    const int kCantidadAguaBotella = 1000;
 
     // Constantes para el vaso y botones
     const double vasoWidth = 40.0;
-    const double vasoHeight = 70.0;
+    const double vasoHeight = 90.0;
     const double textSpace = 24.0;
-    const double espacioEntreBotones = 12.0;
+    const double espacioEntreBotones = 10;
 
     final theme = Theme.of(context);
 
@@ -50,7 +50,7 @@ const int kCantidadAguaBotella = 1000;
     final nivel = (mlBebidos / kCapacidadTotalMl).clamp(0.0, 1.0);
 
     return SizedBox(
-      height: vasoHeight + 16, // aprox. 86 px en total
+      height: vasoHeight + 28, // aprox. 86 px en total
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -86,13 +86,21 @@ const int kCantidadAguaBotella = 1000;
                   ),
                 ),
               ),
+              Text(
+                '+250ml',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.tertiary,
+                ),
+              ),
 
               const SizedBox(height: espacioEntreBotones),
 
               // Botón +1000 ml
               GestureDetector(
                 onTap: () {
-                  hydration.addWater(context ,kCantidadAguaBotella);
+                  hydration.addWater(context, kCantidadAguaBotella);
                 },
                 child: Container(
                   width: 36,
@@ -117,10 +125,18 @@ const int kCantidadAguaBotella = 1000;
                   ),
                 ),
               ),
+              Text(
+                '+1000ml',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.tertiary,
+                ),
+              ),
             ],
           ),
 
-          const SizedBox(width: 40),
+          const SizedBox(width: 30),
 
           // 3.2) Vaso con espacio extra a la derecha para texto
           SizedBox(
