@@ -45,7 +45,6 @@ class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
             currentIndex++;
             isResting = false;
           });
-          // Sum workout time for the new exercise
           _addCurrentExerciseDuration();
         } else {
           setState(() {
@@ -103,9 +102,7 @@ class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: colorScheme.surface,
         title: Text(
           '¡Enhorabuena!',
@@ -134,7 +131,7 @@ class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
               actualTheme: theme,
               onPressed: () {
                 Navigator.of(ctx).pop();
-                Navigator.of(context).pop(); // Salir de la sesión
+                Navigator.of(context).pop();
               },
             ),
           ),
@@ -150,9 +147,7 @@ class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: colorScheme.surface,
         title: Text(
           'Estadísticas',
@@ -162,10 +157,7 @@ class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Ejercicios realizados:',
-                style: theme.textTheme.titleMedium,
-              ),
+              Text('Ejercicios realizados:', style: theme.textTheme.titleMedium),
               const SizedBox(height: 8),
               ...widget.exercises.map((exercise) {
                 final ejercicio = exercise['ejercicio'] ?? {};
@@ -219,11 +211,9 @@ class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     final currentExercise = widget.exercises.isNotEmpty
         ? widget.exercises[currentIndex]
         : null;
-
     final ejercicio = currentExercise != null ? currentExercise['ejercicio'] : {};
 
     return Scaffold(
@@ -238,10 +228,16 @@ class _WorkoutSessionPageState extends State<WorkoutSessionPage> {
             ? Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Descanso: $restTimeLeft segundos',
-              style: theme.textTheme.headlineMedium,
-              textAlign: TextAlign.center,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.hourglass_bottom, size: 36),
+                const SizedBox(width: 10),
+                Text(
+                  'Descanso: $restTimeLeft s',
+                  style: theme.textTheme.headlineMedium,
+                ),
+              ],
             ),
             const Spacer(),
             CustomButton(

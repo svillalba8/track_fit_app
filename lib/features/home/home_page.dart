@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -6,10 +8,13 @@ import 'package:track_fit_app/features/home/widgets/home_card.dart';
 import 'package:track_fit_app/features/home/widgets/hydration_widget.dart';
 import 'package:track_fit_app/features/trainer/service/daily_challenge_dialog.dart';
 import 'package:track_fit_app/models/usuario_model.dart';
+import 'package:track_fit_app/models/routines_models/routine_model.dart'; // Asegúrate de tener este modelo
 import 'package:track_fit_app/notifiers/daily_challenge_notifier.dart';
 import 'package:track_fit_app/notifiers/recipe_notifier.dart';
 import 'package:track_fit_app/services/usuario_service.dart';
+import 'package:track_fit_app/services/routines_services/routine_service.dart'; // Servicio para rutinas
 import 'package:track_fit_app/widgets/custom_divider.dart';
+import 'package:track_fit_app/features/routines/routine_page.dart'; // Ajusta según tu estructura
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,15 +23,52 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
+  final RoutineService _routineService = RoutineService();
+
+  Routine? _rutinaRandom;
+  bool _cargandoRutina = true;
+  String? _errorRutina;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    // Reto diario
+    // Inicializaciones previas
     context.read<DailyChallengeNotifier>().ensureTodayChallengeExists();
-    // Receta diaria
     context.read<RecipeNotifier>().initTodayRecipe();
+
+    // Cargar rutina aleatoria
+    _cargarRutinaRandom();
+  }
+
+  Future<void> _cargarRutinaRandom() async {
+    setState(() {
+      _cargandoRutina = true;
+      _errorRutina = null;
+    });
+
+    try {
+      final rutinas = await _routineService.getRoutines();
+      if (rutinas.isEmpty) {
+        setState(() {
+          _rutinaRandom = null;
+          _errorRutina = 'No tienes rutinas creadas.';
+          _cargandoRutina = false;
+        });
+        return;
+      }
+      final rng = Random();
+      setState(() {
+        _rutinaRandom = rutinas[rng.nextInt(rutinas.length)];
+        _cargandoRutina = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorRutina = 'Error al cargar rutina: $e';
+        _cargandoRutina = false;
+      });
+    }
   }
 
   @override
@@ -37,7 +79,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Cuando la app vuelve al foreground, volvemos a comprobar el reto
     if (state == AppLifecycleState.resumed) {
       context.read<DailyChallengeNotifier>().ensureTodayChallengeExists();
     }
@@ -77,50 +118,27 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               mainAxisSpacing: 8,
               childAspectRatio: 0.87,
               children: [
-                // Card 1: Rutina recomendada
+                // Card 1: Rutina random del usuario
                 HomeCard(
                   icon: Icons.fitness_center,
-                  title: 'Rutina top',
-                  subtitle: 'Fuerza: Tren superior (4 ejercicios)',
+                  title: _cargandoRutina
+                      ? 'Cargando rutina...'
+                      : _rutinaRandom?.nombre ?? 'Sin rutinas',
+                  subtitle: _cargandoRutina
+                      ? null
+                      : _errorRutina ?? 'Pulsa para ver la rutina',
                   backgroundColor: const Color(0xFFF9F9FC),
-                  bottomWidget: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 4),
-                      Stack(
-                        children: [
-                          Container(
-                            height: 6,
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFE5E5EA),
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                          ),
-                          Container(
-                            height: 6,
-                            width: MediaQuery.of(context).size.width * 0.15,
-                            // 2/4 completados ≈ 50% del ancho de una card
-                            decoration: BoxDecoration(
-                              color: actualTheme.colorScheme.secondary,
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                          ),
-                        ],
+                  onTap: (_cargandoRutina || _rutinaRandom == null)
+                      ? () {}
+                      : () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => RoutinePage(),
                       ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        '2 de 4 completados',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0x993C3C43),
-                        ),
-                      ),
-                    ],
-                  ),
-                  onTap: () {
-                    // Navigator.pushNamed(context, '/rutinaRecomendada');
+                    );
                   },
+
                 ),
 
                 // Card 2: Reto del día
@@ -138,12 +156,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color:
-                              completado
-                                  ? Colors
-                                      .green
-                                      .shade100 // fondo verde suave
-                                  : const Color(0xFFFCD34D), // amarillo
+                          color: completado
+                              ? Colors.green.shade100
+                              : const Color(0xFFFCD34D),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -151,12 +166,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color:
-                                completado
-                                    ? Colors
-                                        .green
-                                        .shade800 // texto verde oscuro
-                                    : const Color(0xFF1C1C1E),
+                            color: completado
+                                ? Colors.green.shade800
+                                : const Color(0xFF1C1C1E),
                           ),
                         ),
                       );
@@ -181,11 +193,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
                 // Card 4: Mi progreso
                 HomeCard(
-                  icon: Icons.bar_chart, // 📈
+                  icon: Icons.bar_chart,
                   title: 'Mi objetivo',
                   subtitle: '🔥 1.200 kcal\n 🏃‍♂️ 3 de 5 sesiones',
                   backgroundColor: const Color(0xFFF2F2F7),
-                  // Como aquí tenemos dos métricas, incluimos un bottomWidget con una Row
                   bottomWidget: Row(
                     children: [
                       Expanded(
@@ -243,22 +254,24 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                         child: Text('Error: ${prov.error}'),
                       );
                     } else if (prov.titulo != null) {
-                      // Aquí empaquetamos todos los campos en un Column
                       content = Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             prov.titulo!,
-                            style: TextStyle(fontWeight: FontWeight.bold, color: actualTheme.colorScheme.tertiary),
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: actualTheme.colorScheme.tertiary),
                           ),
                           const SizedBox(height: 20),
                           CustomDivider(color: actualTheme.colorScheme.tertiary),
                           const SizedBox(height: 4),
-                          if (prov.calorias != null &&
-                              prov.tiempoPreparacion != null)
+                          if (prov.calorias != null && prov.tiempoPreparacion != null)
                             Text(
                               '${prov.calorias} kcal · ${prov.tiempoPreparacion} min',
-                              style: TextStyle(fontSize: 12, color: actualTheme.colorScheme.tertiary),
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: actualTheme.colorScheme.tertiary),
                             ),
                         ],
                       );
@@ -268,15 +281,15 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
                     return HomeCard(
                       icon: Icons.fastfood_rounded,
-                      title: 'Nutrición', // Título fijo
-                      subtitle: null, // Sin subtítulo
+                      title: 'Nutrición',
+                      subtitle: null,
                       backgroundColor: const Color(0xFFF2F2F7),
                       bottomWidget: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: content,
                       ),
                       onTap: () {
-                        // Aquí podrías abrir detalle completo si quieres
+                        // Navegar a detalle si quieres
                       },
                     );
                   },
