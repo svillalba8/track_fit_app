@@ -1,21 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/data/di.dart';
 import 'package:track_fit_app/features/home/widgets/home_card.dart';
 import 'package:track_fit_app/features/home/widgets/hydration_widget.dart';
+import 'package:track_fit_app/features/trainer/service/daily_challenge_dialog.dart';
 import 'package:track_fit_app/models/usuario_model.dart';
+import 'package:track_fit_app/notifiers/daily_challenge_notifier.dart';
 import 'package:track_fit_app/services/usuario_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
 
-  Future<UsuarioModel?> _fetchUsuario() async {
-    final supabase = getIt<SupabaseClient>();
-    final authUser = supabase.auth.currentUser;
-    if (authUser == null) return null;
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
-    final usuarioService = getIt<UsuarioService>();
-    return await usuarioService.fetchUsuarioByAuthId(authUser.id);
+    // Primera carga del reto
+    context.read<DailyChallengeNotifier>().ensureTodayChallengeExists();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Cuando la app vuelve al foreground, volvemos a comprobar el reto
+    if (state == AppLifecycleState.resumed) {
+      context.read<DailyChallengeNotifier>().ensureTodayChallengeExists();
+    }
   }
 
   @override
@@ -52,36 +73,7 @@ class HomePage extends StatelessWidget {
               mainAxisSpacing: 16,
               childAspectRatio: 3 / 4,
               children: [
-                // Card 1: Reto del día
-                HomeCard(
-                  icon: Icons.emoji_events, // 🏆
-                  title: 'Reto diario',
-                  subtitle: 'Completa 10 min de yoga para hoy.',
-                  backgroundColor: const Color(0xFFF9F9FC),
-                  bottomWidget: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFCD34D),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      'En progreso',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF1C1C1E),
-                      ),
-                    ),
-                  ),
-                  onTap: () {
-                    // Navigator.pushNamed(context, '/retoDiario');
-                  },
-                ),
-
-                // Card 2: Rutina recomendada
+                // Card 1: Rutina recomendada
                 HomeCard(
                   icon: Icons.fitness_center,
                   title: 'Rutina recomendada',
@@ -127,11 +119,67 @@ class HomePage extends StatelessWidget {
                   },
                 ),
 
-                // Card 3: Mi progreso
+                // Card 2: Reto del día
+                HomeCard(
+                  icon: Icons.emoji_events,
+                  title: 'Reto diario',
+                  subtitle: 'Completa el reto diario de hoy.',
+                  backgroundColor: const Color(0xFFF9F9FC),
+                  bottomWidget: Consumer<DailyChallengeNotifier>(
+                    builder: (_, retoProv, __) {
+                      final completado = retoProv.retoCompletado;
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color:
+                              completado
+                                  ? Colors
+                                      .green
+                                      .shade100 // fondo verde suave
+                                  : const Color(0xFFFCD34D), // amarillo
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          completado ? 'Completado' : 'En progreso',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color:
+                                completado
+                                    ? Colors
+                                        .green
+                                        .shade800 // texto verde oscuro
+                                    : const Color(0xFF1C1C1E),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  onTap: () {
+                    DailyChallengeDialog.show(context);
+                  },
+                ),
+
+                // Card 3: Racha
+                HomeCard(
+                  icon: Icons.local_fire_department_outlined,
+                  title: 'Racha',
+                  subtitle: 'Un contador con tus días entrenados',
+                  backgroundColor: const Color(0xFFF2F2F7),
+                  bottomWidget: null,
+                  onTap: () {
+                    // Navigator.pushNamed(context, '/racha');
+                  },
+                ),
+
+                // Card 4: Mi progreso
                 HomeCard(
                   icon: Icons.bar_chart, // 📈
                   title: 'Mi objetivo',
-                  subtitle: '🔥 1.200 kcal\n🏃‍♂️ 3 de 5 sesiones',
+                  subtitle: '🔥 1.200 kcal\n 🏃‍♂️ 3 de 5 sesiones',
                   backgroundColor: const Color(0xFFF2F2F7),
                   // Como aquí tenemos dos métricas, incluimos un bottomWidget con una Row
                   bottomWidget: Row(
@@ -166,21 +214,9 @@ class HomePage extends StatelessWidget {
                   },
                 ),
 
-                // Card 4: Accesos rápidos
-                HomeCard(
-                  icon: Icons.local_fire_department_outlined, // 🔥
-                  title: 'Racha',
-                  subtitle: 'Un contador con tus días entrenados',
-                  backgroundColor: const Color(0xFFF2F2F7),
-                  bottomWidget: null,
-                  onTap: () {
-                    // Navigator.pushNamed(context, '/racha');
-                  },
-                ),
-
                 // Card 5: Hidratación diaria
                 HomeCard(
-                  icon: Icons.water_drop_outlined, // 💧
+                  icon: Icons.water_drop_outlined,
                   title: 'Hidratación diaria',
                   backgroundColor: const Color(0xFFF2F2F7),
                   bottomWidget: HydrationWidget(),
@@ -189,7 +225,7 @@ class HomePage extends StatelessWidget {
 
                 // Card 6: Recomendación alimentaria
                 HomeCard(
-                  icon: Icons.fastfood_rounded, // 🍔
+                  icon: Icons.fastfood_rounded,
                   title: 'Recomendación alimentaria',
                   subtitle: 'Consejos de nutrición adaptados a ti',
                   backgroundColor: const Color(0xFFF2F2F7),
@@ -207,46 +243,11 @@ class HomePage extends StatelessWidget {
   }
 }
 
-class _QuickAccessIcon extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
+Future<UsuarioModel?> _fetchUsuario() async {
+  final supabase = getIt<SupabaseClient>();
+  final authUser = supabase.auth.currentUser;
+  if (authUser == null) return null;
 
-  const _QuickAccessIcon({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(32),
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(32),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha((0.4 * 255).round()),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.all(12),
-            child: Icon(icon, size: 28, color: const Color(0xFF007AFF)),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 13, color: Color(0xFF1C1C1E)),
-          ),
-        ],
-      ),
-    );
-  }
+  final usuarioService = getIt<UsuarioService>();
+  return await usuarioService.fetchUsuarioByAuthId(authUser.id);
 }
