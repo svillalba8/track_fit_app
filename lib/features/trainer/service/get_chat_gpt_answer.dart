@@ -145,3 +145,74 @@ Future<String> fetchDailyChallengeFromGPT() async {
     return 'Error inesperado: $e';
   }
 }
+
+/// Obtiene una receta diaria (desayuno/comida/cena) usando ChatGPT
+Future<String> fetchDailyRecipeFromGPT(String slot, {String? userName}) async {
+  final String apiKey = dotenv.env['OPENAI_API_KEY']!;
+
+  // Prompt de sistema específico para recetas diarias:
+  const String kDailyRecipeSystemPrompt = r'''
+    Eres L.I.F.T., un nutricionista experto. 
+    Para el tramo “desayuno” (o “comida”/“cena”), devuélveme **solo** un JSON así:
+
+    {
+      "titulo": "Nombre de la receta",
+      "calorias": 350,
+      "tiempo_preparacion": 15,
+      "breve": "2 tostadas integrales con aguacate y huevo pochado."
+    }
+
+    Sin ningún texto extra y la descripción lo mas breve posible.
+      ''';
+
+  const String model = 'gpt-3.5-turbo';
+  final Uri uri = Uri.parse('https://api.openai.com/v1/chat/completions');
+
+  // Construimos el body al estilo de los otros métodos
+  final Map<String, dynamic> body = {
+    'model': model,
+    'messages': [
+      {
+        'role': 'system',
+        'content':
+            kDailyRecipeSystemPrompt +
+            (userName != null
+                ? '\nNota: el usuario se llama "$userName".'
+                : ''),
+      },
+      if (userName != null)
+        {'role': 'system', 'content': 'El nombre de usuario es $userName.'},
+      {'role': 'user', 'content': 'Quiero una receta para: $slot.'},
+    ],
+    'max_tokens': 400,
+    'temperature': 0.7,
+  };
+
+  try {
+    final resp = await http
+        .post(
+          uri,
+          headers: {
+            'Authorization': 'Bearer $apiKey',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode(body),
+        )
+        .timeout(const Duration(seconds: 60));
+
+    if (resp.statusCode == 200) {
+      final raw = resp.bodyBytes;
+      final utf8Body = utf8.decode(raw);
+      final decoded = jsonDecode(utf8Body) as Map<String, dynamic>;
+      final String reply =
+          decoded['choices'][0]['message']['content'] as String;
+      return reply.trim();
+    } else {
+      return 'Error ${resp.statusCode}: ${resp.body}';
+    }
+  } on TimeoutException {
+    return 'Error: la petición a OpenAI tardó demasiado tiempo.';
+  } catch (e) {
+    return 'Error inesperado: $e';
+  }
+}
