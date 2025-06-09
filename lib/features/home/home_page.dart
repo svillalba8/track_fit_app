@@ -75,7 +75,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               crossAxisCount: 2,
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
-              childAspectRatio: 3 / 4,
+              childAspectRatio: 0.87,
               children: [
                 // Card 1: Rutina recomendada
                 HomeCard(
