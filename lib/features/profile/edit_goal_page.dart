@@ -66,11 +66,18 @@ class _EditGoalPageState extends State<EditGoalPage> {
   Future<void> _guardarCambios() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final pesoActual = double.tryParse(_pesoActualController.text.trim());
     final objetivo = double.tryParse(_objetivoController.text.trim());
     final fechaObjetivo =
         _fechaObjetivoController.text.isNotEmpty
             ? DateTime.tryParse(_fechaObjetivoController.text.trim())
             : null;
+
+    if (pesoActual == null) {
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Introduce un peso actual válido');
+      return;
+    }
 
     if (objetivo == null) {
       if (!mounted) return;
@@ -79,6 +86,7 @@ class _EditGoalPageState extends State<EditGoalPage> {
     }
 
     final actualizado = progreso.copyWith(
+      pesoActual: pesoActual,
       objetivoPeso: objetivo,
       fechaObjetivo: fechaObjetivo,
     );
@@ -186,13 +194,26 @@ class _EditGoalPageState extends State<EditGoalPage> {
                 controller: _pesoInicialController,
                 readOnly: true,
               ),
+
               const SizedBox(height: 12),
+
               ProfileField(
                 label: 'Peso actual (kg)',
                 controller: _pesoActualController,
-                readOnly: true,
+                readOnly: !_isEditing,
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (!_isEditing) return null;
+                  final parsed = double.tryParse(value ?? '');
+                  if (parsed == null || parsed <= 0) {
+                    return 'Introduce un valor válido';
+                  }
+                  return null;
+                },
               ),
+
               const SizedBox(height: 12),
+
               ProfileField(
                 controller: _objetivoController,
                 label: 'Objetivo (kg)',
@@ -207,7 +228,9 @@ class _EditGoalPageState extends State<EditGoalPage> {
                   return null;
                 },
               ),
+
               const SizedBox(height: 12),
+
               GestureDetector(
                 onTap: _isEditing ? _seleccionarFecha : null,
                 child: AbsorbPointer(
@@ -219,13 +242,17 @@ class _EditGoalPageState extends State<EditGoalPage> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 12),
+
               ProfileField(
                 label: 'Fecha de inicio',
                 controller: _fechaInicioController,
                 readOnly: true,
               ),
+
               const SizedBox(height: 24),
+
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
                 child:
