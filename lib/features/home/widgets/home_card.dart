@@ -33,15 +33,25 @@ class HomeCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, size: 28, color: actualTheme.colorScheme.secondary),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1C1C1E),
-                ),
+              Row(
+                children: [
+                  Icon(
+                    icon,
+                    size: 28,
+                    color: actualTheme.colorScheme.secondary,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1C1C1E),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 6),
               if (subtitle != null) ...[

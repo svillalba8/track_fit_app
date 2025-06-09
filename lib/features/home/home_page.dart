@@ -7,7 +7,9 @@ import 'package:track_fit_app/features/home/widgets/hydration_widget.dart';
 import 'package:track_fit_app/features/trainer/service/daily_challenge_dialog.dart';
 import 'package:track_fit_app/models/usuario_model.dart';
 import 'package:track_fit_app/notifiers/daily_challenge_notifier.dart';
+import 'package:track_fit_app/notifiers/recipe_notifier.dart';
 import 'package:track_fit_app/services/usuario_service.dart';
+import 'package:track_fit_app/widgets/custom_divider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,8 +23,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    // Primera carga del reto
+    // Reto diario
     context.read<DailyChallengeNotifier>().ensureTodayChallengeExists();
+    // Receta diaria
+    context.read<RecipeNotifier>().initTodayRecipe();
   }
 
   @override
@@ -76,7 +80,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 // Card 1: Rutina recomendada
                 HomeCard(
                   icon: Icons.fitness_center,
-                  title: 'Rutina recomendada',
+                  title: 'Rutina top',
                   subtitle: 'Fuerza: Tren superior (4 ejercicios)',
                   backgroundColor: const Color(0xFFF9F9FC),
                   bottomWidget: Column(
@@ -217,21 +221,64 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 // Card 5: Hidratación diaria
                 HomeCard(
                   icon: Icons.water_drop_outlined,
-                  title: 'Hidratación diaria',
+                  title: 'Agua diaria',
                   backgroundColor: const Color(0xFFF2F2F7),
                   bottomWidget: HydrationWidget(),
                   onTap: () {},
                 ),
 
                 // Card 6: Recomendación alimentaria
-                HomeCard(
-                  icon: Icons.fastfood_rounded,
-                  title: 'Recomendación alimentaria',
-                  subtitle: 'Consejos de nutrición adaptados a ti',
-                  backgroundColor: const Color(0xFFF2F2F7),
-                  bottomWidget: null,
-                  onTap: () {
-                    // Navigator.pushNamed(context, '/alimentacion');
+                Consumer<RecipeNotifier>(
+                  builder: (_, prov, __) {
+                    Widget content;
+
+                    if (prov.isLoading) {
+                      content = const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8.0),
+                        child: Text('Cargando receta…'),
+                      );
+                    } else if (prov.error != null) {
+                      content = Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Text('Error: ${prov.error}'),
+                      );
+                    } else if (prov.titulo != null) {
+                      // Aquí empaquetamos todos los campos en un Column
+                      content = Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            prov.titulo!,
+                            style: TextStyle(fontWeight: FontWeight.bold, color: actualTheme.colorScheme.tertiary),
+                          ),
+                          const SizedBox(height: 20),
+                          CustomDivider(color: actualTheme.colorScheme.tertiary),
+                          const SizedBox(height: 4),
+                          if (prov.calorias != null &&
+                              prov.tiempoPreparacion != null)
+                            Text(
+                              '${prov.calorias} kcal · ${prov.tiempoPreparacion} min',
+                              style: TextStyle(fontSize: 12, color: actualTheme.colorScheme.tertiary),
+                            ),
+                        ],
+                      );
+                    } else {
+                      content = const SizedBox();
+                    }
+
+                    return HomeCard(
+                      icon: Icons.fastfood_rounded,
+                      title: 'Nutrición', // Título fijo
+                      subtitle: null, // Sin subtítulo
+                      backgroundColor: const Color(0xFFF2F2F7),
+                      bottomWidget: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: content,
+                      ),
+                      onTap: () {
+                        // Aquí podrías abrir detalle completo si quieres
+                      },
+                    );
                   },
                 ),
               ],
