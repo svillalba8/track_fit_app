@@ -61,7 +61,7 @@ const int kCantidadAguaBotella = 1000;
               // Botón +250 ml
               GestureDetector(
                 onTap: () {
-                  hydration.addWater(kCantidadAguaVaso);
+                  hydration.addWater(context, kCantidadAguaVaso);
                 },
                 child: Container(
                   width: 36,
@@ -92,7 +92,7 @@ const int kCantidadAguaBotella = 1000;
               // Botón +1000 ml
               GestureDetector(
                 onTap: () {
-                  hydration.addWater(kCantidadAguaBotella);
+                  hydration.addWater(context ,kCantidadAguaBotella);
                 },
                 child: Container(
                   width: 36,
