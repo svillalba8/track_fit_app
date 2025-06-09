@@ -105,9 +105,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 extra: usuario,
               );
               if (updatedUsuario != null) {
-                setState(() {
-                  usuario = updatedUsuario;
-                });
+                await _loadUsuarioYProgreso();
               }
             },
           ),
@@ -283,9 +281,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                     );
 
                                 if (nuevoProgreso != null) {
-                                  setState(() {
-                                    progreso = nuevoProgreso;
-                                  });
+                                  await _loadUsuarioYProgreso();
                                 }
                               },
                             ),
