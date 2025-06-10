@@ -7,6 +7,7 @@ import 'package:track_fit_app/auth/widgets/profile_field.dart';
 import 'package:track_fit_app/core/utils/snackbar_utils.dart';
 import 'package:track_fit_app/models/progreso_model.dart';
 import 'package:track_fit_app/services/progreso_service.dart';
+import 'package:track_fit_app/services/usuario_service.dart';
 import 'package:track_fit_app/widgets/custom_button.dart';
 
 class EditGoalPage extends StatefulWidget {
@@ -23,34 +24,66 @@ class _EditGoalPageState extends State<EditGoalPage> {
   final _objetivoController = TextEditingController();
   final _fechaObjetivoController = TextEditingController();
 
-  late final TextEditingController _pesoInicialController;
-  late final TextEditingController _pesoActualController;
-  late final TextEditingController _fechaInicioController;
+  final TextEditingController _pesoInicialController = TextEditingController();
+  final TextEditingController _pesoActualController = TextEditingController();
+  final TextEditingController _fechaInicioController = TextEditingController();
 
   bool _isEditing = false;
   bool _isSaving = false;
+  bool _loading = true;
 
-  late final ProgresoModel progreso;
+  late ProgresoModel progreso;
 
   @override
   void initState() {
     super.initState();
-    progreso = widget.progreso!;
-    _objetivoController.text = progreso.objetivoPeso.toString();
+    if (widget.progreso == null) {
+      // Modo creación
+      _isEditing = true;
+      _inicializarNuevoProgreso();
+    } else {
+      // Modo edición
+      progreso = widget.progreso!;
+      _setupControllersFromProgreso();
+      _loading = false;
+    }
+  }
+
+  Future<void> _inicializarNuevoProgreso() async {
+    final hoy = DateTime.now();
+    final supabase = GetIt.I<SupabaseClient>();
+    final authUser = supabase.auth.currentUser;
+    double pesoActual = 0;
+    if (authUser != null) {
+      final usuarioService = GetIt.I<UsuarioService>();
+      final usuario = await usuarioService.fetchUsuarioByAuthId(authUser.id);
+      pesoActual = usuario?.peso ?? 0;
+    }
+    progreso = ProgresoModel(
+      id: 0,
+      fechaComienzo: hoy,
+      objetivoPeso: 0,
+      fechaObjetivo: null,
+      pesoActual: pesoActual,
+      pesoInicial: pesoActual,
+    );
+    _setupControllersFromProgreso();
+    setState(() => _loading = false);
+  }
+
+  void _setupControllersFromProgreso() {
+    _objetivoController.text =
+        progreso.objetivoPeso > 0 ? progreso.objetivoPeso.toString() : '';
     _fechaObjetivoController.text =
         progreso.fechaObjetivo != null
             ? DateFormat('yyyy-MM-dd').format(progreso.fechaObjetivo!)
             : '';
-
-    _pesoInicialController = TextEditingController(
-      text: progreso.pesoInicial?.toStringAsFixed(1) ?? '-',
-    );
-    _pesoActualController = TextEditingController(
-      text: progreso.pesoActual.toStringAsFixed(1),
-    );
-    _fechaInicioController = TextEditingController(
-      text: DateFormat('yyyy-MM-dd').format(progreso.fechaComienzo),
-    );
+    _pesoInicialController.text =
+        progreso.pesoInicial?.toStringAsFixed(1) ?? '';
+    _pesoActualController.text = progreso.pesoActual.toStringAsFixed(1);
+    _fechaInicioController.text = DateFormat(
+      'yyyy-MM-dd',
+    ).format(progreso.fechaComienzo);
   }
 
   @override
@@ -73,19 +106,13 @@ class _EditGoalPageState extends State<EditGoalPage> {
             ? DateTime.tryParse(_fechaObjetivoController.text.trim())
             : null;
 
-    if (pesoActual == null) {
+    if (pesoActual == null || objetivo == null) {
       if (!mounted) return;
-      showErrorSnackBar(context, 'Introduce un peso actual válido');
+      showErrorSnackBar(context, 'Revisa los valores introducidos');
       return;
     }
 
-    if (objetivo == null) {
-      if (!mounted) return;
-      showErrorSnackBar(context, 'Introduce un objetivo válido');
-      return;
-    }
-
-    final actualizado = progreso.copyWith(
+    final progresoACrear = progreso.copyWith(
       pesoActual: pesoActual,
       objetivoPeso: objetivo,
       fechaObjetivo: fechaObjetivo,
@@ -94,32 +121,29 @@ class _EditGoalPageState extends State<EditGoalPage> {
     setState(() => _isSaving = true);
 
     try {
-      final progresoService = GetIt.I<ProgresoService>();
-
-      final actualizadoEnBBDD = await progresoService.updateProgreso(
-        actualizado,
-      );
-
-      if (!mounted) return;
-      setState(() => _isSaving = false);
-      showSuccessSnackBar(context, 'Objetivo actualizado');
-      context.pop(actualizadoEnBBDD);
-    } on PostgrestException catch (e) {
-      if (!mounted) return;
-      setState(() => _isSaving = false);
-      debugPrint('Error Supabase: ${e.message}');
-      showErrorSnackBar(context, 'Error al guardar cambios: ${e.message}');
-    } catch (e, stacktrace) {
-      if (!mounted) return;
-      setState(() => _isSaving = false);
-      debugPrint('Error inesperado al guardar progreso: $e');
-      debugPrintStack(stackTrace: stacktrace);
-      showErrorSnackBar(context, 'Error al guardar cambios');
+      final servicio = GetIt.I<ProgresoService>();
+      if (progreso.id == 0) {
+        final creado = await servicio.createProgreso(
+          objetivoPeso: progresoACrear.objetivoPeso,
+          pesoInicial: progresoACrear.pesoInicial ?? pesoActual,
+        );
+        showSuccessSnackBar(context, 'Objetivo creado');
+        context.pop(creado);
+      } else {
+        final actualizado = await servicio.updateProgreso(progresoACrear);
+        showSuccessSnackBar(context, 'Objetivo actualizado');
+        context.pop(actualizado);
+      }
+    } catch (e) {
+      debugPrint('Error al guardar: $e');
+      showErrorSnackBar(context, 'Error interno al guardar cambios');
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
   Future<void> _seleccionarFecha() async {
-    final DateTime? picked = await showDatePicker(
+    final picked = await showDatePicker(
       context: context,
       initialDate: progreso.fechaObjetivo ?? DateTime.now(),
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
@@ -153,11 +177,7 @@ class _EditGoalPageState extends State<EditGoalPage> {
     if (confirm == true) {
       setState(() {
         _isEditing = false;
-        _objetivoController.text = progreso.objetivoPeso.toString();
-        _fechaObjetivoController.text =
-            progreso.fechaObjetivo != null
-                ? DateFormat('yyyy-MM-dd').format(progreso.fechaObjetivo!)
-                : '';
+        _setupControllersFromProgreso();
       });
     }
   }
@@ -165,6 +185,10 @@ class _EditGoalPageState extends State<EditGoalPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    if (_loading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -194,9 +218,7 @@ class _EditGoalPageState extends State<EditGoalPage> {
                 controller: _pesoInicialController,
                 readOnly: true,
               ),
-
               const SizedBox(height: 12),
-
               ProfileField(
                 label: 'Peso actual (kg)',
                 controller: _pesoActualController,
@@ -211,9 +233,7 @@ class _EditGoalPageState extends State<EditGoalPage> {
                   return null;
                 },
               ),
-
               const SizedBox(height: 12),
-
               ProfileField(
                 controller: _objetivoController,
                 label: 'Objetivo (kg)',
@@ -221,16 +241,14 @@ class _EditGoalPageState extends State<EditGoalPage> {
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (!_isEditing) return null;
-                  final double? parsed = double.tryParse(value ?? '');
+                  final parsed = double.tryParse(value ?? '');
                   if (parsed == null || parsed <= 0) {
                     return 'Introduce un valor válido';
                   }
                   return null;
                 },
               ),
-
               const SizedBox(height: 12),
-
               GestureDetector(
                 onTap: _isEditing ? _seleccionarFecha : null,
                 child: AbsorbPointer(
@@ -242,17 +260,13 @@ class _EditGoalPageState extends State<EditGoalPage> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 12),
-
               ProfileField(
                 label: 'Fecha de inicio',
                 controller: _fechaInicioController,
                 readOnly: true,
               ),
-
               const SizedBox(height: 24),
-
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
                 child:
@@ -261,7 +275,7 @@ class _EditGoalPageState extends State<EditGoalPage> {
                           key: const ValueKey('boton_guardar'),
                           text: _isSaving ? 'Guardando...' : 'Guardar cambios',
                           actualTheme: theme,
-                          onPressed: _isSaving ? null : () => _guardarCambios(),
+                          onPressed: _isSaving ? null : _guardarCambios,
                         )
                         : const SizedBox.shrink(),
               ),

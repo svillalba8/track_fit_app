@@ -301,8 +301,15 @@ class _ProfilePageState extends State<ProfilePage> {
                             child: CustomButton(
                               text: 'Establecer objetivo',
                               actualTheme: actualTheme,
-                              onPressed: () {
-                                // Aquí también puedes abrir una pantalla para establecer objetivo
+                              onPressed: () async {
+                                final nuevoProgreso = await context
+                                    .push<ProgresoModel?>(
+                                      AppRoutes.goal,
+                                      extra: null,
+                                    );
+                                if (nuevoProgreso != null) {
+                                  await _loadUsuarioYProgreso();
+                                }
                               },
                             ),
                           ),

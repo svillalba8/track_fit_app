@@ -23,13 +23,16 @@ class ProgresoService {
     required double objetivoPeso,
     required double pesoInicial,
   }) async {
+    final nowIso = DateTime.now().toIso8601String();
+
     final response =
         await supabase
             .from('progreso')
             .insert({
               'objetivo_peso': objetivoPeso,
               'peso_inicial': pesoInicial,
-              'fecha_comienzo': DateTime.now().toIso8601String(),
+              'peso_actual': pesoInicial,
+              'fecha_comienzo': nowIso,
             })
             .select()
             .single();
