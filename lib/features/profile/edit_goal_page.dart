@@ -64,14 +64,22 @@ class _EditGoalPageState extends State<EditGoalPage> {
       fechaComienzo: hoy,
       objetivoPeso: 0,
       fechaObjetivo: null,
-      pesoActual: pesoActual,
       pesoInicial: pesoActual,
     );
     _setupControllersFromProgreso();
     setState(() => _loading = false);
   }
 
-  void _setupControllersFromProgreso() {
+  Future<void> _setupControllersFromProgreso() async {
+    final hoy = DateTime.now();
+    final supabase = GetIt.I<SupabaseClient>();
+    final authUser = supabase.auth.currentUser;
+    double pesoActual = 0;
+    if (authUser != null) {
+      final usuarioService = GetIt.I<UsuarioService>();
+      final usuario = await usuarioService.fetchUsuarioByAuthId(authUser.id);
+      pesoActual = usuario?.peso ?? 0;
+    }
     _objetivoController.text =
         progreso.objetivoPeso > 0 ? progreso.objetivoPeso.toString() : '';
     _fechaObjetivoController.text =
@@ -80,7 +88,7 @@ class _EditGoalPageState extends State<EditGoalPage> {
             : '';
     _pesoInicialController.text =
         progreso.pesoInicial?.toStringAsFixed(1) ?? '';
-    _pesoActualController.text = progreso.pesoActual.toStringAsFixed(1);
+    _pesoActualController.text = pesoActual.toStringAsFixed(1);
     _fechaInicioController.text = DateFormat(
       'yyyy-MM-dd',
     ).format(progreso.fechaComienzo);
@@ -113,7 +121,6 @@ class _EditGoalPageState extends State<EditGoalPage> {
     }
 
     final progresoACrear = progreso.copyWith(
-      pesoActual: pesoActual,
       objetivoPeso: objetivo,
       fechaObjetivo: fechaObjetivo,
     );
@@ -125,7 +132,8 @@ class _EditGoalPageState extends State<EditGoalPage> {
       if (progreso.id == 0) {
         final creado = await servicio.createProgreso(
           objetivoPeso: progresoACrear.objetivoPeso,
-          pesoInicial: progresoACrear.pesoInicial ?? pesoActual,
+          pesoInicial: progresoACrear.pesoInicial,
+          fechaObjetivo: progresoACrear.fechaObjetivo,
         );
         showSuccessSnackBar(context, 'Objetivo creado');
         context.pop(creado);
@@ -278,6 +286,50 @@ class _EditGoalPageState extends State<EditGoalPage> {
                           onPressed: _isSaving ? null : _guardarCambios,
                         )
                         : const SizedBox.shrink(),
+              ),
+              TextButton.icon(
+                onPressed: () async {
+                  final confirmar = await showDialog<bool>(
+                    context: context,
+                    builder:
+                        (ctx) => AlertDialog(
+                          title: Text('Cancelar objetivo'),
+                          content: Text(
+                            '¿Estás seguro de que quieres cancelar tu objetivo actual?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, false),
+                              child: Text('No'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, true),
+                              child: Text('Sí'),
+                            ),
+                          ],
+                        ),
+                  );
+
+                  if (confirmar != true) return;
+
+                  try {
+                    final servicio = GetIt.I<ProgresoService>();
+                    final actualizado = await servicio.cancelarObjetivo(
+                      progreso.id,
+                    );
+                    showSuccessSnackBar(context, 'Objetivo cancelado');
+                    context.pop(actualizado);
+                  } catch (e) {
+                    debugPrint('Error al cancelar objetivo: $e');
+                    showErrorSnackBar(
+                      context,
+                      'No se pudo cancelar el objetivo',
+                    );
+                  }
+                },
+                icon: Icon(Icons.cancel_outlined),
+                label: Text('Cancelar objetivo'),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
               ),
             ],
           ),

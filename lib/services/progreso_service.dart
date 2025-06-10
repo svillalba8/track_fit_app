@@ -22,22 +22,33 @@ class ProgresoService {
   Future<ProgresoModel> createProgreso({
     required double objetivoPeso,
     required double pesoInicial,
+    required DateTime? fechaObjetivo,
   }) async {
     final nowIso = DateTime.now().toIso8601String();
 
-    final response =
+    final progResponse =
         await supabase
             .from('progreso')
             .insert({
               'objetivo_peso': objetivoPeso,
               'peso_inicial': pesoInicial,
-              'peso_actual': pesoInicial,
               'fecha_comienzo': nowIso,
+              'fecha_objetivo': fechaObjetivo?.toIso8601String(),
             })
             .select()
             .single();
 
-    return ProgresoModel.fromJson(response);
+    final nuevoProgreso = ProgresoModel.fromJson(progResponse);
+
+    final authUser = supabase.auth.currentUser;
+    if (authUser != null) {
+      await supabase
+          .from('usuarios')
+          .update({'id_progreso': nuevoProgreso.id})
+          .eq('auth_user_id', authUser.id);
+    }
+
+    return nuevoProgreso;
   }
 
   Future<ProgresoModel> updateProgreso(ProgresoModel progreso) async {
@@ -47,10 +58,21 @@ class ProgresoService {
             .update({
               'objetivo_peso': progreso.objetivoPeso,
               'peso_inicial': progreso.pesoInicial,
-              'peso_actual': progreso.pesoActual,
               'fecha_objetivo': progreso.fechaObjetivo?.toIso8601String(),
             })
             .eq('id', progreso.id)
+            .select()
+            .single();
+
+    return ProgresoModel.fromJson(response);
+  }
+
+  Future<ProgresoModel> cancelarObjetivo(int idProgreso) async {
+    final response =
+        await supabase
+            .from('progreso')
+            .update({'objetivo_peso': null, 'fecha_objetivo': null})
+            .eq('id', idProgreso)
             .select()
             .single();
 
