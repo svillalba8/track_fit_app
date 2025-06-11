@@ -1,14 +1,14 @@
 class ProgresoModel {
   final int id;
   final DateTime fechaComienzo;
-  final double objetivoPeso;
+  final double? objetivoPeso;
   final DateTime? fechaObjetivo;
   final double pesoInicial;
 
   ProgresoModel({
     required this.id,
     required this.fechaComienzo,
-    required this.objetivoPeso,
+    this.objetivoPeso,
     this.fechaObjetivo,
     required this.pesoInicial,
   });
@@ -16,7 +16,10 @@ class ProgresoModel {
   factory ProgresoModel.fromJson(Map<String, dynamic> json) => ProgresoModel(
     id: json['id'] as int,
     fechaComienzo: DateTime.parse(json['fecha_comienzo'] as String),
-    objetivoPeso: (json['objetivo_peso'] as num).toDouble(),
+    objetivoPeso:
+        json['objetivo_peso'] != null
+            ? (json['objetivo_peso'] as num).toDouble()
+            : null,
     fechaObjetivo:
         json['fecha_objetivo'] != null
             ? DateTime.tryParse(json['fecha_objetivo'] as String)

@@ -379,14 +379,16 @@ Widget _buildProgressBar(
 
   double progresoPeso = 0.0;
 
-  if (pesoInicial == pesoObjetivo) {
-    progresoPeso = 1.0;
-  } else if (pesoInicial > pesoObjetivo) {
-    progresoPeso = (pesoInicial - pesoActual) / (pesoInicial - pesoObjetivo);
-  } else {
-    progresoPeso = (pesoActual - pesoInicial) / (pesoObjetivo - pesoInicial);
+  if (pesoObjetivo != null) {
+    if (pesoInicial == pesoObjetivo) {
+      progresoPeso = 1.0;
+    } else if (pesoInicial > pesoObjetivo) {
+      progresoPeso = (pesoInicial - pesoActual) / (pesoInicial - pesoObjetivo);
+    } else {
+      progresoPeso = (pesoActual - pesoInicial) / (pesoObjetivo - pesoInicial);
+    }
+    progresoPeso = progresoPeso.clamp(0.0, 1.0);
   }
-  progresoPeso = progresoPeso.clamp(0.0, 1.0);
 
   // Helpers
   Color getColor(double value) {
