@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
-
+import 'package:track_fit_app/features/routines/services/exercise_service.dart';
+import 'package:track_fit_app/features/routines/services/routine_service.dart';
+import 'package:track_fit_app/features/routines/widgets/add_exercise_to_routine_form.dart';
+import 'package:track_fit_app/features/routines/widgets/exercise_form.dart';
+import 'package:track_fit_app/features/routines/widgets/routine_form.dart';
+import 'package:track_fit_app/features/routines/widgets/section_card.dart';
 import '../../core/enums/exercise_type.dart';
-import '../../models/routines_models/exercise_model.dart';
-import '../../models/routines_models/routine_model.dart';
-import '../../services/routines_services/exercise_service.dart';
-import '../../services/routines_services/routine_service.dart';
-import '../../widgets/routines_page_widgets/add_exercise_to_routine_form.dart';
-import '../../widgets/routines_page_widgets/exercise_form.dart';
-import '../../widgets/routines_page_widgets/routine_form.dart';
-import '../../widgets/routines_page_widgets/section_card.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_icon_button.dart';
-import 'workout_session_page.dart';
+import 'models/exercise_model.dart';
+import 'models/routine_model.dart';
+import 'secondary_pages/workout_session_page.dart';
 
 class RoutinePage extends StatefulWidget {
   const RoutinePage({super.key});
