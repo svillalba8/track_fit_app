@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../widgets/custom_button.dart';
+import '../../../widgets/custom_button.dart';
 
 class WorkoutSessionPage extends StatefulWidget {
   final String routineName;

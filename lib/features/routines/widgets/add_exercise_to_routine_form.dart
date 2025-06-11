@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import '../../core/enums/exercise_type.dart';
-import '../../models/routines_models/exercise_model.dart';
-import '../../models/routines_models/routine_model.dart';
-import '../../services/routines_services/exercise_service.dart';
-import '../../services/routines_services/routine_service.dart';
-import '../custom_button.dart';
-import '../selectable_animated_container.dart';
 
+import '../../../core/enums/exercise_type.dart';
+import '../../../widgets/custom_button.dart';
+import '../../../widgets/selectable_animated_container.dart';
+import '../models/exercise_model.dart';
+import '../models/routine_model.dart';
+import '../services/exercise_service.dart';
+import '../services/routine_service.dart';
 void showAddExerciseToRoutineForm(
     BuildContext context,
     Routine routine,

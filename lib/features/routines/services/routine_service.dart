@@ -1,8 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import '../../models/routines_models/exercise_model.dart';
-import '../../models/routines_models/exercise_with_details_model.dart';
-import '../../models/routines_models/routine_model.dart';
+import '../models/exercise_with_details_model.dart';
+import '../models/routine_model.dart';
 
 class RoutineService {
   final SupabaseClient _client = Supabase.instance.client;

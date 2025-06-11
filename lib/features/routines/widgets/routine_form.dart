@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../models/routines_models/routine_model.dart';
-import '../../services/routines_services/routine_service.dart';
-import '../custom_button.dart';
-
+import '../../../widgets/custom_button.dart';
+import '../models/routine_model.dart';
+import '../services/routine_service.dart';
 void showRoutineForm(
     BuildContext context,
     RoutineService service,

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../core/enums/exercise_type.dart';
-import '../../models/routines_models/exercise_model.dart';
-import '../../services/routines_services/exercise_service.dart';
-import '../custom_button.dart';
-import '../selectable_animated_container.dart';
+import '../../../widgets/custom_button.dart';
+import '../../../widgets/selectable_animated_container.dart';
+import '../models/exercise_model.dart';
+import '../services/exercise_service.dart';
 
 void showExerciseForm(
     BuildContext context,

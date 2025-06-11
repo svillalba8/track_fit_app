@@ -1,15 +1,26 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/data/di.dart';
+import 'package:track_fit_app/features/home/widgets/ejercicios_page_view.dart';
 import 'package:track_fit_app/features/home/widgets/home_card.dart';
 import 'package:track_fit_app/features/home/widgets/hydration_widget.dart';
+import 'package:track_fit_app/features/home/widgets/rutinas_dialog.dart';
 import 'package:track_fit_app/features/trainer/service/daily_challenge_dialog.dart';
 import 'package:track_fit_app/models/usuario_model.dart';
 import 'package:track_fit_app/notifiers/daily_challenge_notifier.dart';
 import 'package:track_fit_app/notifiers/recipe_notifier.dart';
 import 'package:track_fit_app/services/usuario_service.dart';
 import 'package:track_fit_app/widgets/custom_divider.dart';
+import '../../widgets/custom_button.dart';
+import '../routines/models/exercise_model.dart';
+import '../routines/models/routine_model.dart';
+import '../routines/services/exercise_service.dart';
+import '../routines/services/routine_service.dart';
+import '../routines/widgets/exercise_form.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,28 +29,74 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
+  Routine? rutinaAleatoria;
+  List<Exercise> ejercicios = [];
+  bool isLoadingEjercicios = true;
+  final ExerciseService exerciseService = ExerciseService();
+
+  late final PageController _pageController;
+  int _currentPageIndex = 0;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _pageController = PageController();
+    _cargarRutinaAleatoria();
+    _cargarEjercicios();
 
-    // Reto diario
     context.read<DailyChallengeNotifier>().ensureTodayChallengeExists();
-    // Receta diaria
     context.read<RecipeNotifier>().initTodayRecipe();
+  }
+
+  Future<void> _cargarRutinaAleatoria() async {
+    final routineService = RoutineService();
+    final rutinas = await routineService.getRoutines();
+    if (rutinas.isNotEmpty) {
+      final random = Random();
+      setState(() {
+        rutinaAleatoria = rutinas[random.nextInt(rutinas.length)];
+      });
+    }
+  }
+
+  Future<void> _cargarEjercicios() async {
+    setState(() => isLoadingEjercicios = true);
+    final exerciseService = ExerciseService();
+    final listaEjercicios = await exerciseService.getExercises();
+    setState(() {
+      ejercicios = listaEjercicios;
+      isLoadingEjercicios = false;
+      _currentPageIndex = 0;
+      _pageController.jumpToPage(0);
+    });
   }
 
   @override
   void dispose() {
+    _pageController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Cuando la app vuelve al foreground, volvemos a comprobar el reto
     if (state == AppLifecycleState.resumed) {
       context.read<DailyChallengeNotifier>().ensureTodayChallengeExists();
+    }
+  }
+
+  void _goToPreviousPage() {
+    if (_currentPageIndex > 0) {
+      _pageController.previousPage(
+          duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+    }
+  }
+
+  void _goToNextPage() {
+    if (_currentPageIndex < ejercicios.length - 1) {
+      _pageController.nextPage(
+          duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
     }
   }
 
@@ -67,63 +124,65 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             ),
           ),
           body: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 12.0,
-            ),
+            padding:
+            const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             child: GridView.count(
               crossAxisCount: 2,
               crossAxisSpacing: 8,
               mainAxisSpacing: 8,
               childAspectRatio: 0.87,
               children: [
-                // Card 1: Rutina recomendada
+                // Card 1: Rutina aleatoria del usuario
                 HomeCard(
                   icon: Icons.fitness_center,
-                  title: 'Rutina top',
-                  subtitle: 'Fuerza: Tren superior (4 ejercicios)',
+                  title: rutinaAleatoria?.nombre ?? 'Cargando rutina...',
+                  subtitle: null,
                   backgroundColor: const Color(0xFFF9F9FC),
-                  bottomWidget: Column(
+                  bottomWidget: rutinaAleatoria != null
+                      ? Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 4),
-                      Stack(
-                        children: [
-                          Container(
-                            height: 6,
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFE5E5EA),
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                          ),
-                          Container(
-                            height: 6,
-                            width: MediaQuery.of(context).size.width * 0.15,
-                            // 2/4 completados ≈ 50% del ancho de una card
-                            decoration: BoxDecoration(
-                              color: actualTheme.colorScheme.secondary,
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 8),
                       const Text(
-                        '2 de 4 completados',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0x993C3C43),
+                        '¡Que la pereza no te pueda! ¿Ya has entrenado hoy?',
+                        style: TextStyle(fontSize: 12, color: Color(0x993C3C43)),
+                      ),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Builder(
+                          builder: (context) => TextButton(
+                            onPressed: () async {
+                              final routineService = RoutineService();
+                              final todasLasRutinas = await routineService.getRoutines();
+
+                              if (!mounted) return;
+
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return RutinasDialog(
+                                    todasLasRutinas: todasLasRutinas,
+                                    onEntrenar: () {
+                                      if (rutinaAleatoria != null) {
+                                        context.push('/routines', extra: rutinaAleatoria);
+                                      }
+                                    },
+                                  );
+                                },
+                              );
+                            },
+                            child: const Text('Ver rutinas'),
+                          ),
                         ),
                       ),
                     ],
-                  ),
-                  onTap: () {
-                    // Navigator.pushNamed(context, '/rutinaRecomendada');
-                  },
+                  )
+                      : null,
+                  onTap: () {}, // desactivado para usar solo el botón
                 ),
 
-                // Card 2: Reto del día
+                // Card 2: Reto diario
                 HomeCard(
                   icon: Icons.emoji_events,
                   title: 'Reto diario',
@@ -134,16 +193,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                       final completado = retoProv.retoCompletado;
                       return Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color:
-                              completado
-                                  ? Colors
-                                      .green
-                                      .shade100 // fondo verde suave
-                                  : const Color(0xFFFCD34D), // amarillo
+                          color: completado
+                              ? Colors.green.shade100
+                              : const Color(0xFFFCD34D),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -151,12 +205,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color:
-                                completado
-                                    ? Colors
-                                        .green
-                                        .shade800 // texto verde oscuro
-                                    : const Color(0xFF1C1C1E),
+                            color: completado
+                                ? Colors.green.shade800
+                                : const Color(0xFF1C1C1E),
                           ),
                         ),
                       );
@@ -167,25 +218,51 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   },
                 ),
 
-                // Card 3: Racha
+                // Card 3: Ejercicios con flechas para navegar y botón añadir
                 HomeCard(
                   icon: Icons.local_fire_department_outlined,
-                  title: 'Racha',
-                  subtitle: 'Un contador con tus días entrenados',
+                  title: 'Estos son tus ejercicios, ¿añadimos alguno más?',
+                  subtitle: null,
                   backgroundColor: const Color(0xFFF2F2F7),
-                  bottomWidget: null,
-                  onTap: () {
-                    // Navigator.pushNamed(context, '/racha');
-                  },
+                  bottomWidget: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      EjerciciosPageView(
+                        isLoading: isLoadingEjercicios,
+                        ejercicios: ejercicios,
+                        pageController: _pageController,
+                        initialPage: _currentPageIndex,
+                        onPageChanged: (index) {
+                          setState(() {
+                            _currentPageIndex = index;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      CustomButton(
+                        text: 'Añadir nuevo ejercicio',
+                        actualTheme: actualTheme,
+                        onPressed: () {
+                          showExerciseForm(
+                            context,
+                            exerciseService,
+                                () {
+                              _cargarEjercicios(); // recarga la lista tras guardar
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  onTap: () {}, // sin acción en la card para no interferir con el botón
                 ),
 
-                // Card 4: Mi progreso
+            // Card 4: Mi progreso
                 HomeCard(
-                  icon: Icons.bar_chart, // 📈
+                  icon: Icons.bar_chart,
                   title: 'Mi objetivo',
                   subtitle: '🔥 1.200 kcal\n 🏃‍♂️ 3 de 5 sesiones',
                   backgroundColor: const Color(0xFFF2F2F7),
-                  // Como aquí tenemos dos métricas, incluimos un bottomWidget con una Row
                   bottomWidget: Row(
                     children: [
                       Expanded(
@@ -194,10 +271,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           children: const [
                             Text(
                               '🏃‍♂️ Sesiones completadas',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Color(0x993C3C43),
-                              ),
+                              style:
+                              TextStyle(fontSize: 14, color: Color(0x993C3C43)),
                             ),
                             SizedBox(height: 4),
                             Text(
@@ -213,9 +288,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                       ),
                     ],
                   ),
-                  onTap: () {
-                    // Navigator.pushNamed(context, '/miProgreso');
-                  },
+                  onTap: () {},
                 ),
 
                 // Card 5: Hidratación diaria
@@ -243,22 +316,26 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                         child: Text('Error: ${prov.error}'),
                       );
                     } else if (prov.titulo != null) {
-                      // Aquí empaquetamos todos los campos en un Column
                       content = Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             prov.titulo!,
-                            style: TextStyle(fontWeight: FontWeight.bold, color: actualTheme.colorScheme.tertiary),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: actualTheme.colorScheme.tertiary,
+                            ),
                           ),
                           const SizedBox(height: 20),
                           CustomDivider(color: actualTheme.colorScheme.tertiary),
                           const SizedBox(height: 4),
-                          if (prov.calorias != null &&
-                              prov.tiempoPreparacion != null)
+                          if (prov.calorias != null && prov.tiempoPreparacion != null)
                             Text(
                               '${prov.calorias} kcal · ${prov.tiempoPreparacion} min',
-                              style: TextStyle(fontSize: 12, color: actualTheme.colorScheme.tertiary),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: actualTheme.colorScheme.tertiary,
+                              ),
                             ),
                         ],
                       );
@@ -268,16 +345,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
                     return HomeCard(
                       icon: Icons.fastfood_rounded,
-                      title: 'Nutrición', // Título fijo
-                      subtitle: null, // Sin subtítulo
+                      title: 'Nutrición',
+                      subtitle: null,
                       backgroundColor: const Color(0xFFF2F2F7),
                       bottomWidget: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: content,
                       ),
-                      onTap: () {
-                        // Aquí podrías abrir detalle completo si quieres
-                      },
+                      onTap: () {},
                     );
                   },
                 ),
