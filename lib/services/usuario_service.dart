@@ -42,4 +42,14 @@ class UsuarioService {
       throw Exception('No se pudo actualizar el usuario');
     }
   }
+
+  Future<void> updatePesoUsuario(double nuevoPeso) async {
+    final authUser = supabase.auth.currentUser;
+    if (authUser == null) return;
+
+    await supabase
+        .from('usuarios')
+        .update({'peso': nuevoPeso})
+        .eq('auth_user_id', authUser.id);
+  }
 }

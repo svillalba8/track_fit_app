@@ -4,15 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:track_fit_app/core/constants.dart';
 import 'package:track_fit_app/data/di.dart';
 import 'package:track_fit_app/features/home/widgets/ejercicios_page_view.dart';
 import 'package:track_fit_app/features/home/widgets/home_card.dart';
 import 'package:track_fit_app/features/home/widgets/hydration_widget.dart';
+import 'package:track_fit_app/features/home/widgets/my_objective_widget.dart';
 import 'package:track_fit_app/features/home/widgets/rutinas_dialog.dart';
 import 'package:track_fit_app/features/trainer/service/daily_challenge_dialog.dart';
+import 'package:track_fit_app/models/progreso_model.dart';
 import 'package:track_fit_app/models/usuario_model.dart';
 import 'package:track_fit_app/notifiers/daily_challenge_notifier.dart';
 import 'package:track_fit_app/notifiers/recipe_notifier.dart';
+import 'package:track_fit_app/services/progreso_service.dart';
 import 'package:track_fit_app/services/usuario_service.dart';
 import 'package:track_fit_app/widgets/custom_divider.dart';
 import '../../widgets/custom_button.dart';
@@ -29,6 +33,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
+  late final ProgresoService _progresoService;
+  Future<ProgresoModel?>? _futProgreso;
+
   Routine? rutinaAleatoria;
   List<Exercise> ejercicios = [];
   bool isLoadingEjercicios = true;
@@ -42,6 +49,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _pageController = PageController();
+    _progresoService = ProgresoService(Supabase.instance.client);
+
     _cargarRutinaAleatoria();
     _cargarEjercicios();
 
@@ -86,17 +95,34 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     }
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_futProgreso == null) {
+      final usuario = Provider.of<UsuarioModel?>(context);
+      final idProg = usuario?.idProgreso;
+      _futProgreso =
+          (idProg != null)
+              ? _progresoService.fetchProgresoById(idProg)
+              : Future.value(null);
+    }
+  }
+
   void _goToPreviousPage() {
     if (_currentPageIndex > 0) {
       _pageController.previousPage(
-          duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
     }
   }
 
   void _goToNextPage() {
     if (_currentPageIndex < ejercicios.length - 1) {
       _pageController.nextPage(
-          duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
     }
   }
 
@@ -107,7 +133,22 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     return FutureBuilder<UsuarioModel?>(
       future: _fetchUsuario(),
       builder: (context, snapshot) {
-        final usuario = snapshot.data;
+        // 1) Mientras está cargando, muestra un spinner completo
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        // 2) Si hubo error o no trajo usuario, mensaje
+        if (snapshot.hasError || snapshot.data == null) {
+          return const Scaffold(
+            body: Center(child: Text('No se pudo cargar tu perfil')),
+          );
+        }
+
+        // 3) Aquí ya tienes usuario NO nulo
+        final usuario = snapshot.data!;
 
         return Scaffold(
           appBar: AppBar(
@@ -124,8 +165,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             ),
           ),
           body: Padding(
-            padding:
-            const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 12.0,
+            ),
             child: GridView.count(
               crossAxisCount: 2,
               crossAxisSpacing: 8,
@@ -138,47 +181,59 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   title: rutinaAleatoria?.nombre ?? 'Cargando rutina...',
                   subtitle: null,
                   backgroundColor: const Color(0xFFF9F9FC),
-                  bottomWidget: rutinaAleatoria != null
-                      ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 8),
-                      const Text(
-                        '¡Que la pereza no te pueda! ¿Ya has entrenado hoy?',
-                        style: TextStyle(fontSize: 12, color: Color(0x993C3C43)),
-                      ),
-                      const SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Builder(
-                          builder: (context) => TextButton(
-                            onPressed: () async {
-                              final routineService = RoutineService();
-                              final todasLasRutinas = await routineService.getRoutines();
+                  bottomWidget:
+                      rutinaAleatoria != null
+                          ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 8),
+                              const Text(
+                                '¡Que la pereza no te pueda! ¿Ya has entrenado hoy?',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0x993C3C43),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: Builder(
+                                  builder:
+                                      (context) => TextButton(
+                                        onPressed: () async {
+                                          final routineService =
+                                              RoutineService();
+                                          final todasLasRutinas =
+                                              await routineService
+                                                  .getRoutines();
 
-                              if (!mounted) return;
+                                          if (!mounted) return;
 
-                              showDialog(
-                                context: context,
-                                builder: (context) {
-                                  return RutinasDialog(
-                                    todasLasRutinas: todasLasRutinas,
-                                    onEntrenar: () {
-                                      if (rutinaAleatoria != null) {
-                                        context.push('/routines', extra: rutinaAleatoria);
-                                      }
-                                    },
-                                  );
-                                },
-                              );
-                            },
-                            child: const Text('Ver rutinas'),
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                      : null,
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) {
+                                              return RutinasDialog(
+                                                todasLasRutinas:
+                                                    todasLasRutinas,
+                                                onEntrenar: () {
+                                                  if (rutinaAleatoria != null) {
+                                                    context.push(
+                                                      '/routines',
+                                                      extra: rutinaAleatoria,
+                                                    );
+                                                  }
+                                                },
+                                              );
+                                            },
+                                          );
+                                        },
+                                        child: const Text('Ver rutinas'),
+                                      ),
+                                ),
+                              ),
+                            ],
+                          )
+                          : null,
                   onTap: () {}, // desactivado para usar solo el botón
                 ),
 
@@ -193,11 +248,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                       final completado = retoProv.retoCompletado;
                       return Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
-                          color: completado
-                              ? Colors.green.shade100
-                              : const Color(0xFFFCD34D),
+                          color:
+                              completado
+                                  ? Colors.green.shade100
+                                  : const Color(0xFFFCD34D),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -205,9 +263,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: completado
-                                ? Colors.green.shade800
-                                : const Color(0xFF1C1C1E),
+                            color:
+                                completado
+                                    ? Colors.green.shade800
+                                    : const Color(0xFF1C1C1E),
                           ),
                         ),
                       );
@@ -243,52 +302,50 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                         text: 'Añadir nuevo ejercicio',
                         actualTheme: actualTheme,
                         onPressed: () {
-                          showExerciseForm(
-                            context,
-                            exerciseService,
-                                () {
-                              _cargarEjercicios(); // recarga la lista tras guardar
-                            },
-                          );
+                          showExerciseForm(context, exerciseService, () {
+                            _cargarEjercicios(); // recarga la lista tras guardar
+                          });
                         },
                       ),
                     ],
                   ),
-                  onTap: () {}, // sin acción en la card para no interferir con el botón
+                  onTap:
+                      () {}, // sin acción en la card para no interferir con el botón
                 ),
 
-            // Card 4: Mi progreso
-                HomeCard(
-                  icon: Icons.bar_chart,
-                  title: 'Mi objetivo',
-                  subtitle: '🔥 1.200 kcal\n 🏃‍♂️ 3 de 5 sesiones',
-                  backgroundColor: const Color(0xFFF2F2F7),
-                  bottomWidget: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              '🏃‍♂️ Sesiones completadas',
-                              style:
-                              TextStyle(fontSize: 14, color: Color(0x993C3C43)),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              '3 de 5',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF1C1C1E),
-                              ),
-                            ),
-                          ],
+                // Card 4: Mi objetivo
+                FutureBuilder<ProgresoModel?>(
+                  future:
+                      usuario.idProgreso != null
+                          ? _progresoService.fetchProgresoById(
+                            usuario.idProgreso!,
+                          )
+                          : Future.value(null),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState != ConnectionState.done) {
+                      return HomeCard(
+                        icon: Icons.flag_rounded,
+                        title: 'Mi Objetivo',
+                        backgroundColor: const Color(0xFFF2F2F7),
+                        bottomWidget: const Center(
+                          child: CircularProgressIndicator(),
                         ),
+                        onTap: () => context.push(AppRoutes.profile),
+                      );
+                    }
+                    final prog = snapshot.data;
+                    return HomeCard(
+                      icon: Icons.flag_rounded,
+                      title: 'Mi Objetivo',
+                      backgroundColor: const Color(0xFFF2F2F7),
+                      bottomWidget: ObjetivoPesoWidget(
+                        pesoUsuario: usuario?.peso,
+                        pesoObjetivo: prog?.objetivoPeso,
+                        fechaObjetivo: prog?.fechaObjetivo,
                       ),
-                    ],
-                  ),
-                  onTap: () {},
+                      onTap: () => context.push(AppRoutes.profile),
+                    );
+                  },
                 ),
 
                 // Card 5: Hidratación diaria
@@ -327,9 +384,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                             ),
                           ),
                           const SizedBox(height: 20),
-                          CustomDivider(color: actualTheme.colorScheme.tertiary),
+                          CustomDivider(
+                            color: actualTheme.colorScheme.tertiary,
+                          ),
                           const SizedBox(height: 4),
-                          if (prov.calorias != null && prov.tiempoPreparacion != null)
+                          if (prov.calorias != null &&
+                              prov.tiempoPreparacion != null)
                             Text(
                               '${prov.calorias} kcal · ${prov.tiempoPreparacion} min',
                               style: TextStyle(
