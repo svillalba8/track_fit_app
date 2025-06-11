@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/auth/widgets/profile_field.dart';
 import 'package:track_fit_app/core/utils/snackbar_utils.dart';
+import 'package:track_fit_app/features/trainer/widgets/date_objective_field.dart';
 import 'package:track_fit_app/models/progreso_model.dart';
 import 'package:track_fit_app/services/progreso_service.dart';
 import 'package:track_fit_app/services/usuario_service.dart';
@@ -71,7 +72,6 @@ class _EditGoalPageState extends State<EditGoalPage> {
   }
 
   Future<void> _setupControllersFromProgreso() async {
-    final hoy = DateTime.now();
     final supabase = GetIt.I<SupabaseClient>();
     final authUser = supabase.auth.currentUser;
     double pesoActual = 0;
@@ -86,14 +86,11 @@ class _EditGoalPageState extends State<EditGoalPage> {
             : '';
     _fechaObjetivoController.text =
         progreso.fechaObjetivo != null
-            ? DateFormat('yyyy-MM-dd').format(progreso.fechaObjetivo!)
+            ? formatSpanishDate(progreso.fechaObjetivo!)
             : '';
-    _pesoInicialController.text =
-        progreso.pesoInicial?.toStringAsFixed(1) ?? '';
+    _pesoInicialController.text = progreso.pesoInicial.toStringAsFixed(1);
     _pesoActualController.text = pesoActual.toStringAsFixed(1);
-    _fechaInicioController.text = DateFormat(
-      'yyyy-MM-dd',
-    ).format(progreso.fechaComienzo);
+    _fechaInicioController.text = formatSpanishDate(progreso.fechaComienzo);
   }
 
   @override
@@ -111,12 +108,9 @@ class _EditGoalPageState extends State<EditGoalPage> {
 
     final pesoActual = double.tryParse(_pesoActualController.text.trim());
     final objetivo = double.tryParse(_objetivoController.text.trim());
-    final fechaObjetivo =
-        _fechaObjetivoController.text.isNotEmpty
-            ? DateTime.tryParse(_fechaObjetivoController.text.trim())
-            : null;
+    final fechaObjetivo = progreso.fechaObjetivo;
 
-    if (pesoActual == null || objetivo == null) {
+    if (pesoActual == null || objetivo == null || fechaObjetivo == null) {
       if (!mounted) return;
       showErrorSnackBar(context, 'Revisa los valores introducidos');
       return;
@@ -162,7 +156,10 @@ class _EditGoalPageState extends State<EditGoalPage> {
       lastDate: DateTime.now().add(const Duration(days: 730)),
     );
     if (picked != null) {
-      _fechaObjetivoController.text = DateFormat('yyyy-MM-dd').format(picked);
+      setState(() {
+        progreso = progreso.copyWith(fechaObjetivo: picked);
+        _fechaObjetivoController.text = formatSpanishDate(picked);
+      });
     }
   }
 
@@ -194,9 +191,31 @@ class _EditGoalPageState extends State<EditGoalPage> {
     }
   }
 
+  // Helper para la visualización de la fecha
+  String formatSpanishDate(DateTime date) {
+    const meses = [
+      'enero',
+      'febrero',
+      'marzo',
+      'abril',
+      'mayo',
+      'junio',
+      'julio',
+      'agosto',
+      'septiembre',
+      'octubre',
+      'noviembre',
+      'diciembre',
+    ];
+    final day = date.day;
+    final month = meses[date.month - 1];
+    final year = date.year;
+    return '$day de $month de $year';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final actualTheme = Theme.of(context);
 
     if (_loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -267,16 +286,10 @@ class _EditGoalPageState extends State<EditGoalPage> {
 
               const SizedBox(height: 12),
 
-              GestureDetector(
-                onTap: _isEditing ? _seleccionarFecha : null,
-                child: AbsorbPointer(
-                  absorbing: !_isEditing,
-                  child: ProfileField(
-                    controller: _fechaObjetivoController,
-                    label: 'Fecha objetivo (opcional)',
-                    readOnly: !_isEditing,
-                  ),
-                ),
+              FechaObjetivoField(
+                controller: _fechaObjetivoController,
+                isEditable: _isEditing,
+                onTapIcon: _seleccionarFecha,
               ),
 
               const SizedBox(height: 12),
@@ -296,7 +309,7 @@ class _EditGoalPageState extends State<EditGoalPage> {
                         ? CustomButton(
                           key: const ValueKey('boton_guardar'),
                           text: _isSaving ? 'Guardando...' : 'Guardar cambios',
-                          actualTheme: theme,
+                          actualTheme: actualTheme,
                           onPressed: _isSaving ? null : _guardarCambios,
                         )
                         : const SizedBox.shrink(),
