@@ -81,7 +81,9 @@ class _EditGoalPageState extends State<EditGoalPage> {
       pesoActual = usuario?.peso ?? 0;
     }
     _objetivoController.text =
-        progreso.objetivoPeso > 0 ? progreso.objetivoPeso.toString() : '';
+        (progreso.objetivoPeso != null && progreso.objetivoPeso! > 0)
+            ? progreso.objetivoPeso!.toString()
+            : '';
     _fechaObjetivoController.text =
         progreso.fechaObjetivo != null
             ? DateFormat('yyyy-MM-dd').format(progreso.fechaObjetivo!)
@@ -131,14 +133,16 @@ class _EditGoalPageState extends State<EditGoalPage> {
       final servicio = GetIt.I<ProgresoService>();
       if (progreso.id == 0) {
         final creado = await servicio.createProgreso(
-          objetivoPeso: progresoACrear.objetivoPeso,
+          objetivoPeso: objetivo,
           pesoInicial: progresoACrear.pesoInicial,
           fechaObjetivo: progresoACrear.fechaObjetivo,
         );
+        await servicio.updatePesoUsuario(pesoActual);
         showSuccessSnackBar(context, 'Objetivo creado');
         context.pop(creado);
       } else {
         final actualizado = await servicio.updateProgreso(progresoACrear);
+        await servicio.updatePesoUsuario(pesoActual);
         showSuccessSnackBar(context, 'Objetivo actualizado');
         context.pop(actualizado);
       }
@@ -226,7 +230,9 @@ class _EditGoalPageState extends State<EditGoalPage> {
                 controller: _pesoInicialController,
                 readOnly: true,
               ),
+
               const SizedBox(height: 12),
+
               ProfileField(
                 label: 'Peso actual (kg)',
                 controller: _pesoActualController,
@@ -241,7 +247,9 @@ class _EditGoalPageState extends State<EditGoalPage> {
                   return null;
                 },
               ),
+
               const SizedBox(height: 12),
+
               ProfileField(
                 controller: _objetivoController,
                 label: 'Objetivo (kg)',
@@ -256,7 +264,9 @@ class _EditGoalPageState extends State<EditGoalPage> {
                   return null;
                 },
               ),
+
               const SizedBox(height: 12),
+
               GestureDetector(
                 onTap: _isEditing ? _seleccionarFecha : null,
                 child: AbsorbPointer(
@@ -268,13 +278,17 @@ class _EditGoalPageState extends State<EditGoalPage> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 12),
+
               ProfileField(
                 label: 'Fecha de inicio',
                 controller: _fechaInicioController,
                 readOnly: true,
               ),
+
               const SizedBox(height: 24),
+
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
                 child:
