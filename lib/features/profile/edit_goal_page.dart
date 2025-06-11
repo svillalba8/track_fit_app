@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/auth/widgets/profile_field.dart';
 import 'package:track_fit_app/core/utils/snackbar_utils.dart';
