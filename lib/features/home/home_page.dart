@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/core/constants.dart';
 import 'package:track_fit_app/data/di.dart';
-import 'package:track_fit_app/features/home/widgets/ejercicios_page_view.dart';
 import 'package:track_fit_app/features/home/widgets/home_card.dart';
 import 'package:track_fit_app/features/home/widgets/hydration_widget.dart';
 import 'package:track_fit_app/features/home/widgets/my_objective_widget.dart';
@@ -39,10 +38,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   Routine? rutinaAleatoria;
   List<Exercise> ejercicios = [];
   bool isLoadingEjercicios = true;
-  final ExerciseService exerciseService = ExerciseService();
+  int currentPage = 0;
 
+  final ExerciseService exerciseService = ExerciseService();
   late final PageController _pageController;
-  int _currentPageIndex = 0;
 
   @override
   void initState() {
@@ -71,20 +70,40 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   Future<void> _cargarEjercicios() async {
     setState(() => isLoadingEjercicios = true);
-    final listaEjercicios = await exerciseService.getExercises();
-
+    final resultado = await exerciseService.getExercises();
     setState(() {
-      ejercicios = listaEjercicios;
+      ejercicios = resultado;
       isLoadingEjercicios = false;
-      _currentPageIndex = 0;
-    });
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_pageController.hasClients) {
-        _pageController.jumpToPage(0);
-      }
+      currentPage = 0;
     });
   }
+
+  void _goToPrevious() {
+    if (currentPage > 0) {
+      setState(() {
+        currentPage -= 1;
+      });
+      _pageController.animateToPage(
+        currentPage,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _goToNext() {
+    if (currentPage < ejercicios.length - 1) {
+      setState(() {
+        currentPage += 1;
+      });
+      _pageController.animateToPage(
+        currentPage,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
 
 
   @override
@@ -107,13 +126,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     if (_futProgreso == null) {
       final usuario = Provider.of<UsuarioModel?>(context);
       final idProg = usuario?.idProgreso;
-      _futProgreso =
-          (idProg != null)
-              ? _progresoService.fetchProgresoById(idProg)
-              : Future.value(null);
+      _futProgreso = (idProg != null)
+          ? _progresoService.fetchProgresoById(idProg)
+          : Future.value(null);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -122,29 +139,24 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     return FutureBuilder<UsuarioModel?>(
       future: _fetchUsuario(),
       builder: (context, snapshot) {
-        // 1) Mientras está cargando, muestra un spinner completo
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        // 2) Si hubo error o no trajo usuario, mensaje
         if (snapshot.hasError || snapshot.data == null) {
           return const Scaffold(
             body: Center(child: Text('No se pudo cargar tu perfil')),
           );
         }
 
-        // 3) Aquí ya tienes usuario NO nulo
         final usuario = snapshot.data!;
 
         return Scaffold(
           appBar: AppBar(
             title: Text(
-              snapshot.connectionState == ConnectionState.waiting
-                  ? 'Cargando...'
-                  : usuario != null
+              usuario != null
                   ? 'Bienvenido, ${usuario.nombreUsuario}'
                   : 'Bienvenido',
             ),
@@ -154,79 +166,70 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             ),
           ),
           body: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 12.0,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             child: GridView.count(
               crossAxisCount: 2,
               crossAxisSpacing: 8,
               mainAxisSpacing: 8,
               childAspectRatio: 0.87,
               children: [
-                // Card 1: Rutina aleatoria del usuario
+                // CARD 1: Rutina
                 HomeCard(
                   icon: Icons.fitness_center,
                   title: rutinaAleatoria?.nombre ?? 'Cargando rutina...',
                   subtitle: null,
                   backgroundColor: const Color(0xFFF9F9FC),
-                  bottomWidget:
-                      rutinaAleatoria != null
-                          ? Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 8),
-                              const Text(
-                                '¡Que la pereza no te pueda! ¿Ya has entrenado hoy?',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0x993C3C43),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: Builder(
-                                  builder:
-                                      (context) => TextButton(
-                                        onPressed: () async {
-                                          final routineService =
-                                              RoutineService();
-                                          final todasLasRutinas =
-                                              await routineService
-                                                  .getRoutines();
+                  bottomWidget: rutinaAleatoria != null
+                      ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 8),
+                      const Text(
+                        '¡Que la pereza no te pueda! ¿Ya has entrenado hoy?',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0x993C3C43),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Builder(
+                          builder: (context) => TextButton(
+                            onPressed: () async {
+                              final routineService = RoutineService();
+                              final todasLasRutinas = await routineService.getRoutines();
 
-                                          if (!mounted) return;
+                              if (!mounted) return;
 
-                                          showDialog(
-                                            context: context,
-                                            builder: (context) {
-                                              return RutinasDialog(
-                                                todasLasRutinas:
-                                                    todasLasRutinas,
-                                                onEntrenar: () {
-                                                  if (rutinaAleatoria != null) {
-                                                    context.push(
-                                                      '/routines',
-                                                      extra: rutinaAleatoria,
-                                                    );
-                                                  }
-                                                },
-                                              );
-                                            },
-                                          );
-                                        },
-                                        child: const Text('Ver rutinas'),
-                                      ),
-                                ),
-                              ),
-                            ],
-                          )
-                          : null,
-                  onTap: () {}, // desactivado para usar solo el botón
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return RutinasDialog(
+                                    todasLasRutinas: todasLasRutinas,
+                                    onEntrenar: () {
+                                      if (rutinaAleatoria != null) {
+                                        context.push(
+                                          '/routines',
+                                          extra: rutinaAleatoria,
+                                        );
+                                      }
+                                    },
+                                  );
+                                },
+                              );
+                            },
+                            child: const Text('Ver rutinas'),
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                      : null,
+                  onTap: () {},
                 ),
 
-                // Card 2: Reto diario
+                // CARD 2: Reto diario
                 HomeCard(
                   icon: Icons.emoji_events,
                   title: 'Reto diario',
@@ -236,15 +239,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     builder: (_, retoProv, __) {
                       final completado = retoProv.retoCompletado;
                       return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color:
-                              completado
-                                  ? Colors.green.shade100
-                                  : const Color(0xFFFCD34D),
+                          color: completado ? Colors.green.shade100 : const Color(0xFFFCD34D),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -252,64 +249,109 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color:
-                                completado
-                                    ? Colors.green.shade800
-                                    : const Color(0xFF1C1C1E),
+                            color: completado ? Colors.green.shade800 : const Color(0xFF1C1C1E),
                           ),
                         ),
                       );
                     },
                   ),
-                  onTap: () {
-                    DailyChallengeDialog.show(context);
-                  },
+                  onTap: () => DailyChallengeDialog.show(context),
                 ),
 
-                // Card 3: Ejercicios con flechas para navegar y botón añadir
+                // CARD 3: Ejercicios
                 HomeCard(
-                  icon: Icons.local_fire_department_outlined,
-                  title: 'Estos son tus ejercicios, ¿añadimos alguno más?',
-                  subtitle: null,
-                  backgroundColor: const Color(0xFFF2F2F7),
-                  bottomWidget: Column(
-                    mainAxisSize: MainAxisSize.min,
+                  icon: Icons.directions_run,
+                  title: 'Mis ejercicios',
+                  subtitle: ejercicios.isEmpty
+                      ? 'No tienes ejercicios creados.'
+                      : 'Revisa y gestiona tus ejercicios.',
+                  backgroundColor: const Color(0xFFF9F9FC),
+                  bottomWidget: isLoadingEjercicios
+                      ? const Center(child: CircularProgressIndicator())
+                      : ejercicios.isEmpty
+                      ? null
+                      : Column(
                     children: [
-                      EjerciciosPageView(
-                        isLoading: isLoadingEjercicios,
-                        ejercicios: ejercicios,
-                        pageController: _pageController,
-                        initialPage: _currentPageIndex,
-                        onPageChanged: (index) {
-                          setState(() {
-                            _currentPageIndex = index;
-                          });
-                        },
+                      SizedBox(
+                        height: 100,
+                        child: PageView.builder(
+                          controller: _pageController,
+                          itemCount: ejercicios.length,
+                          onPageChanged: (index) =>
+                              setState(() => currentPage = index),
+                          itemBuilder: (context, index) {
+                            final ejercicio = ejercicios[index];
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    ejercicio.nombre,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF1C1C1E),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    ejercicio.descripcion ?? 'Sin descripción',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Color(0x993C3C43),
+                                    ),
+                                    maxLines: 3,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Tipo: ${ejercicio.tipo.name}',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Theme.of(context).colorScheme.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
                       ),
-                      const SizedBox(height: 12),
-                      CustomButton(
-                        text: 'Añadir nuevo ejercicio',
-                        actualTheme: actualTheme,
-                        onPressed: () {
-                          showExerciseForm(context, exerciseService, () {
-                            _cargarEjercicios(); // recarga la lista tras guardar
-                          });
-                        },
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back_ios),
+                            color: const Color(0xFF1C1C1E),
+                            onPressed: currentPage == 0 ? null : _goToPrevious,
+                          ),
+                          Text(
+                            '${currentPage + 1} / ${ejercicios.length}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF1C1C1E),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.arrow_forward_ios),
+                            color: const Color(0xFF1C1C1E),
+                            onPressed: currentPage == ejercicios.length - 1
+                                ? null
+                                : _goToNext,
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  onTap:
-                      () {}, // sin acción en la card para no interferir con el botón
+                  onTap: () {},
                 ),
-
-                // Card 4: Mi objetivo
+// CARD 4: Objetivo
                 FutureBuilder<ProgresoModel?>(
-                  future:
-                      usuario.idProgreso != null
-                          ? _progresoService.fetchProgresoById(
-                            usuario.idProgreso!,
-                          )
-                          : Future.value(null),
+                  future: usuario.idProgreso != null
+                      ? _progresoService.fetchProgresoById(usuario.idProgreso!)
+                      : Future.value(null),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState != ConnectionState.done) {
                       return HomeCard(
@@ -328,7 +370,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                       title: 'Mi Objetivo',
                       backgroundColor: const Color(0xFFF2F2F7),
                       bottomWidget: ObjetivoPesoWidget(
-                        pesoUsuario: usuario?.peso,
+                        pesoUsuario: usuario.peso,
                         pesoObjetivo: prog?.objetivoPeso,
                         fechaObjetivo: prog?.fechaObjetivo,
                       ),
@@ -337,7 +379,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   },
                 ),
 
-                // Card 5: Hidratación diaria
+                // CARD 5: Hidratación
                 HomeCard(
                   icon: Icons.water_drop_outlined,
                   title: 'Agua diaria',
@@ -346,11 +388,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   onTap: () {},
                 ),
 
-                // Card 6: Recomendación alimentaria
+                // CARD 6: Nutrición
                 Consumer<RecipeNotifier>(
                   builder: (_, prov, __) {
                     Widget content;
-
                     if (prov.isLoading) {
                       content = const Padding(
                         padding: EdgeInsets.symmetric(vertical: 8.0),
