@@ -37,8 +37,8 @@ class DailyRecipeNotifier extends ChangeNotifier {
   // Lógica para decidir en qué tramo estamos
   String get _currentTramo {
     final h = DateTime.now().hour;
-    if (h >= 6 && h < 12) return 'desayuno';
-    if (h >= 12 && h < 16) return 'comida';
+    if (h >= 6 && h <= 12) return 'desayuno';
+    if (h >= 13 && h <= 19) return 'comida';
     return 'cena';
   }
 

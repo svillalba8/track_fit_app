@@ -162,7 +162,7 @@ Future<String> fetchDailyRecipeFromGPT(String slot, {String? userName}) async {
       "breve": "2 tostadas integrales con aguacate y huevo pochado."
     }
 
-    Sin ningún texto extra y la descripción lo mas breve posible.
+    Sin ningún texto extra y la descripción lo mas breve posible, y que sean recetas mediterraneas variadas.
       ''';
 
   const String model = 'gpt-3.5-turbo';
