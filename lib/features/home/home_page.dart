@@ -1,8 +1,8 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/core/constants.dart';
 import 'package:track_fit_app/data/di.dart';
@@ -18,12 +18,11 @@ import 'package:track_fit_app/notifiers/recipe_notifier.dart';
 import 'package:track_fit_app/services/progreso_service.dart';
 import 'package:track_fit_app/services/usuario_service.dart';
 import 'package:track_fit_app/widgets/custom_divider.dart';
-import '../../widgets/custom_button.dart';
+
 import '../routines/models/exercise_model.dart';
 import '../routines/models/routine_model.dart';
 import '../routines/services/exercise_service.dart';
 import '../routines/services/routine_service.dart';
-import '../routines/widgets/exercise_form.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -104,8 +103,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     }
   }
 
-
-
   @override
   void dispose() {
     _pageController.dispose();
@@ -126,9 +123,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     if (_futProgreso == null) {
       final usuario = Provider.of<UsuarioModel?>(context);
       final idProg = usuario?.idProgreso;
-      _futProgreso = (idProg != null)
-          ? _progresoService.fetchProgresoById(idProg)
-          : Future.value(null);
+      _futProgreso =
+          (idProg != null)
+              ? _progresoService.fetchProgresoById(idProg)
+              : Future.value(null);
     }
   }
 
@@ -155,18 +153,17 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text(
-              usuario != null
-                  ? 'Bienvenido, ${usuario.nombreUsuario}'
-                  : 'Bienvenido',
-            ),
+            title: Text('Bienvenido, ${usuario.nombreUsuario}'),
             titleTextStyle: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
           body: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 12.0,
+            ),
             child: GridView.count(
               crossAxisCount: 2,
               crossAxisSpacing: 8,
@@ -179,53 +176,57 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   title: rutinaAleatoria?.nombre ?? 'Cargando rutina...',
                   subtitle: null,
                   backgroundColor: const Color(0xFFF9F9FC),
-                  bottomWidget: rutinaAleatoria != null
-                      ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 8),
-                      const Text(
-                        '¡Que la pereza no te pueda! ¿Ya has entrenado hoy?',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0x993C3C43),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Builder(
-                          builder: (context) => TextButton(
-                            onPressed: () async {
-                              final routineService = RoutineService();
-                              final todasLasRutinas = await routineService.getRoutines();
+                  bottomWidget:
+                      rutinaAleatoria != null
+                          ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 8),
+                              const Text(
+                                '¡Que la pereza no te pueda! ¿Ya has entrenado hoy?',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0x993C3C43),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: Builder(
+                                  builder:
+                                      (buttonContext) => TextButton(
+                                        onPressed: () async {
+                                          final todasLasRutinas =
+                                              await RoutineService()
+                                                  .getRoutines();
 
-                              if (!mounted) return;
+                                          if (!buttonContext.mounted) return;
 
-                              showDialog(
-                                context: context,
-                                builder: (context) {
-                                  return RutinasDialog(
-                                    todasLasRutinas: todasLasRutinas,
-                                    onEntrenar: () {
-                                      if (rutinaAleatoria != null) {
-                                        context.push(
-                                          '/routines',
-                                          extra: rutinaAleatoria,
-                                        );
-                                      }
-                                    },
-                                  );
-                                },
-                              );
-                            },
-                            child: const Text('Ver rutinas'),
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                      : null,
+                                          showDialog(
+                                            context: buttonContext,
+                                            builder: (dialogContext) {
+                                              return RutinasDialog(
+                                                todasLasRutinas:
+                                                    todasLasRutinas,
+                                                onEntrenar: () {
+                                                  if (rutinaAleatoria != null) {
+                                                    dialogContext.push(
+                                                      '/routines',
+                                                      extra: rutinaAleatoria,
+                                                    );
+                                                  }
+                                                },
+                                              );
+                                            },
+                                          );
+                                        },
+                                        child: const Text('Ver rutinas'),
+                                      ),
+                                ),
+                              ),
+                            ],
+                          )
+                          : null,
                   onTap: () {},
                 ),
 
@@ -235,26 +236,43 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   title: 'Reto diario',
                   subtitle: 'Completa el reto diario de hoy.',
                   backgroundColor: const Color(0xFFF9F9FC),
-                  bottomWidget: Consumer<DailyChallengeNotifier>(
-                    builder: (_, retoProv, __) {
-                      final completado = retoProv.retoCompletado;
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: completado ? Colors.green.shade100 : const Color(0xFFFCD34D),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          completado ? 'Completado' : 'En progreso',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: completado ? Colors.green.shade800 : const Color(0xFF1C1C1E),
-                          ),
-                        ),
-                      );
-                    },
+                  bottomWidget: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 54),
+
+                      Consumer<DailyChallengeNotifier>(
+                        builder: (_, retoProv, __) {
+                          final completado = retoProv.retoCompletado;
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  completado
+                                      ? Colors.green.shade100
+                                      : const Color(0xFFFCD34D),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              completado ? 'Completado' : 'En progreso',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color:
+                                    completado
+                                        ? Colors.green.shade800
+                                        : const Color(0xFF1C1C1E),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
+
                   onTap: () => DailyChallengeDialog.show(context),
                 ),
 
@@ -262,96 +280,111 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 HomeCard(
                   icon: Icons.directions_run,
                   title: 'Mis ejercicios',
-                  subtitle: ejercicios.isEmpty
-                      ? 'No tienes ejercicios creados.'
-                      : 'Revisa y gestiona tus ejercicios.',
+                  subtitle:
+                      ejercicios.isEmpty
+                          ? 'No tienes ejercicios creados.'
+                          : 'Revisa y gestiona tus ejercicios.',
                   backgroundColor: const Color(0xFFF9F9FC),
-                  bottomWidget: isLoadingEjercicios
-                      ? const Center(child: CircularProgressIndicator())
-                      : ejercicios.isEmpty
-                      ? null
-                      : Column(
-                    children: [
-                      SizedBox(
-                        height: 100,
-                        child: PageView.builder(
-                          controller: _pageController,
-                          itemCount: ejercicios.length,
-                          onPageChanged: (index) =>
-                              setState(() => currentPage = index),
-                          itemBuilder: (context, index) {
-                            final ejercicio = ejercicios[index];
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                  bottomWidget:
+                      isLoadingEjercicios
+                          ? const Center(child: CircularProgressIndicator())
+                          : ejercicios.isEmpty
+                          ? null
+                          : Column(
+                            children: [
+                              SizedBox(
+                                height: 100,
+                                child: PageView.builder(
+                                  controller: _pageController,
+                                  itemCount: ejercicios.length,
+                                  onPageChanged:
+                                      (index) =>
+                                          setState(() => currentPage = index),
+                                  itemBuilder: (context, index) {
+                                    final ejercicio = ejercicios[index];
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            ejercicio.nombre,
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xFF1C1C1E),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            ejercicio.descripcion ??
+                                                'Sin descripción',
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              color: Color(0x993C3C43),
+                                            ),
+                                            maxLines: 3,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Tipo: ${ejercicio.tipo.name}',
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              color:
+                                                  Theme.of(
+                                                    context,
+                                                  ).colorScheme.primary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.arrow_back_ios),
+                                    color: const Color(0xFF1C1C1E),
+                                    onPressed:
+                                        currentPage == 0 ? null : _goToPrevious,
+                                  ),
                                   Text(
-                                    ejercicio.nombre,
+                                    '${currentPage + 1} / ${ejercicios.length}',
                                     style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
                                       color: Color(0xFF1C1C1E),
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    ejercicio.descripcion ?? 'Sin descripción',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: Color(0x993C3C43),
-                                    ),
-                                    maxLines: 3,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Tipo: ${ejercicio.tipo.name}',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
+                                  IconButton(
+                                    icon: const Icon(Icons.arrow_forward_ios),
+                                    color: const Color(0xFF1C1C1E),
+                                    onPressed:
+                                        currentPage == ejercicios.length - 1
+                                            ? null
+                                            : _goToNext,
                                   ),
                                 ],
                               ),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.arrow_back_ios),
-                            color: const Color(0xFF1C1C1E),
-                            onPressed: currentPage == 0 ? null : _goToPrevious,
+                            ],
                           ),
-                          Text(
-                            '${currentPage + 1} / ${ejercicios.length}',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Color(0xFF1C1C1E),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.arrow_forward_ios),
-                            color: const Color(0xFF1C1C1E),
-                            onPressed: currentPage == ejercicios.length - 1
-                                ? null
-                                : _goToNext,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
                   onTap: () {},
                 ),
-// CARD 4: Objetivo
+                // CARD 4: Objetivo
                 FutureBuilder<ProgresoModel?>(
-                  future: usuario.idProgreso != null
-                      ? _progresoService.fetchProgresoById(usuario.idProgreso!)
-                      : Future.value(null),
+                  future:
+                      usuario.idProgreso != null
+                          ? _progresoService.fetchProgresoById(
+                            usuario.idProgreso!,
+                          )
+                          : Future.value(null),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState != ConnectionState.done) {
                       return HomeCard(
