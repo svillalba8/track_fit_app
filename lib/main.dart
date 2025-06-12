@@ -53,7 +53,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => ChatNotifier()),
         ChangeNotifierProvider(create: (_) => DailyChallengeNotifier()),
         ChangeNotifierProvider(create: (_) => HydrationNotifier()),
-        ChangeNotifierProvider(create: (_) => RecipeNotifier()),
+        ChangeNotifierProvider(create: (_) => DailyRecipeNotifier()),
         ChangeNotifierProvider(create: (_) => themeNotifier),
       ],
       child: const MyApp(),

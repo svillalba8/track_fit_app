@@ -53,7 +53,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     _cargarEjercicios();
 
     context.read<DailyChallengeNotifier>().ensureTodayChallengeExists();
-    context.read<RecipeNotifier>().initTodayRecipe();
   }
 
   Future<void> _cargarRutinaAleatoria() async {
@@ -422,7 +421,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 ),
 
                 // CARD 6: Nutrición
-                Consumer<RecipeNotifier>(
+                Consumer<DailyRecipeNotifier>(
                   builder: (_, prov, __) {
                     Widget content;
                     if (prov.isLoading) {
@@ -435,6 +434,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: Text('Error: ${prov.error}'),
                       );
+                      debugPrint('Error: ${prov.error}');
                     } else if (prov.titulo != null) {
                       content = Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
