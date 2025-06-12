@@ -117,8 +117,6 @@ class RecipeNotifier extends ChangeNotifier {
     try {
       final slot = _currentMealSlot();
       final rawJson = await fetchDailyRecipeFromGPT(slot);
-
-      // Parsear el JSON (prompt A)
       final Map<String, dynamic> meta = jsonDecode(rawJson);
       final titulo = meta['titulo'] as String;
       final calorias = (meta['calorias'] as num).toInt();
@@ -126,27 +124,30 @@ class RecipeNotifier extends ChangeNotifier {
       final breve = meta['breve'] as String;
 
       // Insertar en BD
-      final inserted =
-          await _supabase
-              .from('receta_diaria')
-              .insert({
-                'user_id': user.id,
-                'fecha': _hoyKey,
-                'tramo_horario': slot,
-                'titulo': titulo,
-                'calorias': calorias,
-                'tiempo_preparacion': tiempo,
-                'descripcion_breve': breve,
-              })
-              .select('''
-            id,
-            tramo_horario,
-            titulo,
-            calorias,
-            tiempo_preparacion,
-            descripcion_breve
-          ''')
-              .maybeSingle();
+      final inserted = await _supabase
+    .from('receta_diaria')
+    .upsert(
+      {
+        'user_id': user.id,
+        'fecha': _hoyKey,
+        'tramo_horario': slot,
+        'titulo': titulo,
+        'calorias': calorias,
+        'tiempo_preparacion': tiempo,
+        'descripcion_breve': breve,
+      },
+      onConflict: 'user_id,fecha,tramo_horario',
+    )
+    .select('''
+  id,
+  tramo_horario,
+  titulo,
+  calorias,
+  tiempo_preparacion,
+  descripcion_breve
+''')
+    .maybeSingle();
+
 
       if (inserted == null) {
         _error = 'No se pudo guardar la receta';

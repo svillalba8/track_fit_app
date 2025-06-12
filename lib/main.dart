@@ -5,10 +5,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/core/navigation/app_router.dart';
 import 'package:track_fit_app/core/themes/theme_notifier.dart';
 import 'package:track_fit_app/data/di.dart';
-import 'package:track_fit_app/features/home/service/hydration_service.dart';
 import 'package:track_fit_app/notifiers/auth_user_notifier.dart';
 import 'package:track_fit_app/notifiers/chat_notifier.dart';
 import 'package:track_fit_app/notifiers/daily_challenge_notifier.dart';
+import 'package:track_fit_app/notifiers/hydration_notifier.dart';
 import 'package:track_fit_app/notifiers/recipe_notifier.dart';
 
 /// Separa toda la inicialización en este método:

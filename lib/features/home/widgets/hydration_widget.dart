@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:track_fit_app/features/home/service/hydration_service.dart';
+import 'package:track_fit_app/notifiers/hydration_notifier.dart';
 
 class HydrationWidget extends StatelessWidget {
   const HydrationWidget({super.key});
