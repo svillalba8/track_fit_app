@@ -71,15 +71,21 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   Future<void> _cargarEjercicios() async {
     setState(() => isLoadingEjercicios = true);
-    final exerciseService = ExerciseService();
     final listaEjercicios = await exerciseService.getExercises();
+
     setState(() {
       ejercicios = listaEjercicios;
       isLoadingEjercicios = false;
       _currentPageIndex = 0;
-      _pageController.jumpToPage(0);
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_pageController.hasClients) {
+        _pageController.jumpToPage(0);
+      }
     });
   }
+
 
   @override
   void dispose() {
@@ -108,23 +114,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     }
   }
 
-  void _goToPreviousPage() {
-    if (_currentPageIndex > 0) {
-      _pageController.previousPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    }
-  }
-
-  void _goToNextPage() {
-    if (_currentPageIndex < ejercicios.length - 1) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
