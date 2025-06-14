@@ -10,7 +10,9 @@ import 'package:track_fit_app/services/progreso_service.dart';
 import 'package:track_fit_app/services/usuario_service.dart';
 import 'package:track_fit_app/widgets/custom_button.dart';
 
+// Página para crear o editar un objetivo de progreso de peso
 class EditGoalPage extends StatefulWidget {
+  // Modelo de progreso opcional, si es null se crea uno nuevo
   final ProgresoModel? progreso;
 
   const EditGoalPage({super.key, this.progreso});
@@ -20,35 +22,39 @@ class EditGoalPage extends StatefulWidget {
 }
 
 class _EditGoalPageState extends State<EditGoalPage> {
+  // Clave del formulario para validaciones
   final _formKey = GlobalKey<FormState>();
+  // Controladores de texto para los campos de entrada
   final _objetivoController = TextEditingController();
   final _fechaObjetivoController = TextEditingController();
-
   final TextEditingController _pesoInicialController = TextEditingController();
   final TextEditingController _pesoActualController = TextEditingController();
   final TextEditingController _fechaInicioController = TextEditingController();
 
+  // Flags para controlar edición, guardado y carga
   bool _isEditing = false;
   bool _isSaving = false;
   bool _loading = true;
 
+  // Progreso actual (nuevo o existente)
   late ProgresoModel progreso;
 
   @override
   void initState() {
     super.initState();
     if (widget.progreso == null) {
-      // Modo creación
+      // Si no hay progreso, iniciar creación de uno nuevo
       _isEditing = true;
       _inicializarNuevoProgreso();
     } else {
-      // Modo edición
+      // Si existe progreso, cargar datos para edición
       progreso = widget.progreso!;
       _setupControllersFromProgreso();
       _loading = false;
     }
   }
 
+  // Inicializa un nuevo ProgresoModel con peso inicial del usuario actual
   Future<void> _inicializarNuevoProgreso() async {
     final hoy = DateTime.now();
     final supabase = GetIt.I<SupabaseClient>();
@@ -59,6 +65,7 @@ class _EditGoalPageState extends State<EditGoalPage> {
       final usuario = await usuarioService.fetchUsuarioByAuthId(authUser.id);
       pesoActual = usuario?.peso ?? 0;
     }
+    // Crear modelo con datos por defecto
     progreso = ProgresoModel(
       id: 0,
       fechaComienzo: hoy,
@@ -70,6 +77,7 @@ class _EditGoalPageState extends State<EditGoalPage> {
     setState(() => _loading = false);
   }
 
+  // Carga valores del modelo en los controladores de texto
   Future<void> _setupControllersFromProgreso() async {
     final supabase = GetIt.I<SupabaseClient>();
     final authUser = supabase.auth.currentUser;
@@ -94,6 +102,7 @@ class _EditGoalPageState extends State<EditGoalPage> {
 
   @override
   void dispose() {
+    // Liberar recursos de los controladores
     _objetivoController.dispose();
     _fechaObjetivoController.dispose();
     _pesoInicialController.dispose();
@@ -102,13 +111,15 @@ class _EditGoalPageState extends State<EditGoalPage> {
     super.dispose();
   }
 
+  // Guarda o actualiza el objetivo en el servicio correspondiente
   Future<void> _guardarCambios() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) return; // Validar formulario
 
     final pesoActual = double.tryParse(_pesoActualController.text.trim());
     final objetivo = double.tryParse(_objetivoController.text.trim());
     final fechaObjetivo = progreso.fechaObjetivo;
 
+    // Comprobar valores válidos
     if (pesoActual == null || objetivo == null || fechaObjetivo == null) {
       if (!mounted) return;
       showErrorSnackBar(context, 'Revisa los valores introducidos');
@@ -125,17 +136,21 @@ class _EditGoalPageState extends State<EditGoalPage> {
     try {
       final servicio = GetIt.I<ProgresoService>();
       if (progreso.id == 0) {
+        // Crear nuevo objetivo
         final creado = await servicio.createProgreso(
           objetivoPeso: objetivo,
           pesoInicial: progresoACrear.pesoInicial,
           fechaObjetivo: progresoACrear.fechaObjetivo,
         );
         await servicio.updatePesoUsuario(pesoActual);
+        if (!mounted) return;
         showSuccessSnackBar(context, 'Objetivo creado');
         context.pop(creado);
       } else {
+        // Actualizar objetivo existente
         final actualizado = await servicio.updateProgreso(progresoACrear);
         await servicio.updatePesoUsuario(pesoActual);
+        if (!mounted) return;
         showSuccessSnackBar(context, 'Objetivo actualizado');
         context.pop(actualizado);
       }
@@ -147,6 +162,7 @@ class _EditGoalPageState extends State<EditGoalPage> {
     }
   }
 
+  // Muestra un selector de fecha y actualiza el modelo y controlador
   Future<void> _seleccionarFecha() async {
     final picked = await showDatePicker(
       context: context,
@@ -162,6 +178,7 @@ class _EditGoalPageState extends State<EditGoalPage> {
     }
   }
 
+  // Confirma al usuario si desea cancelar la edición y descartar cambios
   Future<void> _confirmarCancelarEdicion() async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -190,7 +207,7 @@ class _EditGoalPageState extends State<EditGoalPage> {
     }
   }
 
-  // Helper para la visualización de la fecha
+  // Formatea una fecha a estilo español: "día de mes de año"
   String formatSpanishDate(DateTime date) {
     const meses = [
       'enero',
@@ -217,9 +234,11 @@ class _EditGoalPageState extends State<EditGoalPage> {
     final actualTheme = Theme.of(context);
 
     if (_loading) {
+      // Mostrar indicador de carga mientras se inicializa
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    // Estructura principal de la página con AppBar y formulario
     return Scaffold(
       appBar: AppBar(
         title: const Text('Objetivo de progreso'),
@@ -243,6 +262,7 @@ class _EditGoalPageState extends State<EditGoalPage> {
           key: _formKey,
           child: Column(
             children: [
+              // Campo: peso inicial (siempre de solo lectura)
               ProfileField(
                 label: 'Peso inicial (kg)',
                 controller: _pesoInicialController,
@@ -251,6 +271,7 @@ class _EditGoalPageState extends State<EditGoalPage> {
 
               const SizedBox(height: 12),
 
+              // Campo: peso actual (editable solo en modo edición)
               ProfileField(
                 label: 'Peso actual (kg)',
                 controller: _pesoActualController,
@@ -268,6 +289,7 @@ class _EditGoalPageState extends State<EditGoalPage> {
 
               const SizedBox(height: 12),
 
+              // Campo: objetivo (kg)
               ProfileField(
                 controller: _objetivoController,
                 label: 'Objetivo (kg)',
@@ -285,6 +307,7 @@ class _EditGoalPageState extends State<EditGoalPage> {
 
               const SizedBox(height: 12),
 
+              // Campo personalizado para seleccionar fecha objetivo
               FechaObjetivoField(
                 controller: _fechaObjetivoController,
                 isEditable: _isEditing,
@@ -293,6 +316,7 @@ class _EditGoalPageState extends State<EditGoalPage> {
 
               const SizedBox(height: 12),
 
+              // Campo: fecha de inicio (solo lectura)
               ProfileField(
                 label: 'Fecha de inicio',
                 controller: _fechaInicioController,
@@ -301,6 +325,7 @@ class _EditGoalPageState extends State<EditGoalPage> {
 
               const SizedBox(height: 24),
 
+              // Botón de guardar con animación y estado de guardado
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
                 child:
@@ -313,6 +338,7 @@ class _EditGoalPageState extends State<EditGoalPage> {
                         )
                         : const SizedBox.shrink(),
               ),
+              // Opción para cancelar objetivo existente
               TextButton.icon(
                 onPressed: () async {
                   final confirmar = await showDialog<bool>(
@@ -343,10 +369,12 @@ class _EditGoalPageState extends State<EditGoalPage> {
                     final actualizado = await servicio.cancelarObjetivo(
                       progreso.id,
                     );
+                    if (!context.mounted) return;
                     showSuccessSnackBar(context, 'Objetivo cancelado');
                     context.pop(actualizado);
                   } catch (e) {
                     debugPrint('Error al cancelar objetivo: $e');
+                    if (!context.mounted) return;
                     showErrorSnackBar(
                       context,
                       'No se pudo cancelar el objetivo',

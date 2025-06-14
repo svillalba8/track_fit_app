@@ -7,6 +7,9 @@ import 'package:track_fit_app/models/usuario_model.dart';
 import 'package:track_fit_app/services/usuario_service.dart';
 import 'package:track_fit_app/widgets/custom_button.dart';
 
+/// Página para ver y editar los datos personales del usuario.
+/// - Muestra campos en modo lectura por defecto.
+/// - Al pulsar el icono de editar, habilita los campos y muestra botón de guardar.
 class EditUserPage extends StatefulWidget {
   final UsuarioModel usuario;
 
@@ -18,29 +21,35 @@ class EditUserPage extends StatefulWidget {
 
 class _EditUserPageState extends State<EditUserPage> {
   final _formKey = GlobalKey<FormState>();
-  final _nombreUsuarioController = TextEditingController();
-  final _descripcionController = TextEditingController();
-  final _pesoController = TextEditingController();
-  final _estaturaController = TextEditingController();
+  late final TextEditingController _nombreUsuarioController;
+  late final TextEditingController _descripcionController;
+  late final TextEditingController _pesoController;
+  late final TextEditingController _estaturaController;
 
-  bool _isSaving = false;
-  bool _isEditing = false;
-
+  bool _isSaving = false; // Indica si se está guardando
+  bool _isEditing = false; // Controla si los campos están editables
   late final UsuarioModel usuario;
 
   @override
   void initState() {
     super.initState();
     usuario = widget.usuario;
-
-    _nombreUsuarioController.text = usuario.nombreUsuario;
-    _descripcionController.text = usuario.descripcion ?? '';
-    _pesoController.text = usuario.peso.toString();
-    _estaturaController.text = usuario.estatura.toString();
+    // Inicializa controladores con datos actuales
+    _nombreUsuarioController = TextEditingController(
+      text: usuario.nombreUsuario,
+    );
+    _descripcionController = TextEditingController(
+      text: usuario.descripcion ?? '',
+    );
+    _pesoController = TextEditingController(text: usuario.peso.toString());
+    _estaturaController = TextEditingController(
+      text: usuario.estatura.toString(),
+    );
   }
 
   @override
   void dispose() {
+    // Libera recursos de los controladores
     _nombreUsuarioController.dispose();
     _descripcionController.dispose();
     _pesoController.dispose();
@@ -48,23 +57,23 @@ class _EditUserPageState extends State<EditUserPage> {
     super.dispose();
   }
 
+  /// Valida el formulario y envía los cambios a Supabase via UsuarioService.
+  /// - Muestra un SnackBar en caso de error.
   Future<void> _guardarCambios() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isSaving = true);
 
     try {
+      // Crea una copia actualizada del modelo
       final updatedUser = usuario.copyWith(
         nombreUsuario: _nombreUsuarioController.text.trim(),
         descripcion: _descripcionController.text.trim(),
         peso: double.parse(_pesoController.text.trim()),
         estatura: double.parse(_estaturaController.text.trim()),
       );
-
-      final usuarioService = getIt<UsuarioService>();
-      await usuarioService.updateUsuario(updatedUser);
-
+      await getIt<UsuarioService>().updateUsuario(updatedUser);
       if (!mounted) return;
+      // Retorna el usuario actualizado al llamador
       Navigator.pop(context, updatedUser);
     } catch (e) {
       showErrorSnackBar(context, 'Error al guardar cambios');
@@ -75,7 +84,7 @@ class _EditUserPageState extends State<EditUserPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final actualTheme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -86,21 +95,21 @@ class _EditUserPageState extends State<EditUserPage> {
         ),
         actions: [
           IconButton(
+            // Alterna entre modo lectura y edición
             icon: Icon(_isEditing ? Icons.close : Icons.edit),
             tooltip: _isEditing ? 'Cancelar edición' : 'Editar',
-            onPressed: () {
-              setState(() => _isEditing = !_isEditing);
-            },
+            onPressed: () => setState(() => _isEditing = !_isEditing),
           ),
         ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Form(
             key: _formKey,
             child: Column(
               children: [
+                // Campo: nombre de usuario
                 ProfileField(
                   controller: _nombreUsuarioController,
                   label: 'Nombre de usuario',
@@ -108,6 +117,7 @@ class _EditUserPageState extends State<EditUserPage> {
                   readOnly: !_isEditing,
                 ),
                 const SizedBox(height: 12),
+                // Campo: descripción
                 ProfileField(
                   controller: _descripcionController,
                   label: 'Descripción',
@@ -115,6 +125,7 @@ class _EditUserPageState extends State<EditUserPage> {
                   readOnly: !_isEditing,
                 ),
                 const SizedBox(height: 12),
+                // Campo: peso
                 ProfileField(
                   controller: _pesoController,
                   label: 'Peso (Kg)',
@@ -122,6 +133,7 @@ class _EditUserPageState extends State<EditUserPage> {
                   readOnly: !_isEditing,
                 ),
                 const SizedBox(height: 12),
+                // Campo: estatura
                 ProfileField(
                   controller: _estaturaController,
                   label: 'Estatura (cm)',
@@ -130,9 +142,10 @@ class _EditUserPageState extends State<EditUserPage> {
                 ),
                 const SizedBox(height: 24),
                 if (_isEditing)
+                  // Botón para guardar cambios, solo visible en edición
                   CustomButton(
                     text: _isSaving ? 'Guardando...' : 'Guardar cambios',
-                    actualTheme: theme,
+                    actualTheme: actualTheme,
                     onPressed: _guardarCambios,
                   ),
               ],

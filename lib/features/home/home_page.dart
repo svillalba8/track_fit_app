@@ -24,37 +24,51 @@ import '../routines/models/routine_model.dart';
 import '../routines/services/exercise_service.dart';
 import '../routines/services/routine_service.dart';
 
+// Pantalla principal de la aplicación: muestra resumen de rutinas, retos, ejercicios, objetivo, hidratación y nutrición
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
+  // Servicio para manejar el progreso del usuario
   late final ProgresoService _progresoService;
+  // Future para obtener el progreso existente (si existe)
   Future<ProgresoModel?>? _futProgreso;
 
+  // Rutina aleatoria seleccionada para mostrar
   Routine? rutinaAleatoria;
+  // Lista de ejercicios del usuario
   List<Exercise> ejercicios = [];
+  // Indicador de carga de ejercicios
   bool isLoadingEjercicios = true;
+  // Índice actual de la página en PageView de ejercicios
   int currentPage = 0;
 
+  // Servicio para manejar ejercicios y controlador de páginas
   final ExerciseService exerciseService = ExerciseService();
   late final PageController _pageController;
 
   @override
   void initState() {
     super.initState();
+    // Observador del ciclo de vida para actualizar retos al reanudar la app
     WidgetsBinding.instance.addObserver(this);
     _pageController = PageController();
+    // Inicializa el servicio de progreso con el cliente Supabase
     _progresoService = ProgresoService(Supabase.instance.client);
 
+    // Carga inicial: rutina aleatoria y lista de ejercicios
     _cargarRutinaAleatoria();
     _cargarEjercicios();
 
+    // Asegura que el reto diario de hoy exista o se cree
     context.read<DailyChallengeNotifier>().ensureTodayChallengeExists();
   }
 
+  // Obtiene todas las rutinas y selecciona una al azar para mostrar
   Future<void> _cargarRutinaAleatoria() async {
     final routineService = RoutineService();
     final rutinas = await routineService.getRoutines();
@@ -66,6 +80,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     }
   }
 
+  // Carga lista de ejercicios desde el servicio y actualiza estado
   Future<void> _cargarEjercicios() async {
     setState(() => isLoadingEjercicios = true);
     final resultado = await exerciseService.getExercises();
@@ -76,11 +91,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     });
   }
 
+  // Navega a la página anterior en el PageView de ejercicios
   void _goToPrevious() {
     if (currentPage > 0) {
-      setState(() {
-        currentPage -= 1;
-      });
+      setState(() => currentPage -= 1);
       _pageController.animateToPage(
         currentPage,
         duration: const Duration(milliseconds: 300),
@@ -89,11 +103,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     }
   }
 
+  // Navega a la página siguiente en el PageView de ejercicios
   void _goToNext() {
     if (currentPage < ejercicios.length - 1) {
-      setState(() {
-        currentPage += 1;
-      });
+      setState(() => currentPage += 1);
       _pageController.animateToPage(
         currentPage,
         duration: const Duration(milliseconds: 300),
@@ -104,6 +117,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    // Limpia controlador y observador al destruir el estado
     _pageController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -111,6 +125,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Cuando la app vuelve del fondo, verificar de nuevo el reto diario
     if (state == AppLifecycleState.resumed) {
       context.read<DailyChallengeNotifier>().ensureTodayChallengeExists();
     }
@@ -119,6 +134,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // Inicializa una sola vez el Future del progreso según el usuario actual
     if (_futProgreso == null) {
       final usuario = Provider.of<UsuarioModel?>(context);
       final idProg = usuario?.idProgreso;
@@ -133,16 +149,19 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final ThemeData actualTheme = Theme.of(context);
 
+    // Utiliza FutureBuilder para cargar datos del usuario autenticado
     return FutureBuilder<UsuarioModel?>(
       future: _fetchUsuario(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
+          // Indicador de carga mientras se obtiene el usuario
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
         if (snapshot.hasError || snapshot.data == null) {
+          // Mensaje de error si falla la carga de perfil
           return const Scaffold(
             body: Center(child: Text('No se pudo cargar tu perfil')),
           );
@@ -152,6 +171,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
         return Scaffold(
           appBar: AppBar(
+            // Saludo personalizado con nombre de usuario
             title: Text('Bienvenido, ${usuario.nombreUsuario}'),
             titleTextStyle: const TextStyle(
               fontSize: 20,
@@ -163,13 +183,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               horizontal: 16.0,
               vertical: 12.0,
             ),
+            // Configura un GridView con 2 columnas para mostrar tarjetas de contenido
             child: GridView.count(
               crossAxisCount: 2,
               crossAxisSpacing: 8,
               mainAxisSpacing: 8,
               childAspectRatio: 0.87,
               children: [
-                // CARD 1: Rutina
+                // TARJETA 1: Rutina aleatoria
                 HomeCard(
                   icon: Icons.fitness_center,
                   title: rutinaAleatoria?.nombre ?? 'Cargando rutina...',
@@ -195,12 +216,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                                   builder:
                                       (buttonContext) => TextButton(
                                         onPressed: () async {
+                                          // Abre diálogo con todas las rutinas y opción de entrenar
                                           final todasLasRutinas =
                                               await RoutineService()
                                                   .getRoutines();
-
                                           if (!buttonContext.mounted) return;
-
                                           showDialog(
                                             context: buttonContext,
                                             builder: (dialogContext) {
@@ -210,7 +230,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                                                 onEntrenar: () {
                                                   if (rutinaAleatoria != null) {
                                                     dialogContext.push(
-                                                      '/routines',
+                                                      AppRoutes.routines,
                                                       extra: rutinaAleatoria,
                                                     );
                                                   }
@@ -229,7 +249,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   onTap: () {},
                 ),
 
-                // CARD 2: Reto diario
+                // TARJETA 2: Reto diario
                 HomeCard(
                   icon: Icons.emoji_events,
                   title: 'Reto diario',
@@ -239,7 +259,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const SizedBox(height: 54),
-
+                      // Muestra estado del reto: completado o en progreso
                       Consumer<DailyChallengeNotifier>(
                         builder: (_, retoProv, __) {
                           final completado = retoProv.retoCompletado;
@@ -271,11 +291,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                       ),
                     ],
                   ),
-
                   onTap: () => DailyChallengeDialog.show(context),
                 ),
 
-                // CARD 3: Ejercicios
+                // TARJETA 3: Mis ejercicios
                 HomeCard(
                   icon: Icons.directions_run,
                   title: 'Mis ejercicios',
@@ -293,6 +312,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                             children: [
                               SizedBox(
                                 height: 100,
+                                // Carousel de ejercicios con PageView
                                 child: PageView.builder(
                                   controller: _pageController,
                                   itemCount: ejercicios.length,
@@ -334,9 +354,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                                             style: TextStyle(
                                               fontSize: 13,
                                               color:
-                                                  Theme.of(
-                                                    context,
-                                                  ).colorScheme.primary,
+                                                  actualTheme
+                                                      .colorScheme
+                                                      .primary,
                                             ),
                                           ),
                                         ],
@@ -346,6 +366,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                                 ),
                               ),
                               const SizedBox(height: 8),
+                              // Controles para navegar entre ejercicios
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -376,7 +397,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           ),
                   onTap: () {},
                 ),
-                // CARD 4: Objetivo
+
+                // TARJETA 4: Mi Objetivo de peso
                 FutureBuilder<ProgresoModel?>(
                   future:
                       usuario.idProgreso != null
@@ -386,6 +408,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           : Future.value(null),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState != ConnectionState.done) {
+                      // Muestra spinner mientras carga el objetivo
                       return HomeCard(
                         icon: Icons.flag_rounded,
                         title: 'Mi Objetivo',
@@ -411,7 +434,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   },
                 ),
 
-                // CARD 5: Hidratación
+                // TARJETA 5: Hidratación diaria
                 HomeCard(
                   icon: Icons.water_drop_outlined,
                   title: 'Agua diaria',
@@ -420,22 +443,25 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   onTap: () {},
                 ),
 
-                // CARD 6: Nutrición
+                // TARJETA 6: Receta nutricional del día
                 Consumer<DailyRecipeNotifier>(
                   builder: (_, prov, __) {
                     Widget content;
                     if (prov.isLoading) {
+                      // Indica cuando está cargando la receta
                       content = const Padding(
                         padding: EdgeInsets.symmetric(vertical: 8.0),
                         child: Text('Cargando receta…'),
                       );
                     } else if (prov.error != null) {
+                      // Muestra error si falla la carga
                       content = Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: Text('Error: ${prov.error}'),
                       );
                       debugPrint('Error: ${prov.error}');
                     } else if (prov.titulo != null) {
+                      // Muestra detalles de la receta (título, calorías, tiempo)
                       content = Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -488,6 +514,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 }
 
+// Función auxiliar para obtener el usuario autenticado desde Supabase
 Future<UsuarioModel?> _fetchUsuario() async {
   final supabase = getIt<SupabaseClient>();
   final authUser = supabase.auth.currentUser;
