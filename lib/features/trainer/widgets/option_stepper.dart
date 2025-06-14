@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 
+/// Widget para seleccionar una opción de una lista con botones arriba/abajo
 class OptionStepper extends StatefulWidget {
+  // Etiqueta descriptiva que aparece encima
   final String label;
+  // Lista de opciones posibles
   final List<String> options;
+  // Índice inicial dentro de las opciones (se clampa al rango válido)
   final int initialIndex;
+  // Callback con la opción seleccionada al cambiar
   final ValueChanged<String>? onChanged;
+  // Iconos para los botones de incrementar/decrementar
   final IconData upIcon;
   final IconData downIcon;
 
@@ -28,43 +34,47 @@ class _OptionStepperState extends State<OptionStepper> {
   @override
   void initState() {
     super.initState();
+    // Ajusta el índice inicial dentro del rango de opciones
     currentIndex = widget.initialIndex.clamp(0, widget.options.length - 1);
   }
 
+  /// Incrementa el índice si no está al final y notifica cambio
   void _increment() {
     setState(() {
       if (currentIndex < widget.options.length - 1) {
         currentIndex++;
+        widget.onChanged?.call(widget.options[currentIndex]);
       }
-      widget.onChanged?.call(widget.options[currentIndex]);
     });
   }
 
+  /// Decrementa el índice si no está al inicio y notifica cambio
   void _decrement() {
     setState(() {
       if (currentIndex > 0) {
         currentIndex--;
+        widget.onChanged?.call(widget.options[currentIndex]);
       }
-      widget.onChanged?.call(widget.options[currentIndex]);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData actualTheme = Theme.of(context);
+    final actualTheme = Theme.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Muestra la etiqueta en negrita
         Text(
           '- ${widget.label}',
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+          style: actualTheme.textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
-
         const SizedBox(height: 6),
 
+        // Contenedor con borde para mostrar la opción y los botones
         Container(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
           decoration: BoxDecoration(
@@ -72,20 +82,21 @@ class _OptionStepperState extends State<OptionStepper> {
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              // Texto de la opción actual, centrado
               Expanded(
                 child: Text(
                   widget.options[currentIndex],
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: actualTheme.textTheme.bodyMedium,
                 ),
               ),
-
               const SizedBox(width: 16),
 
+              // Columna con botones de incrementar y decrementar
               Column(
                 children: [
+                  // Botón de subir (incrementar)
                   Container(
                     width: 32,
                     height: 32,
@@ -96,7 +107,7 @@ class _OptionStepperState extends State<OptionStepper> {
                     child: IconButton(
                       icon: Icon(
                         widget.upIcon,
-                        size: 22, // tamaño del icono
+                        size: 22,
                         color: actualTheme.colorScheme.primary,
                       ),
                       padding: const EdgeInsets.all(4),
@@ -105,31 +116,26 @@ class _OptionStepperState extends State<OptionStepper> {
                       onPressed: _increment,
                     ),
                   ),
-
                   const SizedBox(height: 12),
-
-                  Column(
-                    children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: actualTheme.colorScheme.secondary,
-                          shape: BoxShape.circle,
-                        ),
-                        child: IconButton(
-                          icon: Icon(
-                            widget.downIcon,
-                            size: 22, // tamaño del icono
-                            color: actualTheme.colorScheme.primary,
-                          ),
-                          padding: const EdgeInsets.all(4),
-                          constraints: const BoxConstraints(),
-                          splashRadius: 16,
-                          onPressed: _decrement,
-                        ),
+                  // Botón de bajar (decrementar)
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: actualTheme.colorScheme.secondary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      icon: Icon(
+                        widget.downIcon,
+                        size: 22,
+                        color: actualTheme.colorScheme.primary,
                       ),
-                    ],
+                      padding: const EdgeInsets.all(4),
+                      constraints: const BoxConstraints(),
+                      splashRadius: 16,
+                      onPressed: _decrement,
+                    ),
                   ),
                 ],
               ),

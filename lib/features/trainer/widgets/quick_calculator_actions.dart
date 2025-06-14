@@ -5,9 +5,10 @@ import 'package:track_fit_app/features/trainer/service/macros_form.dart';
 import 'package:track_fit_app/widgets/custom_divider.dart';
 import 'package:track_fit_app/widgets/custom_icon_button.dart';
 
-// Niveles de popup
+/// Niveles del popup: menú principal o formulario concreto
 enum PopupLevel { menu, form }
 
+/// Botón de “calculadoras rápidas” que muestra un menú overlay
 class QuickCalculatorsActions extends StatefulWidget {
   final ThemeData actualTheme;
   const QuickCalculatorsActions({super.key, required this.actualTheme});
@@ -18,13 +19,14 @@ class QuickCalculatorsActions extends StatefulWidget {
 }
 
 class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
-  final LayerLink _layerLink = LayerLink();
-  OverlayEntry? _overlayEntry;
-  final bool _useMetric = true;
+  final LayerLink _layerLink = LayerLink(); // Enlaza target y overlay
+  OverlayEntry? _overlayEntry; // Guarda el overlay abierto
+  final bool _useMetric = true; // Unidades (futuro toggle)
 
-  PopupLevel _level = PopupLevel.menu;
-  String? _selectedCalculator;
+  PopupLevel _level = PopupLevel.menu; // Nivel actual (menu o form)
+  String? _selectedCalculator; // Tipo de calculadora elegido
 
+  /// Muestra u oculta el overlay
   void _toggleMenu() {
     if (_overlayEntry == null) {
       _overlayEntry = _createOverlayEntry();
@@ -32,52 +34,46 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
     } else {
       _overlayEntry!.remove();
       _overlayEntry = null;
+      // Restablece al menú
       _level = PopupLevel.menu;
       _selectedCalculator = null;
     }
   }
 
+  /// Crea el overlay posicionando el menú o el formulario
   OverlayEntry _createOverlayEntry() {
-    final RenderBox renderBox = context.findRenderObject() as RenderBox;
-    final RenderBox overlay =
-        Overlay.of(context).context.findRenderObject() as RenderBox;
-    final Size size = renderBox.size;
-    final Offset position = renderBox.localToGlobal(
-      Offset.zero,
-      ancestor: overlay,
-    );
+    final renderBox = context.findRenderObject() as RenderBox;
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final size = renderBox.size;
+    final position = renderBox.localToGlobal(Offset.zero, ancestor: overlay);
 
-    const double menuWidth = 180;
-    const double formWidth = 280;
-    const double closeSize = 26;
+    const menuWidth = 180.0;
+    const formWidth = 280.0;
+    const closeSize = 26.0;
 
-    final double centerX = position.dx + size.width / 2;
-    final double initialLeftUnclamped = centerX - (menuWidth / 1.17);
-    final double initialLeft = initialLeftUnclamped.clamp(
+    // Calcula posición horizontal centrada y ajusta a pantallas pequeñas
+    final centerX = position.dx + size.width / 2;
+    final initialLeftUnclamped = centerX - (menuWidth / 1.17);
+    var left = initialLeftUnclamped.clamp(
       16.0,
       overlay.size.width - menuWidth - 16.0,
     );
 
-    final double top = position.dy + (size.height / 2) - (closeSize / 1.06);
+    final top = position.dy + (size.height / 2) - (closeSize / 1.06);
 
     return OverlayEntry(
       builder: (context) {
-        final double popupWidth =
-            _level == PopupLevel.menu ? menuWidth : formWidth;
-
-        // Empiezas con la misma izquierda del menú
-        double left = initialLeft;
-
-        // Si es el popup de formulario, lo desplazas 20px a la izquierda
-        if (_level == PopupLevel.form) {
-          left -= 100; // ajusta este valor a tu gusto
-        }
-
-        // Luego aseguras los márgenes mínimos y máximos
-        left = left.clamp(16.0, overlay.size.width - popupWidth - 16.0);
+        // Decide ancho según nivel
+        final popupWidth = _level == PopupLevel.menu ? menuWidth : formWidth;
+        // Desplaza el form ligeramente a la izquierda
+        var adjustedLeft = left - (_level == PopupLevel.form ? 100 : 0);
+        adjustedLeft = adjustedLeft.clamp(
+          16.0,
+          overlay.size.width - popupWidth - 16.0,
+        );
 
         return Positioned(
-          left: left,
+          left: adjustedLeft,
           top: top,
           width: popupWidth,
           child: Material(
@@ -93,6 +89,7 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
     );
   }
 
+  /// Construye el contenido del menú con opciones de calculadora
   Widget _buildMenuContent() {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -102,18 +99,16 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Encabezado: cambio de unidades y cerrar
+          // Encabezado: cierre y cambio de unidades (no implementado)
           Row(
             children: [
               GestureDetector(
                 onTap: () {
-                  // setState(() => _useMetric = !_useMetric); Actualizacion futura
                   _overlayEntry?.markNeedsBuild();
                 },
                 child: Icon(
-                  _useMetric ? Icons.straighten_rounded : Icons.height_rounded, // Implementacion futura
+                  _useMetric ? Icons.straighten_rounded : Icons.height_rounded,
                   size: 32,
                   color: widget.actualTheme.colorScheme.secondary,
                 ),
@@ -126,7 +121,7 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
                 ),
               ),
               GestureDetector(
-                onTap: _toggleMenu,
+                onTap: _toggleMenu, // Cierra el menú
                 child: Icon(
                   Icons.close_rounded,
                   size: 26,
@@ -142,11 +137,10 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             ),
           ),
-
           const SizedBox(height: 6),
           CustomDivider(),
           const SizedBox(height: 18),
-
+          // Opciones: grasa corporal, IMC, macros
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -157,9 +151,7 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
                 });
                 _overlayEntry?.markNeedsBuild();
               }),
-
               const SizedBox(height: 18),
-
               _menuIcon('assets/icons/bmi.png', 'IMC', () {
                 setState(() {
                   _level = PopupLevel.form;
@@ -167,9 +159,7 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
                 });
                 _overlayEntry?.markNeedsBuild();
               }),
-
               const SizedBox(height: 18),
-
               _menuIcon('assets/icons/macros.png', 'MACROS', () {
                 setState(() {
                   _level = PopupLevel.form;
@@ -184,10 +174,10 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
     );
   }
 
+  /// Construye el formulario correspondiente al tipo seleccionado
   Widget _buildFormContent() {
-    final actualTheme = Theme.of(context);
-
-    // Selecciona el widget de formulario según lo elegido
+    final theme = Theme.of(context);
+    // Escoge el widget de formulario
     late final Widget form;
     switch (_selectedCalculator) {
       case '% de grasa':
@@ -211,9 +201,8 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Flecha de retroceso y título dinámico
+          // Encabezado con título y botón de volver
           Row(
             children: [
               Expanded(
@@ -232,7 +221,7 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
                 },
                 child: Icon(
                   Icons.arrow_forward_ios_rounded,
-                  color: actualTheme.colorScheme.secondary,
+                  color: theme.colorScheme.secondary,
                   size: 24,
                 ),
               ),
@@ -241,18 +230,17 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
           const SizedBox(height: 8),
           CustomDivider(),
           const SizedBox(height: 12),
-          // Aquí se inserta el formulario correspondiente
-          form,
+          form, // Inserta el formulario
         ],
       ),
     );
   }
 
+  /// Fila de icono y etiqueta para el menú
   Widget _menuIcon(String assetPath, String label, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
           Image.asset(
             assetPath,
@@ -269,6 +257,7 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
 
   @override
   Widget build(BuildContext context) {
+    // Botón que activa el overlay, envolviendo en CompositedTransformTarget
     return CompositedTransformTarget(
       link: _layerLink,
       child: CustomIconButton(
@@ -279,7 +268,7 @@ class _QuickCalculatorsActionsState extends State<QuickCalculatorsActions> {
           color: widget.actualTheme.colorScheme.secondary,
         ),
         actualTheme: widget.actualTheme,
-        onPressed: _toggleMenu,
+        onPressed: _toggleMenu, // Muestra/oculta el menú
       ),
     );
   }

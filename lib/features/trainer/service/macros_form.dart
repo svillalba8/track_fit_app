@@ -10,13 +10,17 @@ import 'package:track_fit_app/services/usuario_service.dart';
 import 'package:track_fit_app/widgets/profield_center_field.dart';
 import 'package:track_fit_app/widgets/profile_selector.dart';
 
+/// Formulario de cálculo de macros diarios:
+/// - Paso 1: datos básicos (sexo, edad, peso, altura)
+/// - Paso 2: preguntas adicionales (actividad, objetivo, superávit, %grasa)
+/// - Cálculo de calorías y rangos de macronutrientes
 class MacrosForm extends StatefulWidget {
   final bool useMetric;
   final VoidCallback? onCalculated;
   const MacrosForm({super.key, required this.useMetric, this.onCalculated});
 
   @override
-  _MacrosFormState createState() => _MacrosFormState();
+  State<MacrosForm> createState() => _MacrosFormState();
 }
 
 class _MacrosFormState extends State<MacrosForm> {
@@ -256,24 +260,33 @@ class _MacrosFormState extends State<MacrosForm> {
   }
 
   Future<void> _loadProfile() async {
+    // 1. Antes de tocar el estado, asegurémonos de que el widget sigue montado.
+    if (!mounted) return;
     setState(() => _loadingProfile = true);
 
     final supabase = getIt<SupabaseClient>();
     final authUser = supabase.auth.currentUser;
     final userService = getIt<UsuarioService>();
 
+    // 2. Caso de usuario no autenticado (sin await, pero aún comprobamos mounted antes de mostrar SnackBar y setState)
     if (authUser == null) {
+      if (!mounted) return;
       showNeutralSnackBar(context, 'No estás autenticado');
+      if (!mounted) return;
       setState(() => _loadingProfile = false);
       return;
     }
 
     try {
+      // 3. Llamada asíncrona
       final usuario = await userService.fetchUsuarioByAuthId(authUser.id);
+
+      // 4. Nada de context o setState si ya desmontaron el widget
+      if (!mounted) return;
+
       if (usuario == null) {
         showErrorSnackBar(context, 'Usuario no encontrado');
       } else {
-        // Rellenar solo los campos que necesitas
         setState(() {
           _gender =
               [kGeneroMujer, kGeneroHombre].contains(usuario.genero)
@@ -285,6 +298,8 @@ class _MacrosFormState extends State<MacrosForm> {
         });
       }
     } catch (e) {
+      // 5. Protegemos antes de mostrar el error
+      if (!mounted) return;
       showErrorSnackBar(context, 'Error al cargar datos');
     } finally {
       setState(() => _loadingProfile = false);
@@ -382,8 +397,12 @@ class _MacrosFormState extends State<MacrosForm> {
                             Text(
                               'Los mínimos y máximos son (g/día).',
                               textAlign: TextAlign.start,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(fontStyle: FontStyle.italic, fontSize: 12),
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodySmall?.copyWith(
+                                fontStyle: FontStyle.italic,
+                                fontSize: 12,
+                              ),
                             ),
                           ],
                         ),

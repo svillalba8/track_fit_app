@@ -13,6 +13,10 @@ import 'package:track_fit_app/notifiers/daily_challenge_notifier.dart';
 import 'package:track_fit_app/widgets/custom_divider.dart';
 import 'package:track_fit_app/widgets/custom_icon_button.dart';
 
+/// Página principal del entrenador:
+/// - Muestra AppBar con avatar y accesos rápidos
+/// - Botón de reto diario que abre un diálogo
+/// - Cuerpo con lista de mensajes y campo de entrada
 class TrainerPage extends StatefulWidget {
   const TrainerPage({super.key});
 
@@ -23,57 +27,60 @@ class TrainerPage extends StatefulWidget {
 class _TrainerPageState extends State<TrainerPage> {
   @override
   Widget build(BuildContext context) {
-    final retoCompletado = context.watch<DailyChallengeNotifier>().retoCompletado;
-    final ThemeData actualTheme = Theme.of(context);
+    // Lee si el reto diario está completado para cambiar el icono
+    final retoCompletado =
+        context.watch<DailyChallengeNotifier>().retoCompletado;
+    final theme = Theme.of(context);
 
     return Scaffold(
-      // AppBar personalizado con altura extra y degradado
+      // AppBar con altura aumentada y degradado de colores
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(65),
+        preferredSize: const Size.fromHeight(65),
         child: AppBar(
           automaticallyImplyLeading: false,
-          bottom: PreferredSize(
+          // Divider personalizado en la parte inferior
+          bottom: const PreferredSize(
             preferredSize: Size.fromHeight(1),
             child: CustomDivider(),
           ),
+          // Fondo degradado
           flexibleSpace: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  actualTheme.colorScheme.primaryFixed,
-                  actualTheme.colorScheme.onTertiary,
+                  theme.colorScheme.primaryFixed,
+                  theme.colorScheme.onTertiary,
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
             ),
           ),
+          // Avatar y nombre del entrenador
           title: Row(
             children: [
-              // Avatar del entrenador
               CircleAvatar(
                 radius: 28,
-                backgroundImage: AssetImage(kAvatarEntrenadorPersonal),
+                backgroundImage: const AssetImage(kAvatarEntrenadorPersonal),
               ),
-              SizedBox(width: 12),
-              // Nombre y estado debajo
+              const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'L.I.F.T', // Live Intelligent Fitness Trainer
+                    'L.I.F.T', // Nombre de la “IA entrenador”
                     style: TextStyle(
                       fontSize: 20,
-                      color: actualTheme.colorScheme.secondary,
+                      color: theme.colorScheme.secondary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
-                    '¡Listo para ayudarte!',
+                    '¡Listo para ayudarte!', // Subtítulo de estado
                     style: TextStyle(
                       fontSize: 14,
-                      color: actualTheme.colorScheme.secondary.withAlpha(140),
+                      color: theme.colorScheme.secondary.withAlpha(140),
                     ),
                   ),
                 ],
@@ -81,8 +88,9 @@ class _TrainerPageState extends State<TrainerPage> {
             ],
           ),
           actions: [
-            // Botones de acceso directo
-            QuickCalculatorsActions(actualTheme: actualTheme),
+            // Acciones rápidas (calculadoras)
+            QuickCalculatorsActions(actualTheme: theme),
+            // Icono de reto diario (cambia si está cumplido) y abre diálogo
             CustomIconButton(
               icon:
                   retoCompletado
@@ -90,15 +98,15 @@ class _TrainerPageState extends State<TrainerPage> {
                         'assets/icons/objetivo_diario_cumplido.png',
                         width: 24,
                         height: 24,
-                        color: actualTheme.colorScheme.secondary,
+                        color: theme.colorScheme.secondary,
                       )
                       : Image.asset(
                         'assets/icons/objetivo_diario.png',
                         width: 24,
                         height: 24,
-                        color: actualTheme.colorScheme.secondary,
+                        color: theme.colorScheme.secondary,
                       ),
-              actualTheme: actualTheme,
+              actualTheme: theme,
               onPressed: () {
                 DailyChallengeDialog.show(context);
               },
@@ -106,25 +114,30 @@ class _TrainerPageState extends State<TrainerPage> {
           ],
         ),
       ),
+      // Cuerpo con chat
       body: _ChatView(),
     );
   }
 }
 
+/// Vista del chat:
+/// - Fondo según la extensión de tema
+/// - ListView de mensajes (burbujas propias y ajenas)
+/// - Campo de entrada para enviar mensajes
 class _ChatView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final chatProvider = context.watch<ChatNotifier>();
-    final actualTheme = Theme.of(context);
-    final backgroundExtension = actualTheme.extension<ChatBackground>();
-    final backgroundAsset =
-        backgroundExtension?.assetPath ??
+    final chatProv = context.watch<ChatNotifier>();
+    final theme = Theme.of(context);
+    // Obtiene ruta de fondo desde la extensión de tema
+    final bgAsset =
+        theme.extension<ChatBackground>()?.assetPath ??
         'assets/backgrounds/default_chat_bg.png';
 
     return Container(
       decoration: BoxDecoration(
         image: DecorationImage(
-          image: AssetImage(backgroundAsset),
+          image: AssetImage(bgAsset), // Imagen de fondo
           fit: BoxFit.cover,
         ),
       ),
@@ -133,25 +146,22 @@ class _ChatView extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
           child: Column(
             children: [
+              // Lista de mensajes
               Expanded(
                 child: ListView.builder(
-                  controller: chatProvider.chatScrollController,
-                  itemCount: chatProvider.messageList.length,
-                  itemBuilder: (context, index) {
-                    final message = chatProvider.messageList[index];
-
-                    return (message.fromWho == FromWho.his)
-                        ? HisMessageBubble(message: message)
-                        : MyMessageBubble(message: message);
+                  controller: chatProv.chatScrollController,
+                  itemCount: chatProv.messageList.length,
+                  itemBuilder: (ctx, i) {
+                    final msg = chatProv.messageList[i];
+                    // Selecciona burbuja según emisor
+                    return msg.fromWho == FromWho.his
+                        ? HisMessageBubble(message: msg)
+                        : MyMessageBubble(message: msg);
                   },
                 ),
               ),
-              MessageFieldBox(
-                // OPCION A
-                // onValue: (value) => chatProvider.sendMessage(value),
-                // OPCION B
-                onValue: chatProvider.sendMessage,
-              ),
+              // Caja de texto y botón para enviar mensaje
+              MessageFieldBox(onValue: chatProv.sendMessage),
             ],
           ),
         ),

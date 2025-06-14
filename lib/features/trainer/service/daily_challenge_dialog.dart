@@ -4,36 +4,39 @@ import 'package:provider/provider.dart';
 import 'package:track_fit_app/core/utils/snackbar_utils.dart';
 import 'package:track_fit_app/notifiers/daily_challenge_notifier.dart';
 
-/// Clase estática que encapsula todo el flujo de diálogos del reto diario.
+/// Diálogo flotante para gestionar el flujo del reto diario:
+/// - Comprueba o genera el reto de hoy
+/// - Muestra errores o estado completado
+/// - Permite marcar como hecho al usuario
 class DailyChallengeDialog {
   static const String _kTituloRetoDiario = '🏅 Reto del día 🏅';
 
+  /// Inicia todo el proceso de mostrar el diálogo
   static Future<void> show(BuildContext context) async {
-    final chatProvider = context.read<DailyChallengeNotifier>();
-    final theme = Theme.of(context);
+    final challengeProv = context.read<DailyChallengeNotifier>();
+    final actualTheme = Theme.of(context);
 
-    // 1) Disparamos la lógica para comprobar/crear el reto
-    await chatProvider.ensureTodayChallengeExists();
+    // 1) Asegura que exista el reto de hoy (o lo crea)
+    await challengeProv.ensureTodayChallengeExists();
 
-    // 2) Si hubo error en fetch/creación, mostramos SnackBar y salimos
-    if (chatProvider.retoError != null) {
+    // 2) Si hubo error al obtener/crear, mostramos SnackBar y salimos
+    if (challengeProv.retoError != null) {
       if (!context.mounted) return;
-      showErrorSnackBar(context, chatProvider.retoError!);
+      showErrorSnackBar(context, challengeProv.retoError!);
       return;
     }
 
-    // Antes de usar context en asíncrono, comprobamos que siga montado:
-    if (!context.mounted) return;
-
-    // 3) Si no hay texto de reto, mostramos snackbar neutro y salimos
-    final textoReto = chatProvider.retoTexto;
+    // 3) Si no hay texto de reto, informamos y salimos
+    final textoReto = challengeProv.retoTexto;
     if (textoReto == null || textoReto.isEmpty) {
+      if (!context.mounted) return;
       showNeutralSnackBar(context, 'No se encontró reto para hoy.');
       return;
     }
 
-    // 4) Si ya está completado, mostramos diálogo informativo
-    if (chatProvider.retoCompletado) {
+    // 4) Si ya completó el reto, mostramos diálogo de felicitación
+    if (challengeProv.retoCompletado) {
+      if (!context.mounted) return;
       await showDialog(
         context: context,
         builder:
@@ -45,7 +48,7 @@ class DailyChallengeDialog {
                   IconButton(
                     iconSize: 36,
                     icon: const Icon(Icons.close_rounded),
-                    color: theme.colorScheme.secondary,
+                    color: actualTheme.colorScheme.secondary,
                     onPressed: () => ctx.pop(),
                   ),
                 ],
@@ -59,7 +62,9 @@ class DailyChallengeDialog {
       return;
     }
 
-    // 5) Si aún no está completado, mostramos diálogo con "Cancelar" / "Hecho"
+    if (!context.mounted) return;
+
+    // 5) Si no está completado, mostramos el reto con botón "Hecho"
     await showDialog(
       context: context,
       builder: (ctx) {
@@ -71,23 +76,24 @@ class DailyChallengeDialog {
               IconButton(
                 iconSize: 36,
                 icon: const Icon(Icons.close_rounded),
-                color: theme.colorScheme.secondary,
+                color: actualTheme.colorScheme.secondary,
                 onPressed: () => ctx.pop(),
               ),
             ],
           ),
           content: Text(textoReto, style: const TextStyle(fontSize: 16)),
           actions: [
+            // Botón para indicar que ya está hecho
             ElevatedButton(
               style: TextButton.styleFrom(
-                backgroundColor: theme.colorScheme.tertiary,
-                foregroundColor: theme.colorScheme.secondary,
+                backgroundColor: actualTheme.colorScheme.tertiary,
+                foregroundColor: actualTheme.colorScheme.secondary,
               ),
               onPressed: () async {
-                // 5.1) Cerramos este diálogo
+                // a) Cerrar diálogo actual
                 ctx.pop();
 
-                // 5.2) Mostramos confirmación "¿Ya has terminado?"
+                // b) Confirmar realmente si el usuario completó el reto
                 final confirm = await showDialog<bool>(
                   context: context,
                   builder:
@@ -100,16 +106,18 @@ class DailyChallengeDialog {
                         actions: [
                           TextButton(
                             style: TextButton.styleFrom(
-                              backgroundColor: theme.colorScheme.tertiary,
-                              foregroundColor: theme.colorScheme.secondary,
+                              backgroundColor: actualTheme.colorScheme.tertiary,
+                              foregroundColor:
+                                  actualTheme.colorScheme.secondary,
                             ),
                             onPressed: () => confirmCtx.pop(false),
                             child: const Text('Aún no'),
                           ),
                           TextButton(
                             style: TextButton.styleFrom(
-                              backgroundColor: theme.colorScheme.tertiary,
-                              foregroundColor: theme.colorScheme.secondary,
+                              backgroundColor: actualTheme.colorScheme.tertiary,
+                              foregroundColor:
+                                  actualTheme.colorScheme.secondary,
                             ),
                             onPressed: () => confirmCtx.pop(true),
                             child: const Text('Sí, he terminado'),
@@ -118,9 +126,9 @@ class DailyChallengeDialog {
                       ),
                 );
 
-                // 5.3) Si confirma, marcamos como completado y mostramos snackbar
+                // c) Si confirma, marca el reto y avisa con SnackBar
                 if (confirm == true) {
-                  await chatProvider.markChallengeDone();
+                  await challengeProv.markChallengeDone();
                   if (!context.mounted) return;
                   showNeutralSnackBar(context, '¡Reto completado! 🎉');
                 }

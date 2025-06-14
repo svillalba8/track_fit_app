@@ -5,14 +5,18 @@ import 'package:track_fit_app/core/constants.dart';
 import 'package:track_fit_app/models/usuario_model.dart';
 import 'package:track_fit_app/widgets/custom_button.dart';
 
+/// Página de ajustes de usuario:
+/// - Permite editar datos, cambiar tema y cerrar sesión
 class UserSettingsPage extends StatelessWidget {
   final UsuarioModel usuario;
 
   const UserSettingsPage({super.key, required this.usuario});
 
+  /// Muestra diálogo de confirmación para cerrar sesión
   Future<void> _confirmLogout(BuildContext context) async {
-  final ThemeData actualTheme = Theme.of(context);
+    final actualTheme = Theme.of(context);
 
+    // 1) Diálogo "¿Cerrar sesión?"
     final shouldLogout = await showDialog<bool>(
       context: context,
       builder:
@@ -23,29 +27,27 @@ class UserSettingsPage extends StatelessWidget {
               CustomButton(
                 text: 'Cancelar',
                 actualTheme: actualTheme,
-                onPressed: () => context.pop(false),
+                onPressed: () => context.pop(false), // No cerrar
               ),
               CustomButton(
                 text: 'Cerrar sesión',
                 actualTheme: actualTheme,
-                onPressed: () => context.pop(true),
+                onPressed: () => context.pop(true), // Confirmar
               ),
             ],
           ),
     );
 
+    // 2) Si confirma, cierra sesión en Supabase y navega a login
     if (shouldLogout == true) {
       await Supabase.instance.client.auth.signOut();
-      if (context.mounted) {
-        // Navegar fuera del stack, al login
-        context.go('/login');
-      }
+      if (context.mounted) context.go(AppRoutes.login);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final actualTheme = Theme.of(context);
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -57,58 +59,59 @@ class UserSettingsPage extends StatelessWidget {
       ),
       body: ListView(
         children: [
+          // Opción: editar datos personales
           ListTile(
             leading: Icon(
               Icons.person,
-              color: actualTheme.colorScheme.secondaryFixed,
+              color: theme.colorScheme.secondaryFixed,
             ),
             title: Text(
               'Datos personales',
-              style: TextStyle(color: actualTheme.colorScheme.secondaryFixed),
+              style: TextStyle(color: theme.colorScheme.secondaryFixed),
             ),
             onTap: () async {
-              final updatedUsuario = await context.push<UsuarioModel>(
+              // Navega a EditUser y, si hay usuario actualizado, retorna al previo
+              final updated = await context.push<UsuarioModel>(
                 AppRoutes.editUser,
                 extra: usuario,
               );
-              if (updatedUsuario != null) {
-                if (!context.mounted) return;
-                context.pop(updatedUsuario);
+              if (updated != null && context.mounted) {
+                context.pop(updated);
               }
             },
           ),
 
-          const SizedBox(height: 24), // separación visual
+          const SizedBox(height: 24),
 
+          // Opción: cambiar tema
           ListTile(
             leading: Icon(
               Icons.color_lens,
-              color: actualTheme.colorScheme.secondaryFixed,
+              color: theme.colorScheme.secondaryFixed,
             ),
             title: Text(
               'Cambiar tema',
-              style: TextStyle(color: actualTheme.colorScheme.secondaryFixed),
+              style: TextStyle(color: theme.colorScheme.secondaryFixed),
             ),
-            onTap: () {
-              context.push(AppRoutes.themeSelector);
-            },
+            onTap: () => context.push(AppRoutes.themeSelector),
           ),
 
-          const SizedBox(height: 24), // separación visual
+          const SizedBox(height: 24),
 
-          Divider(color: Colors.red.withValues(alpha: 0.5), height: 0.1),
+          // Separador y opción: cerrar sesión
+          Divider(color: Colors.red.withAlpha(128), height: 0.1),
           Container(
-            color: Colors.red.withValues(alpha: 0.10),
+            color: Colors.red.withAlpha(25),
             child: ListTile(
               leading: const Icon(Icons.exit_to_app, color: Colors.red),
               title: const Text(
                 'Cerrar sesión',
                 style: TextStyle(color: Colors.red),
               ),
-              onTap: () => _confirmLogout(context),
+              onTap: () => _confirmLogout(context), // Lanza confirmación
             ),
           ),
-          Divider(color: Colors.red.withValues(alpha: 0.5), height: 0.1),
+          Divider(color: Colors.red.withAlpha(128), height: 0.1),
         ],
       ),
     );
