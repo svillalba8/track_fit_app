@@ -101,6 +101,8 @@ class _ProfilePageState extends State<ProfilePage> {
             icon: Image.asset(
               'assets/icons/engranaje_ajustes.png',
               color: actualTheme.colorScheme.secondary,
+              height: 28,
+              width: 28,
             ),
             onPressed: () async {
               // Espera posible usuario actualizado al volver

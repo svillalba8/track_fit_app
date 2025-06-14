@@ -1,7 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/exercise_with_details_model.dart';
 import '../models/routine_model.dart';
 
+/// Servicio encargado de las operaciones CRUD sobre rutinas y su relación con ejercicios.
 class RoutineService {
   final SupabaseClient _client = Supabase.instance.client;
 
@@ -12,14 +14,18 @@ class RoutineService {
     final userId = _userId;
     if (userId == null) throw Exception('User not authenticated');
     try {
-      final response = await _client.from('rutina').insert({
-        'nombre': nombre,
-        'user_id': userId,
-        'created_at': DateTime.now().toIso8601String(),
-      }).select().single();
+      final response =
+          await _client
+              .from('rutina')
+              .insert({
+                'nombre': nombre,
+                'user_id': userId,
+                'created_at': DateTime.now().toIso8601String(),
+              })
+              .select()
+              .single();
       return Routine.fromMap(response);
     } catch (e) {
-      print('Error creating routine: $e');
       rethrow;
     }
   }
@@ -36,7 +42,6 @@ class RoutineService {
           .order('created_at', ascending: false);
       return (data as List).map((e) => Routine.fromMap(e)).toList();
     } catch (e) {
-      print('Error fetching routines: $e');
       return [];
     }
   }
@@ -52,7 +57,6 @@ class RoutineService {
           .eq('id', routineId)
           .eq('user_id', userId);
     } catch (e) {
-      print('Error updating routine: $e');
       rethrow;
     }
   }
@@ -69,7 +73,6 @@ class RoutineService {
           .eq('id', routineId)
           .eq('user_id', userId);
     } catch (e) {
-      print('Error deleting routine: $e');
       rethrow;
     }
   }
@@ -91,27 +94,31 @@ class RoutineService {
         'duracion': duration,
       });
     } catch (e) {
-      print('Error adding exercise to routine: $e');
       rethrow;
     }
   }
 
-  Future<List<Map<String, dynamic>>> getExercisesByRoutine(int routineId) async {
+  Future<List<Map<String, dynamic>>> getExercisesByRoutine(
+    int routineId,
+  ) async {
     try {
       final data = await _client
           .from('ejercicio_rutina')
-          .select('series, repeticiones, duracion, ejercicio(id, nombre, tipo, descripcion)')
+          .select(
+            'series, repeticiones, duracion, ejercicio(id, nombre, tipo, descripcion)',
+          )
           .eq('id_rutina', routineId);
 
       return (data as List).cast<Map<String, dynamic>>();
     } catch (e) {
-      print('Error fetching exercises by routine: $e');
       return [];
     }
   }
 
   // Obtener ejercicios con detalles de una rutina (modelo)
-  Future<List<ExerciseWithDetails>> getExercisesForRoutine(int routineId) async {
+  Future<List<ExerciseWithDetails>> getExercisesForRoutine(
+    int routineId,
+  ) async {
     try {
       final response = await _client
           .from('ejercicio_rutina')
@@ -122,7 +129,6 @@ class RoutineService {
           .map((e) => ExerciseWithDetails.fromMap(e))
           .toList();
     } catch (e) {
-      print('Error fetching exercises for routine: $e');
       return [];
     }
   }
@@ -141,7 +147,6 @@ class RoutineService {
           .eq('id_rutina', routineId)
           .eq('id_ejercicio', exerciseId);
     } catch (e) {
-      print('Error removing exercise from routine: $e');
       rethrow;
     }
   }
@@ -151,14 +156,16 @@ class RoutineService {
     final userId = _userId;
     if (userId == null) throw Exception('User not authenticated');
 
-    final routine = await _client
-        .from('rutina')
-        .select()
-        .eq('id', routineId)
-        .eq('user_id', userId)
-        .maybeSingle();
+    final routine =
+        await _client
+            .from('rutina')
+            .select()
+            .eq('id', routineId)
+            .eq('user_id', userId)
+            .maybeSingle();
 
-    if (routine == null) throw Exception('Routine not found or does not belong to user');
+    if (routine == null)
+      throw Exception('Routine not found or does not belong to user');
 
     await _client.from('ejercicio_rutina').delete().eq('id_rutina', routineId);
   }

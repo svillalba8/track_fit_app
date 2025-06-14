@@ -1,12 +1,26 @@
 import 'package:flutter/material.dart';
+
 import '../../../widgets/custom_button.dart';
 
+/// Página que muestra las estadísticas de un entrenamiento basado en una rutina.
+/// - [routineName]: nombre de la rutina mostrada en el AppBar.
+/// - [exercises]: lista de mapas con datos de ejercicios realizados.
+/// - [totalRestTime]: tiempo total de descanso en segundos.
+/// - [totalWorkoutTime]: tiempo total de entrenamiento en segundos.
 class WorkoutStatisticsPage extends StatelessWidget {
+  /// Nombre de la rutina para el título de la página.
   final String routineName;
-  final List<Map<String, dynamic>> exercises;
-  final int totalRestTime; // en segundos
-  final int totalWorkoutTime; // en segundos
 
+  /// Lista de ejercicios con sus detalles: series, repeticiones y referencia al ejercicio.
+  final List<Map<String, dynamic>> exercises;
+
+  /// Tiempo total de descanso acumulado (en segundos).
+  final int totalRestTime;
+
+  /// Tiempo total de entrenamiento acumulado (en segundos).
+  final int totalWorkoutTime;
+
+  /// Constructor con parámetros obligatorios para inicializar la página.
   const WorkoutStatisticsPage({
     super.key,
     required this.routineName,
@@ -15,6 +29,8 @@ class WorkoutStatisticsPage extends StatelessWidget {
     required this.totalWorkoutTime,
   });
 
+  /// Da formato legible a una duración expresada en segundos,
+  /// convirtiéndola en minutos y segundos.
   String _formatDuration(int seconds) {
     final minutes = seconds ~/ 60;
     final secs = seconds % 60;
@@ -23,10 +39,12 @@ class WorkoutStatisticsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Obtenemos tema y esquema de colores actual.
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
+      // Barra superior con el nombre de la rutina.
       appBar: AppBar(
         title: Text('Estadísticas: $routineName'),
         backgroundColor: colorScheme.primary,
@@ -37,11 +55,15 @@ class WorkoutStatisticsPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Encabezado de la sección de ejercicios.
             Text(
               'Ejercicios realizados',
-              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 12),
+            // Lista expandida de tarjetas con cada ejercicio.
             Expanded(
               child: ListView.builder(
                 itemCount: exercises.length,
@@ -50,24 +72,43 @@ class WorkoutStatisticsPage extends StatelessWidget {
                   final ej = exercise['ejercicio'] ?? {};
                   return Card(
                     margin: const EdgeInsets.symmetric(vertical: 6),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     elevation: 3,
                     child: ListTile(
-                      leading: Icon(Icons.fitness_center, color: colorScheme.primary, size: 32),
+                      // Icono representativo genérico.
+                      leading: Icon(
+                        Icons.fitness_center,
+                        color: colorScheme.primary,
+                        size: 32,
+                      ),
+                      // Nombre del ejercicio.
                       title: Text(
                         ej['nombre'] ?? 'Sin nombre',
-                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
+                      // Subtítulo con series y repeticiones.
                       subtitle: Row(
                         children: [
-                          Icon(Icons.repeat, size: 18, color: colorScheme.secondary),
+                          Icon(
+                            Icons.repeat,
+                            size: 18,
+                            color: colorScheme.secondary,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             '${exercise['series']} series',
                             style: theme.textTheme.bodyMedium,
                           ),
                           const SizedBox(width: 16),
-                          Icon(Icons.format_list_numbered, size: 18, color: colorScheme.secondary),
+                          Icon(
+                            Icons.format_list_numbered,
+                            size: 18,
+                            color: colorScheme.secondary,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             '${exercise['repeticiones']} repeticiones',
@@ -81,13 +122,16 @@ class WorkoutStatisticsPage extends StatelessWidget {
               ),
             ),
             const Divider(height: 30, thickness: 1.2),
+            // Fila con tiempo total de entrenamiento.
             Row(
               children: [
                 Icon(Icons.timer, color: colorScheme.primary),
                 const SizedBox(width: 8),
                 Text(
                   'Tiempo total entrenado:',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -97,13 +141,16 @@ class WorkoutStatisticsPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
+            // Fila con tiempo total de descanso.
             Row(
               children: [
                 Icon(Icons.timer_off, color: colorScheme.primary),
                 const SizedBox(width: 8),
                 Text(
                   'Tiempo total descansado:',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -113,6 +160,7 @@ class WorkoutStatisticsPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
+            // Botón para volver a la pantalla anterior.
             SizedBox(
               width: double.infinity,
               child: CustomButton(
