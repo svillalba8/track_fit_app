@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/core/constants.dart';
 import 'package:track_fit_app/models/usuario_model.dart';
+import 'package:track_fit_app/widgets/custom_button.dart';
 
 class UserSettingsPage extends StatelessWidget {
   final UsuarioModel usuario;
@@ -10,6 +11,8 @@ class UserSettingsPage extends StatelessWidget {
   const UserSettingsPage({super.key, required this.usuario});
 
   Future<void> _confirmLogout(BuildContext context) async {
+  final ThemeData actualTheme = Theme.of(context);
+
     final shouldLogout = await showDialog<bool>(
       context: context,
       builder:
@@ -17,13 +20,15 @@ class UserSettingsPage extends StatelessWidget {
             title: const Text('Cerrar sesión'),
             content: const Text('¿Estás seguro de que deseas cerrar sesión?'),
             actions: [
-              TextButton(
+              CustomButton(
+                text: 'Cancelar',
+                actualTheme: actualTheme,
                 onPressed: () => context.pop(false),
-                child: const Text('Cancelar'),
               ),
-              TextButton(
+              CustomButton(
+                text: 'Cerrar sesión',
+                actualTheme: actualTheme,
                 onPressed: () => context.pop(true),
-                child: const Text('Cerrar sesión'),
               ),
             ],
           ),
@@ -67,6 +72,7 @@ class UserSettingsPage extends StatelessWidget {
                 extra: usuario,
               );
               if (updatedUsuario != null) {
+                if (!context.mounted) return;
                 context.pop(updatedUsuario);
               }
             },
