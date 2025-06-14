@@ -2,10 +2,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/models/progreso_model.dart';
 
 class ProgresoService {
+  // Cliente Supabase inyectado para operaciones en la base de datos
   final SupabaseClient supabase;
 
   ProgresoService(this.supabase);
 
+  /// Recupera un progreso por su ID (puede devolver null si no existe)
   Future<ProgresoModel?> fetchProgresoById(int idProgreso) async {
     final response =
         await supabase
@@ -19,6 +21,7 @@ class ProgresoService {
     return ProgresoModel.fromJson(response);
   }
 
+  /// Crea un nuevo progreso con objetivo y fecha, y actualiza al usuario actual
   Future<ProgresoModel> createProgreso({
     required double objetivoPeso,
     required double pesoInicial,
@@ -40,6 +43,7 @@ class ProgresoService {
 
     final nuevoProgreso = ProgresoModel.fromJson(progResponse);
 
+    // Asocia el nuevo progreso al usuario autenticado
     final authUser = supabase.auth.currentUser;
     if (authUser != null) {
       await supabase
@@ -51,6 +55,7 @@ class ProgresoService {
     return nuevoProgreso;
   }
 
+  /// Actualiza los campos de un progreso existente
   Future<ProgresoModel> updateProgreso(ProgresoModel progreso) async {
     final response =
         await supabase
@@ -67,6 +72,7 @@ class ProgresoService {
     return ProgresoModel.fromJson(response);
   }
 
+  /// Cancela el objetivo de peso limpiando esos campos en el progreso
   Future<ProgresoModel> cancelarObjetivo(int idProgreso) async {
     final response =
         await supabase
@@ -79,6 +85,7 @@ class ProgresoService {
     return ProgresoModel.fromJson(response);
   }
 
+  /// Actualiza solo el peso del usuario autenticado en la tabla de usuarios
   Future<void> updatePesoUsuario(double nuevoPeso) async {
     final authUser = supabase.auth.currentUser;
     if (authUser == null) return;

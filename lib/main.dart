@@ -11,7 +11,6 @@ import 'package:track_fit_app/notifiers/daily_challenge_notifier.dart';
 import 'package:track_fit_app/notifiers/hydration_notifier.dart';
 import 'package:track_fit_app/notifiers/recipe_notifier.dart';
 
-/// Separa toda la inicialización en este método:
 Future<void> initializeApp() async {
   // 1. Inicializa el binding de Flutter para que los plugins y servicios estén disponibles
   WidgetsFlutterBinding.ensureInitialized();

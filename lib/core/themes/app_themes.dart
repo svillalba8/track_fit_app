@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:track_fit_app/core/themes/theme_extensions.dart';
+
 import 'logo_type.dart';
 
 class AppThemes {
+  /// Devuelve un ThemeData configurado según el tipo de logo seleccionado
   static ThemeData themeForLogo(LogoType logo) {
     switch (logo) {
       case LogoType.blancoMorado:

@@ -19,34 +19,39 @@ import 'package:track_fit_app/features/trainer/trainer_page.dart';
 import 'package:track_fit_app/models/progreso_model.dart';
 import 'package:track_fit_app/models/usuario_model.dart';
 
-/// Configuración de rutas usando GoRouter
+/// Configuración principal de rutas usando GoRouter
 final GoRouter appRouter = GoRouter(
-  // Escucha los cambios de autenticación y fuerza a GoRouter a reevalúar el redirect cada vez que haya un evento
+  // Vuelve a evaluar el redirect cuando cambia el estado de autenticación
   refreshListenable: StreamListenable(
     Supabase.instance.client.auth.onAuthStateChange,
   ),
 
+  // Ruta inicial al iniciar la app
   initialLocation: AppRoutes.splash,
 
-  // Lógica de guardia: redirige según el estado de la sesión y la ruta actual
+  // Lógica de guardias: redirige según sesión activa y ruta de login/register
   redirect: (ctx, state) {
     final session = Supabase.instance.client.auth.currentSession;
     final loggingIn =
         state.matchedLocation == AppRoutes.login ||
         state.matchedLocation == AppRoutes.register;
-    if (session == null && !loggingIn) return AppRoutes.login;
-    if (session != null && loggingIn) return AppRoutes.home;
-    return null;
+    if (session == null && !loggingIn) {
+      return AppRoutes.login; // Si no está auth, va a login
+    }
+    if (session != null && loggingIn) {
+      return AppRoutes.home; // Si ya auth, evita login/register
+    }
+    return null; // No redirige
   },
 
   routes: <RouteBase>[
-    // 1) Splash (pantalla de decisión)
+    // 1) SplashPage para pantalla de carga/inicial
     GoRoute(
-      path: AppRoutes.splash, // aquí pones la ruta '/'
+      path: AppRoutes.splash,
       builder: (ctx, state) => const SplashPage(),
     ),
 
-    // 2) Autenticación
+    // 2) Rutas de autenticación: login, registro, completar perfil
     GoRoute(path: AppRoutes.login, builder: (ctx, state) => const LoginPage()),
     GoRoute(
       path: AppRoutes.register,
@@ -57,26 +62,27 @@ final GoRouter appRouter = GoRouter(
       builder: (ctx, state) => const CompleteProfilePage(),
     ),
 
-    /// 3) StatefulShellRoute con IndexedStack para conservar el estado
+    /// 3) Shell con IndexedStack para mantener estado de pestañas
     StatefulShellRoute.indexedStack(
       builder: (
         BuildContext ctx,
         GoRouterState state,
         StatefulNavigationShell nav,
       ) {
-        // Ahora MainScaffold recibe el índice y el callback para cambiar de rama
         return MainScaffold(
-          currentIndex: nav.currentIndex,
-          onTap: nav.goBranch,
-          child: nav,
+          currentIndex: nav.currentIndex, // Índice activo de pestaña
+          onTap: nav.goBranch, // Callback al cambiar pestaña
+          child: nav, // Muestra la navegación interna
         );
       },
       branches: [
+        // Rama 0: Home
         StatefulShellBranch(
           routes: [
             GoRoute(path: AppRoutes.home, builder: (_, __) => const HomePage()),
           ],
         ),
+        // Rama 1: Routines
         StatefulShellBranch(
           routes: [
             GoRoute(
@@ -85,6 +91,7 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
+        // Rama 2: Trainer
         StatefulShellBranch(
           routes: [
             GoRoute(
@@ -93,36 +100,39 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
+        // Rama 3: Profile y subrutas
         StatefulShellBranch(
           routes: [
             GoRoute(
               path: AppRoutes.profile,
               builder: (_, __) => const ProfilePage(),
               routes: [
+                // 3.1) Settings dentro de Profile
                 GoRoute(
-                  path: 'settings', // se convierte en '/profile/settings'
+                  path: 'settings', // /profile/settings
                   builder: (context, state) {
                     final usuario = state.extra! as UsuarioModel;
                     return UserSettingsPage(usuario: usuario);
                   },
                   routes: [
+                    // Editar usuario
                     GoRoute(
-                      path:
-                          'edit-user', // se convierte en '/profile/settings/edit-user'
+                      path: 'edit-user', // /profile/settings/edit-user
                       builder: (context, state) {
                         final usuario = state.extra! as UsuarioModel;
                         return EditUserPage(usuario: usuario);
                       },
                     ),
+                    // Selector de tema
                     GoRoute(
-                      path:
-                          'theme', // se convierte en '/profile/settings/theme'
-                      builder: (context, state) => const ThemeSelectorPage(),
+                      path: 'theme', // /profile/settings/theme
+                      builder: (_, __) => const ThemeSelectorPage(),
                     ),
                   ],
                 ),
+                // 3.2) Editar objetivo de progreso
                 GoRoute(
-                  path: 'edit-goal',
+                  path: 'edit-goal', // /profile/edit-goal
                   builder: (context, state) {
                     final progreso = state.extra as ProgresoModel?;
                     return EditGoalPage(progreso: progreso);

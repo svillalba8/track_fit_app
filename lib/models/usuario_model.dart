@@ -1,14 +1,25 @@
 class UsuarioModel {
+  // ID interno de la tabla 'usuarios'
   final int id;
+  // Nombre de usuario único para mostrar
   final String nombreUsuario;
+  // Descripción o biografía opcional
   final String? descripcion;
+  // Peso actual del usuario
   final double peso;
+  // Estatura del usuario en cm
   final double estatura;
+  // Género
   final String genero;
+  // Nombre de pila del usuario
   final String nombre;
+  // Apellidos del usuario
   final String apellidos;
+  // ID de autenticación de Supabase (UUID)
   final String authUsersId;
+  // ID de progreso activo (puede ser null si no tiene)
   final int? idProgreso;
+  // Fecha de nacimiento
   final DateTime fechaNac;
 
   UsuarioModel({
@@ -25,6 +36,7 @@ class UsuarioModel {
     required this.fechaNac,
   });
 
+  /// Crea el modelo a partir del JSON de la BD
   factory UsuarioModel.fromJson(Map<String, dynamic> json) {
     return UsuarioModel(
       id: json['id'] as int,
@@ -41,6 +53,7 @@ class UsuarioModel {
     );
   }
 
+  /// Devuelve una copia del modelo con campos opcionalmente modificados
   UsuarioModel copyWith({
     int? id,
     String? nombreUsuario,
@@ -69,10 +82,11 @@ class UsuarioModel {
     );
   }
 
+  /// Calcula la edad actual basándose en la fecha de nacimiento
   int? getEdad() {
     final today = DateTime.now();
     int edad = today.year - fechaNac.year;
-    // Si no ha cumplido este año, se resta uno
+    // Si no ha cumplido años este año, resta uno
     if (today.month < fechaNac.month ||
         (today.month == fechaNac.month && today.day < fechaNac.day)) {
       edad--;

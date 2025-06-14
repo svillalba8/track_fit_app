@@ -2,39 +2,44 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/features/trainer/service/get_chat_gpt_answer.dart';
 
+/// Notificador para el reto diario:
+/// - Inicializa al construir (diferido para evitar setState en build)
+/// - Gestiona estado de carga, texto, completado y errores
 class DailyChallengeNotifier extends ChangeNotifier {
   DailyChallengeNotifier() {
-    // Comprobamos el estado del reto diario
-    // ← CAMBIO: diferir init para evitar setState en build
+    // Arranca la inicialización tras la construcción
     Future.microtask(initDailyChallenge);
   }
 
-  final SupabaseClient _supabase = Supabase.instance.client;
+  final SupabaseClient _supabase = Supabase.instance.client; // Cliente Supabase
 
-  // ----------------------- Estado para el reto diario -----------------------
-  String? _retoId;
-  String? _retoTexto;
-  bool _retoCompletado = false;
-  bool _isRetoLoading = false;
-  String? _retoError;
-  DateTime? _ultimaFecha; // ← AÑADIDO: para guardar fecha del último reto
+  // Estado interno del reto diario
+  String? _retoId; // ID del reto actual
+  String? _retoTexto; // Texto descriptivo del reto
+  bool _retoCompletado = false; // Si el reto ya está completado
+  bool _isRetoLoading = false; // Indicador de carga
+  String? _retoError; // Mensaje de error (si lo hay)
+  DateTime? _ultimaFecha; // Fecha del último reto cargado
 
   String? get retoId => _retoId;
   String? get retoTexto => _retoTexto;
   bool get retoCompletado => _retoCompletado;
   bool get isRetoLoading => _isRetoLoading;
   String? get retoError => _retoError;
-  DateTime? get ultimaFecha => _ultimaFecha; // ← AÑADIDO: getter opcional
+  DateTime? get ultimaFecha => _ultimaFecha;
 
-  /// Devuelve la fecha de hoy en formato 'yyyy-MM-dd'
+  /// Clave de hoy en formato 'yyyy-MM-dd'
   String get _hoyKey => DateTime.now().toIso8601String().split('T').first;
 
+  /// Inicializa el reto diario:
+  /// - Activa loading
+  /// - Asegura que exista el reto de hoy o crea uno nuevo
+  /// - Captura errores y desactiva loading
   Future<void> initDailyChallenge() async {
     _isRetoLoading = true;
-    notifyListeners(); // ← CAMBIO: iniciar loading aquí
+    notifyListeners();
 
     try {
-      // ← CAMBIO: usamos nuevo flujo que compara fechas
       await ensureTodayChallengeExists();
     } catch (e) {
       _retoError = 'Error al inicializar reto diario: $e';
@@ -44,7 +49,7 @@ class DailyChallengeNotifier extends ChangeNotifier {
     }
   }
 
-  /// 1) Trae siempre el último reto (sin filtrar por fecha)
+  /// 1) Obtiene el reto más reciente de la base (sin filtrar por fecha)
   Future<Map<String, dynamic>?> _fetchLastChallenge() async {
     final user = _supabase.auth.currentUser;
     if (user == null) return null;
@@ -57,20 +62,18 @@ class DailyChallengeNotifier extends ChangeNotifier {
         .maybeSingle();
   }
 
-  /// 2) Compara última fecha y genera o reutiliza reto
+  /// 2) Comprueba si el reto de hoy ya existe:
+  ///    • Si existe (fecha ≥ hoy), reutiliza datos
+  ///    • Si no, pide uno nuevo a GPT y lo guarda (upsert)
   Future<void> ensureTodayChallengeExists() async {
     final hoy = DateTime.parse(_hoyKey);
-
-    // 2.1) Traemos el reto más reciente
     final last = await _fetchLastChallenge();
 
     if (last != null) {
-      final fechaStr = last['fecha'] as String;
-      final fechaUltimo = DateTime.tryParse(fechaStr);
-      _ultimaFecha = fechaUltimo; // ← GUARDAR fecha
-
+      final fechaUltimo = DateTime.tryParse(last['fecha'] as String);
+      _ultimaFecha = fechaUltimo;
       if (fechaUltimo != null && !fechaUltimo.isBefore(hoy)) {
-        // Si ya hay reto de hoy, lo reutilizamos
+        // Reutiliza reto ya creado hoy
         _retoId = last['id'] as String;
         _retoTexto = last['reto_texto'] as String;
         _retoCompletado = last['completado'] as bool;
@@ -78,22 +81,18 @@ class DailyChallengeNotifier extends ChangeNotifier {
       }
     }
 
-    // 2.2) Si no hay reto de hoy, pedimos a GPT y guardamos uno nuevo
+    // Genera texto nuevo con GPT y guarda/actualiza en la tabla
     final textoGenerado = await fetchDailyChallengeFromGPT();
     final user = _supabase.auth.currentUser!;
-
     final data =
         await _supabase
             .from('reto_diario')
-            .upsert(
-              {
-                'user_id': user.id,
-                'fecha': _hoyKey,
-                'reto_texto': textoGenerado,
-                'completado': false,
-              },
-              onConflict: 'user_id',
-            ) // ← USAR upsert con onConflict como String
+            .upsert({
+              'user_id': user.id,
+              'fecha': _hoyKey,
+              'reto_texto': textoGenerado,
+              'completado': false,
+            }, onConflict: 'user_id')
             .select('id, reto_texto, completado, fecha')
             .maybeSingle();
 
@@ -103,12 +102,13 @@ class DailyChallengeNotifier extends ChangeNotifier {
       _retoId = data['id'] as String;
       _retoTexto = data['reto_texto'] as String;
       _retoCompletado = data['completado'] as bool;
-      final nuevaFecha = data['fecha'] as String;
-      _ultimaFecha = DateTime.tryParse(nuevaFecha); // ← GUARDAR fecha
+      _ultimaFecha = DateTime.tryParse(data['fecha'] as String);
     }
   }
 
-  /// 3) Marca el reto de hoy como completado (UPDATE).
+  /// 3) Marca el reto actual como completado:
+  ///    • Actualiza la columna 'completado' a true
+  ///    • Maneja loading, errores y notifica cambios
   Future<void> markChallengeDone() async {
     if (_retoId == null) {
       _retoError = 'No hay reto de hoy para marcar.';
@@ -117,15 +117,14 @@ class DailyChallengeNotifier extends ChangeNotifier {
     }
 
     _isRetoLoading = true;
-    notifyListeners();
     _retoError = null;
+    notifyListeners();
 
     try {
       await _supabase
           .from('reto_diario')
           .update({'completado': true})
           .eq('id', _retoId!);
-
       _retoCompletado = true;
     } catch (e) {
       _retoError = 'Error al marcar completado: $e';

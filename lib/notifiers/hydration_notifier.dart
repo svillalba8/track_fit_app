@@ -2,20 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HydrationNotifier extends ChangeNotifier {
+  // Tras creación, inicia carga del estado de hidratación
   HydrationNotifier() {
-    // Comprobamos el estado de hidratación
     initHydration();
   }
 
+  // Constantes de meta de hidratación
+  static const int _kCapacidadTotalMl = 8000; // Límite máximo diario
+  static const int _kCantidadRecomendada = 4000; // Meta diaria
+
   final SupabaseClient _supabase = Supabase.instance.client;
 
-  // --------------------- Estado para hidratación diaria ---------------------
-  int _mlBebidos = 0;
-  int _diasCompletados = 0;
-  DateTime? _ultimoDia;
-  DateTime? _fechaActualizacion;
-  bool _isHydrationLoading = false;
-  String? _hydrationError;
+  // Estado de hidratación diaria
+  int _mlBebidos = 0; // Mililitros consumidos hoy
+  int _diasCompletados = 0; // Días en que se alcanzó la meta
+  DateTime? _ultimoDia; // Fecha del último día completado
+  DateTime? _fechaActualizacion; // Fecha de la última actualización
+  bool _isHydrationLoading = false; // Indicador de carga
+  String? _hydrationError; // Mensaje de error si ocurre
 
   int get mlBebidos => _mlBebidos;
   int get diasCompletados => _diasCompletados;
@@ -24,19 +28,13 @@ class HydrationNotifier extends ChangeNotifier {
   bool get isHydrationLoading => _isHydrationLoading;
   String? get hydrationError => _hydrationError;
 
-  /// Devuelve la fecha de hoy en formato 'yyyy-MM-dd'
+  /// Devuelve la fecha de hoy en 'yyyy-MM-dd'
   String get _hoyKey => DateTime.now().toIso8601String().split('T').first;
 
-  // Constantes de hidratación:
-  static const int _kCapacidadTotalMl = 8000;
-  static const int _kCantidadRecomendada = 4000;
-
-  // ----------------------- Lógica para “hidratación” -----------------------
-
+  /// 1) Inicializa el registro: carga o crea datos y reinicia si es un día nuevo
   Future<void> initHydration() async {
     try {
       await _fetchOrCreateHydrationRecord();
-      // Tras esto, _mlBebidos, _diasCompletados, _ultimoDia y _fechaActualizacion ya estarán cargados
       final hoy = DateTime.parse(_hoyKey);
       if (_fechaActualizacion == null || _fechaActualizacion!.isBefore(hoy)) {
         await resetHydration();
@@ -44,15 +42,13 @@ class HydrationNotifier extends ChangeNotifier {
     } catch (e) {
       _hydrationError = 'Error al inicializar hidratación: $e';
     }
-
     notifyListeners();
   }
 
-  /// 1) Comprueba si ya hay un registro de hidratación para hoy.
-  ///    Si existe, carga los datos; si no, llama a _createHydrationRecord().
+  /// 2) Obtiene o crea el registro de hidratación para el usuario
   Future<void> _fetchOrCreateHydrationRecord() async {
-    final authUser = _supabase.auth.currentUser;
-    if (authUser == null) {
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
       _hydrationError = 'Usuario no autenticado';
       _isHydrationLoading = false;
       notifyListeners();
@@ -64,28 +60,29 @@ class HydrationNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // maybeSingle() devuelve Map<String,dynamic>? o null si no hay fila
       final data =
           await _supabase
               .from('hidratacion_usuario')
               .select(
                 'ml_bebidos, dias_completados, ultimo_dia_completado, fecha_actualizacion',
               )
-              .eq('user_id', authUser.id)
+              .eq('user_id', user.id)
               .maybeSingle();
 
       if (data == null) {
-        // No hay fila → la creamos con valores por defecto
-        await _createHydrationRecord(authUser.id);
+        await _createHydrationRecord(user.id);
       } else {
-        // data es Map<String, dynamic>
+        // Carga valores desde la BD
         _mlBebidos = (data['ml_bebidos'] as int?) ?? 0;
         _diasCompletados = (data['dias_completados'] as int?) ?? 0;
-        final fechaStr = data['ultimo_dia_completado'] as String?;
-        _ultimoDia = fechaStr != null ? DateTime.tryParse(fechaStr) : null;
-        final fechaActStr = data['fecha_actualizacion'] as String?;
+        _ultimoDia =
+            (data['ultimo_dia_completado'] != null)
+                ? DateTime.tryParse(data['ultimo_dia_completado'] as String)
+                : null;
         _fechaActualizacion =
-            fechaActStr != null ? DateTime.tryParse(fechaActStr) : null;
+            (data['fecha_actualizacion'] != null)
+                ? DateTime.tryParse(data['fecha_actualizacion'] as String)
+                : null;
       }
     } on PostgrestException catch (e) {
       _hydrationError = 'Error Supabase al leer hidratación: ${e.message}';
@@ -103,7 +100,7 @@ class HydrationNotifier extends ChangeNotifier {
     }
   }
 
-  /// 2) Crea la fila inicial de hidratación para el usuario con valores a 0.
+  /// 3) Inserta un nuevo registro con valores iniciales a 0
   Future<void> _createHydrationRecord(String userId) async {
     try {
       final insertData =
@@ -123,17 +120,12 @@ class HydrationNotifier extends ChangeNotifier {
 
       if (insertData == null) {
         _hydrationError = 'No se pudo insertar registro de hidratación';
-        _mlBebidos = 0;
-        _diasCompletados = 0;
-        _ultimoDia = null;
       } else {
+        // Carga valores recién insertados
         _mlBebidos = (insertData['ml_bebidos'] as int?) ?? 0;
         _diasCompletados = (insertData['dias_completados'] as int?) ?? 0;
-        final fechaStr = insertData['ultimo_dia_completado'] as String?;
-        _ultimoDia = fechaStr != null ? DateTime.tryParse(fechaStr) : null;
-        final fechaActStr = insertData['fecha_actualizacion'] as String?;
-        _fechaActualizacion =
-            fechaActStr != null ? DateTime.tryParse(fechaActStr) : null;
+        _ultimoDia = null;
+        _fechaActualizacion = null;
       }
     } on PostgrestException catch (e) {
       _hydrationError = 'Error al crear registro de hidratación: ${e.message}';
@@ -150,37 +142,31 @@ class HydrationNotifier extends ChangeNotifier {
     }
   }
 
-  /// 3) Agrega cierta cantidad de agua (en ml) localmente y luego actualiza en la base.
+  /// 4) Añade ml al contador, actualiza en BD y marca día si alcanza la meta
   Future<void> addWater(BuildContext context, int cantidadMl) async {
-    // Si ya bebimos la capacidad total, no hace nada
     if (_mlBebidos >= _kCapacidadTotalMl) return;
-
     final messenger = ScaffoldMessenger.of(context);
 
-    // Actualiza el estado local inmediatamente
-    final nuevoMl = (_mlBebidos + cantidadMl).clamp(0, _kCapacidadTotalMl);
-    _mlBebidos = nuevoMl;
+    // Actualiza estado local inmediatamente
+    _mlBebidos = (_mlBebidos + cantidadMl).clamp(0, _kCapacidadTotalMl);
     notifyListeners();
 
-    final authUser = _supabase.auth.currentUser;
-    if (authUser == null) return;
+    final user = _supabase.auth.currentUser;
+    if (user == null) return;
 
     try {
       await _supabase
           .from('hidratacion_usuario')
           .update({'ml_bebidos': _mlBebidos, 'fecha_actualizacion': _hoyKey})
-          .eq('user_id', authUser.id);
-
+          .eq('user_id', user.id);
       _fechaActualizacion = DateTime.parse(_hoyKey);
-    } on PostgrestException catch (e) {
-      _hydrationError = 'Error al actualizar ml_bebidos: ${e.message}';
     } catch (e) {
-      _hydrationError = 'Excepción al actualizar hidratación: $e';
+      _hydrationError = 'Error al actualizar hidratación: $e';
     }
 
+    // Si alcanza la meta recomendada, incrementa días completados
     if (_mlBebidos == _kCantidadRecomendada) {
       _diasCompletados += 1;
-
       try {
         await _supabase
             .from('hidratacion_usuario')
@@ -188,28 +174,26 @@ class HydrationNotifier extends ChangeNotifier {
               'dias_completados': _diasCompletados,
               'ultimo_dia_completado': _hoyKey,
             })
-            .eq('user_id', authUser.id);
+            .eq('user_id', user.id);
 
         messenger.showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('¡Genial, has completado la hidratación diaria!'),
             duration: Duration(seconds: 4),
           ),
         );
-      } on PostgrestException catch (e) {
-        _hydrationError = 'Error al actualizar ml_bebidos: ${e.message}';
       } catch (e) {
-        _hydrationError = 'Excepción al actualizar hidratación: $e';
+        _hydrationError = 'Error al actualizar días completados: $e';
       }
     }
 
     notifyListeners();
   }
 
-  /// 4) Reinicia el conteo de hidratación a 0 (al iniciar nuevo día)
+  /// 5) Reinicia el conteo de hidratación para un nuevo día
   Future<void> resetHydration() async {
-    final authUser = _supabase.auth.currentUser;
-    if (authUser == null) {
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
       _hydrationError = 'Usuario no autenticado';
       notifyListeners();
       return;
@@ -223,14 +207,11 @@ class HydrationNotifier extends ChangeNotifier {
       await _supabase
           .from('hidratacion_usuario')
           .update({'ml_bebidos': 0, 'fecha_actualizacion': null})
-          .eq('user_id', authUser.id);
+          .eq('user_id', user.id);
       _mlBebidos = 0;
       _fechaActualizacion = null;
-      _hydrationError = null;
-    } on PostgrestException catch (e) {
-      _hydrationError = 'Error al resetear hidratación: ${e.message}';
     } catch (e) {
-      _hydrationError = 'Excepción al resetear hidratación: $e';
+      _hydrationError = 'Error al resetear hidratación: $e';
     } finally {
       _isHydrationLoading = false;
       notifyListeners();

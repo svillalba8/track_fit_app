@@ -18,7 +18,7 @@ class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
@@ -214,9 +214,8 @@ class _LoginPageState extends State<LoginPage> {
       );
     } catch (e) {
       // Captura errores de OAuth
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error Google Sign-In: $e')));
+      if (!mounted) return;
+      showErrorSnackBar(context, 'Error Google Sign-In: $e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }

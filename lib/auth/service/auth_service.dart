@@ -1,23 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Servicio para gestionar registro y comprobación de usuarios
+/// Servicio para registrar usuarios y validar emails con Supabase Auth
 class AuthService {
   final SupabaseClient _supabase;
+
+  /// Inyecta cliente Supabase o usa el singleton por defecto
   AuthService({SupabaseClient? client})
     : _supabase = client ?? Supabase.instance.client;
 
-  /// Comprueba si un email ya existe en Auth
+  /// Comprueba si un email ya está registrado:
+  /// - Llama a la función RPC 'user_exists' en Supabase
+  /// - Interpreta la respuesta en distintos formatos (bool, num, Map, List)
   Future<bool> emailExists(String email) async {
     try {
-      final dynamic raw = await _supabase.rpc(
+      final raw = await _supabase.rpc(
         'user_exists',
         params: {'_email': email.trim()},
       );
-      // Si raw es bool o número, tratamos directamente
+      // Caso bool
       if (raw is bool) return raw;
+      // Caso num
       if (raw is num) return raw > 0;
-      // Si viene un Map
+      // Caso Map
       if (raw is Map<String, dynamic>) {
         if (raw.containsKey('user_exists')) {
           final v = raw['user_exists'];
@@ -28,7 +33,7 @@ class AuthService {
           return (raw['count'] as num) > 0;
         }
       }
-      // Si viene List
+      // Caso List
       if (raw is List && raw.isNotEmpty) {
         final first = raw.first;
         if (first is bool) return first;
@@ -51,7 +56,7 @@ class AuthService {
     }
   }
 
-  /// Mapea errores de Supabase a mensajes de usuario
+  /// Convierte mensajes de error API en mensajes amigables al usuario
   String mapError(String apiMsg) {
     switch (apiMsg) {
       case 'Invalid email address':
@@ -67,11 +72,12 @@ class AuthService {
       case 'conflict':
         return 'Parece que ya existe una operación en curso. Intenta de nuevo.';
       default:
-        return apiMsg;
+        return apiMsg; // Devolver mensaje original si no hay mapeo
     }
   }
 
-  /// Realiza el signUp y lanza AuthException en caso de fallo
+  /// Registra un usuario con email y contraseña
+  /// - Lanza excepción de Supabase en caso de fallo
   Future<void> signUp({required String email, required String password}) async {
     await _supabase.auth.signUp(email: email, password: password);
   }

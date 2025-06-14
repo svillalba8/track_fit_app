@@ -5,11 +5,13 @@ import 'package:track_fit_app/data/di.dart';
 import 'package:track_fit_app/services/usuario_service.dart';
 import 'package:track_fit_app/models/usuario_model.dart';
 
-/// Notificador para el usuario autenticado, con carga inicial,
-/// escucha de cambios de auth y recarga manual del perfil.
+/// Notificador del usuario autenticado:
+/// - Carga inicial del perfil
+/// - Escucha cambios de sesión
+/// - Permite recarga manual y cierre de sesión
 class AuthUserNotifier extends ChangeNotifier {
-  final SupabaseClient supabase = getIt<SupabaseClient>();
-  final UsuarioService userApi = getIt<UsuarioService>();
+  final SupabaseClient supabase = getIt<SupabaseClient>(); // Cliente Supabase
+  final UsuarioService userApi = getIt<UsuarioService>(); // Servicio de usuario
 
   UsuarioModel? _usuario;
   bool _loading = true;
@@ -19,7 +21,7 @@ class AuthUserNotifier extends ChangeNotifier {
     // 1) Carga inicial si ya hay sesión activa
     _init();
 
-    // 2) Escucha cambios de autenticación
+    // 2) Escucha eventos de auth (signedIn, signedOut...)
     _authSubscription = supabase.auth.onAuthStateChange.listen(
       _handleAuthChange,
     );
@@ -28,6 +30,7 @@ class AuthUserNotifier extends ChangeNotifier {
   UsuarioModel? get usuario => _usuario;
   bool get isLoading => _loading;
 
+  /// Carga inicial: si hay sesión, carga el usuario; si no, marca como cargado
   Future<void> _init() async {
     final session = supabase.auth.currentSession;
     final user = session?.user;
@@ -39,6 +42,7 @@ class AuthUserNotifier extends ChangeNotifier {
     }
   }
 
+  /// Maneja cambios de estado de autenticación
   void _handleAuthChange(AuthState state) {
     final event = state.event;
     final session = state.session;
@@ -59,6 +63,7 @@ class AuthUserNotifier extends ChangeNotifier {
     }
   }
 
+  /// Carga perfil desde API y actualiza estado de carga
   Future<void> _loadUser(String userId) async {
     _loading = true;
     notifyListeners();
@@ -89,7 +94,7 @@ class AuthUserNotifier extends ChangeNotifier {
 
   @override
   void dispose() {
-    _authSubscription.cancel();
+    _authSubscription.cancel(); // Detiene la escucha de auth
     super.dispose();
   }
 }

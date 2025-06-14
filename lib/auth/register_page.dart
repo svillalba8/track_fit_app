@@ -11,103 +11,99 @@ import 'package:track_fit_app/widgets/link_text.dart';
 import '../core/constants.dart';
 import '../widgets/custom_button.dart';
 
-/// Página de registro optimizada con diseño elegante
+/// Página de registro de usuario
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
   @override
-  _RegisterPageState createState() => _RegisterPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  // Controladores para campos de email y contraseña
   final _emailController = TextEditingController();
   final _passController = TextEditingController();
   final _passConfirmController = TextEditingController();
   final supabase = Supabase.instance.client;
-  bool _loading = false;
-  bool _obscureRepeat = true;
+  bool _loading = false; // Indica carga de petición
+  bool _obscureRepeat = true; // Oculta/mostrar contraseña
+
+  // Servicio de autenticación
+  final _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
-    final actualTheme = Theme.of(context);
+    final theme = Theme.of(context);
 
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Logo de la app
+              // Logo con color adaptado al tema
               Image.asset(
                 kLogoTrackFitBlancoSinFondo,
                 height: 120,
                 color:
-                    actualTheme.colorScheme.secondary ==
-                            Color(
-                              0xFFD9B79A,
-                            ) // Si es el color del cremaAzulmarino se utiliza otro color del actualTheme
-                        ? actualTheme.colorScheme.tertiary
-                        : actualTheme.colorScheme.secondary,
+                    theme.colorScheme.secondary == const Color(0xFFD9B79A)
+                        ? theme.colorScheme.tertiary
+                        : theme.colorScheme.secondary,
               ),
               const SizedBox(height: 32),
 
-              // Card del formulario
+              // Card que agrupa el formulario
               Card(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
                 elevation: 4,
                 child: Padding(
-                  padding: const EdgeInsets.all(24.0),
+                  padding: const EdgeInsets.all(24),
                   child: Column(
                     children: [
-                      Text(
-                        'Crear Cuenta',
-                        style: actualTheme.textTheme.titleLarge,
-                      ),
+                      // Título
+                      Text('Crear Cuenta', style: theme.textTheme.titleLarge),
                       const SizedBox(height: 16),
 
-                      // Email
+                      // Campo de email
                       EmailField(
                         emailController: _emailController,
-                        actualTheme: actualTheme,
+                        actualTheme: theme,
                       ),
-
                       const SizedBox(height: 24),
 
-                      // Contraseña
+                      // Campo de contraseña
                       PasswordField(
                         passController: _passController,
                         message: 'Contraseña',
-                        actualTheme: actualTheme,
+                        actualTheme: theme,
+                        obscureRepeat: _obscureRepeat,
                         onToggleObscure: () {
                           setState(() => _obscureRepeat = !_obscureRepeat);
                         },
-                        obscureRepeat: _obscureRepeat,
                       ),
-
                       const SizedBox(height: 12),
 
-                      // Confirmar contraseña
+                      // Campo de confirmación de contraseña
                       PasswordField(
                         passController: _passConfirmController,
                         message: 'Repetir contraseña',
-                        actualTheme: actualTheme,
+                        actualTheme: theme,
+                        obscureRepeat: _obscureRepeat,
                         onToggleObscure: () {
                           setState(() => _obscureRepeat = !_obscureRepeat);
                         },
-                        obscureRepeat: _obscureRepeat,
                       ),
-
                       const SizedBox(height: 24),
 
-                      // Botón de registro
+                      // Botón de crear cuenta
                       CustomButton(
                         text: _loading ? 'Cargando...' : 'Crear cuenta',
-                        actualTheme: Theme.of(context),
+                        actualTheme: theme,
                         onPressed: () {
-                          // 1) Ejecutamos todos los validadores y usamos el primero que devuelva error
+                          // Valida email, contraseña y confirmación
                           final errorMessage =
                               AuthValidators.emailValidator(
                                 _emailController.text,
@@ -119,27 +115,20 @@ class _RegisterPageState extends State<RegisterPage> {
                                 _passConfirmController.text,
                                 _passController.text,
                               );
-
-                          // 2) Si hay un mensaje de error, lo mostramos y salimos
                           if (errorMessage != null) {
                             showErrorSnackBar(context, errorMessage);
                             return;
                           }
-
-                          // 3) Si todo OK, lanzamos el signup
-                          if (!_loading) {
-                            _signUp();
-                          }
+                          if (!_loading) _signUp(); // Lanza lógica de registro
                         },
                       ),
-
                       const SizedBox(height: 34),
 
-                      // Enlace a login
+                      // Enlace para ir a login
                       LinkText(
                         text: '¿Ya tienes cuenta? Inicia sesión',
                         underline: false,
-                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                        style: theme.textTheme.bodySmall!.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
@@ -156,16 +145,16 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  /// Lógica de registro con Supabase, pre‐check RPC y mapeo de errores
-  final _authService = AuthService();
-
+  ///  Registra al usuario en Supabase:
+  ///  1) Validación local
+  ///  2) Pre-check RPC para email existente
+  ///  3) SignUp y manejo de errores
   Future<void> _signUp() async {
     setState(() => _loading = true);
-
     final email = _emailController.text.trim();
     final password = _passController.text.trim();
 
-    // Validación local
+    // Validación local antes de llamada remota
     final localError =
         AuthValidators.emailValidator(email) ??
         AuthValidators.passwordValidator(password) ??
@@ -176,20 +165,18 @@ class _RegisterPageState extends State<RegisterPage> {
     if (localError != null) {
       if (!mounted) return;
       showErrorSnackBar(context, localError);
-      setState(() => _loading = false);
-      return;
+      return setState(() => _loading = false);
     }
 
-    // Pre-check
+    // Comprueba existencia de email vía RPC
     final exists = await _authService.emailExists(email);
     if (!mounted) return;
     if (exists) {
       showErrorSnackBar(context, 'Este correo ya está en uso.');
-      setState(() => _loading = false);
-      return;
+      return setState(() => _loading = false);
     }
 
-    // Sign up
+    // Llama a signUp de Supabase y maneja errores
     try {
       await _authService.signUp(email: email, password: password);
       if (!mounted) return;
@@ -212,7 +199,7 @@ class _RegisterPageState extends State<RegisterPage> {
       if (!mounted) return;
       showErrorSnackBar(context, 'Error inesperado. Intenta de nuevo.');
     } finally {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 }

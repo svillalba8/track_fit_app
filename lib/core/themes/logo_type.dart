@@ -1,5 +1,6 @@
 import 'package:track_fit_app/core/constants.dart';
 
+/// Tipos de logo disponibles en la app
 enum LogoType {
   blancoMorado,
   blancoNegro,
@@ -10,6 +11,7 @@ enum LogoType {
   blancoSinFondoSinletras, // SOLO VISUAL (No para los temas)
 }
 
+/// Extensión para obtener un nombre legible del logo
 extension LogoDisplay on LogoType {
   String get displayName {
     switch (this) {
@@ -29,6 +31,7 @@ extension LogoDisplay on LogoType {
   }
 }
 
+/// Extensión para obtener el asset y si aplica tema
 extension LogoAsset on LogoType {
   String get assetPath {
     switch (this) {
@@ -49,6 +52,7 @@ extension LogoAsset on LogoType {
     }
   }
 
+  /// Indica si este logo tiene un tema asociado
   bool get isTheme {
     switch (this) {
       case LogoType.blancoSinFondo:

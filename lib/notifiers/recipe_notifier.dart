@@ -1,15 +1,18 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:track_fit_app/features/trainer/service/get_chat_gpt_answer.dart';
 
+/// Notificador de receta diaria:
+/// - Carga/crea receta al instanciar
+/// - Resetea cuando cambia día o tramo
 class DailyRecipeNotifier extends ChangeNotifier {
+  // Al crear, inicia la lectura o creación de la receta
   DailyRecipeNotifier() {
     initDailyRecipe();
   }
 
-  final SupabaseClient _supabase = Supabase.instance.client;
+  final SupabaseClient _supabase = Supabase.instance.client; // Cliente Supabase
 
   // Estado de la receta diaria
   String? _titulo;
@@ -21,7 +24,6 @@ class DailyRecipeNotifier extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
 
-  // Getters públicos
   String? get titulo => _titulo;
   int? get calorias => _calorias;
   int? get tiempoPreparacion => _tiempoPreparacion;
@@ -31,10 +33,10 @@ class DailyRecipeNotifier extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  // Formatea la fecha de hoy como 'yyyy-MM-dd'
+  // Fecha de hoy formateada como 'yyyy-MM-dd'
   String get _hoyKey => DateTime.now().toIso8601String().split('T').first;
 
-  // Lógica para decidir en qué tramo estamos
+  // Determina si es desayuno, comida o cena según hora actual
   String get _currentTramo {
     final h = DateTime.now().hour;
     if (h >= 6 && h <= 12) return 'desayuno';
@@ -42,8 +44,7 @@ class DailyRecipeNotifier extends ChangeNotifier {
     return 'cena';
   }
 
-  /// 0) Inicialización: leer o crear la receta diaria y, si cambió
-  ///    el día o el tramo horario, forzar un “reset” (una actualización).
+  /// 0) Inicializa o resetea si cambió día/tramo
   Future<void> initDailyRecipe() async {
     try {
       await _fetchOrCreateRecipe();
@@ -58,7 +59,7 @@ class DailyRecipeNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 1) Intenta leer la fila; si no existe, la crea con datos de la API.
+  /// 1) Lee registro existente o crea uno nuevo con datos de GPT
   Future<void> _fetchOrCreateRecipe() async {
     final user = _supabase.auth.currentUser;
     if (user == null) {
@@ -66,7 +67,6 @@ class DailyRecipeNotifier extends ChangeNotifier {
       notifyListeners();
       return;
     }
-
     _isLoading = true;
     _error = null;
     notifyListeners();
@@ -82,10 +82,8 @@ class DailyRecipeNotifier extends ChangeNotifier {
               .maybeSingle();
 
       if (data == null) {
-        // No había fila → creamos ya con datos de ChatGPT
         await _createRecipeRecord();
       } else {
-        // Asignamos localmente
         _titulo = data['titulo'] as String?;
         _calorias = (data['calorias'] as int?) ?? 0;
         _tiempoPreparacion = (data['tiempo_preparacion'] as int?) ?? 0;
@@ -93,17 +91,15 @@ class DailyRecipeNotifier extends ChangeNotifier {
         _fecha = DateTime.tryParse(data['fecha'] as String);
         _tramoHorario = data['tramo_horario'] as String?;
       }
-    } on PostgrestException catch (e) {
-      _error = 'Error Supabase al leer receta: ${e.message}';
     } catch (e) {
-      _error = 'Excepción al leer receta: $e';
+      _error = 'Error al leer receta: $e';
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  /// 2) Crea la fila **con los datos devueltos por ChatGPT**.
+  /// 2) Crea el registro usando JSON obtenido de ChatGPT
   Future<void> _createRecipeRecord() async {
     final user = _supabase.auth.currentUser;
     if (user == null) return;
@@ -113,25 +109,20 @@ class DailyRecipeNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // 2.1) Llamada a tu API para obtener JSON con título, calorías, tiempo y breve
       final rawJson = await fetchDailyRecipeFromGPT(_currentTramo);
       final receta = jsonDecode(rawJson) as Map<String, dynamic>;
-
-      // 2.2) Insertamos esa receta
-      final insertData = {
-        'user_id': user.id,
-        'fecha': _hoyKey,
-        'tramo_horario': _currentTramo,
-        'titulo': receta['titulo'],
-        'calorias': receta['calorias'],
-        'tiempo_preparacion': receta['tiempo_preparacion'],
-        'descripcion_breve': receta['breve'],
-      };
-
       final row =
           await _supabase
               .from('receta_diaria')
-              .insert(insertData)
+              .insert({
+                'user_id': user.id,
+                'fecha': _hoyKey,
+                'tramo_horario': _currentTramo,
+                'titulo': receta['titulo'],
+                'calorias': receta['calorias'],
+                'tiempo_preparacion': receta['tiempo_preparacion'],
+                'descripcion_breve': receta['breve'],
+              })
               .select()
               .maybeSingle();
 
@@ -143,19 +134,15 @@ class DailyRecipeNotifier extends ChangeNotifier {
         _fecha = DateTime.tryParse(row['fecha'] as String);
         _tramoHorario = row['tramo_horario'] as String?;
       }
-    } on FormatException catch (e) {
-      _error = 'Error al parsear JSON de receta: $e';
-    } on PostgrestException catch (e) {
-      _error = 'Error Supabase al crear receta: ${e.message}';
     } catch (e) {
-      _error = 'Excepción al crear receta: $e';
+      _error = 'Error al crear receta: $e';
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  /// 3) Cuando cambia día/tramo, pedimos de nuevo a la API y actualizamos.
+  /// 3) Fuerza nueva llamada a GPT y actualiza registro si cambió día/tramo
   Future<void> resetDailyRecipe() async {
     final user = _supabase.auth.currentUser;
     if (user == null) {
@@ -169,33 +156,23 @@ class DailyRecipeNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // 3.1) Nueva llamada a ChatGPT
       final rawJson = await fetchDailyRecipeFromGPT(_currentTramo);
       final receta = jsonDecode(rawJson) as Map<String, dynamic>;
-
-      // 3.2) Actualizamos la fila existente
-      final updateData = {
-        'fecha': _hoyKey,
-        'tramo_horario': _currentTramo,
-        'titulo': receta['titulo'],
-        'calorias': receta['calorias'],
-        'tiempo_preparacion': receta['tiempo_preparacion'],
-        'descripcion_breve': receta['breve'],
-      };
-
       await _supabase
           .from('receta_diaria')
-          .update(updateData)
+          .update({
+            'fecha': _hoyKey,
+            'tramo_horario': _currentTramo,
+            'titulo': receta['titulo'],
+            'calorias': receta['calorias'],
+            'tiempo_preparacion': receta['tiempo_preparacion'],
+            'descripcion_breve': receta['breve'],
+          })
           .eq('user_id', user.id);
 
-      // 3.3) Volvemos a leer y asignar localmente
       await _fetchOrCreateRecipe();
-    } on FormatException catch (e) {
-      _error = 'Error al parsear JSON de receta: $e';
-    } on PostgrestException catch (e) {
-      _error = 'Error Supabase al actualizar receta: ${e.message}';
     } catch (e) {
-      _error = 'Excepción al resetear receta: $e';
+      _error = 'Error al resetear receta: $e';
     } finally {
       _isLoading = false;
       notifyListeners();

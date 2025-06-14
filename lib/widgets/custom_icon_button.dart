@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 
 class CustomIconButton extends StatelessWidget {
+  // Icono a mostrar (obligatorio)
   final Widget icon;
+  // Texto opcional; si se proporciona, muestra icono+texto
   final String? texto;
+  // Tema actual para colores y estilos
   final ThemeData actualTheme;
+  // Acción a ejecutar al pulsar
   final VoidCallback onPressed;
 
   const CustomIconButton({
@@ -16,7 +20,7 @@ class CustomIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Si hay texto, usamos ElevatedButton.icon para icono + texto
+    // Botón con icono y texto si 'texto' no es null
     if (texto != null) {
       return ElevatedButton.icon(
         style: ElevatedButton.styleFrom(
@@ -35,7 +39,7 @@ class CustomIconButton extends StatelessWidget {
             fontSize: 16,
           ),
         ),
-        onPressed: onPressed,
+        onPressed: onPressed, // Callback al pulsar
       );
     }
 
@@ -46,7 +50,7 @@ class CustomIconButton extends StatelessWidget {
       icon: icon,
       color: actualTheme.colorScheme.secondary,
       splashRadius: 28,
-      onPressed: onPressed,
+      onPressed: onPressed, // Callback al pulsar
     );
   }
 }

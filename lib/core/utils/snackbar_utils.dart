@@ -22,8 +22,12 @@ void showSuccessSnackBar(BuildContext context, String message) {
   );
 }
 
+/// Muestra un SnackBar neutro (tema por defecto) durante 2 segundos.
 void showNeutralSnackBar(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+    SnackBar(
+      content: Text(message),
+      duration: const Duration(seconds: 2),
+    ),
   );
 }

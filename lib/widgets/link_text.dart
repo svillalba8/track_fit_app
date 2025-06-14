@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Un enlace de texto clickable, sin padding extra,
-/// que hereda el estilo de texto del tema o usa uno personalizado.
+/// Un enlace de texto clickable
 class LinkText extends StatelessWidget {
   /// Texto que se muestra.
   final String text;

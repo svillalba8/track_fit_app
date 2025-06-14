@@ -6,13 +6,13 @@ import 'package:track_fit_app/notifiers/auth_user_notifier.dart';
 
 /// Scaffold principal con BottomNavigation y contenido dinámico via ShellRoute
 class MainScaffold extends StatelessWidget {
-  /// Índice de la pestaña activa
+  /// Índice de la pestaña activa (pasado por GoRouter)
   final int currentIndex;
 
-  /// Callback para cambiar de pestaña (usa nav.goBranch)
+  /// Callback para cambiar de pestaña (`nav.goBranch`)
   final void Function(int index, {bool initialLocation}) onTap;
 
-  /// Contenido dinámico (el NavigationShell)
+  /// Contenido dinámico (el `NavigationShell`)
   final Widget child;
 
   const MainScaffold({
@@ -22,6 +22,7 @@ class MainScaffold extends StatelessWidget {
     required this.child,
   });
 
+  /// Calcula el índice de pestaña a partir de la ruta actual
   int _calculateIndex(BuildContext context) {
     final location = GoRouter.of(context).location;
     switch (location) {
@@ -38,6 +39,7 @@ class MainScaffold extends StatelessWidget {
     }
   }
 
+  /// Navega a la ruta correspondiente cuando se pulsa un ítem
   void _onTap(BuildContext context, int index) {
     switch (index) {
       case 0:
@@ -57,55 +59,52 @@ class MainScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentIndex = _calculateIndex(context);
+    // Obtiene el índice real según la ruta
+    final index = _calculateIndex(context);
     final actualTheme = Theme.of(context);
 
-    // 1) Obtén el usuario de tu ChangeNotifier
-    final authNotifier = context.watch<AuthUserNotifier>();
-    final usuario = authNotifier.usuario;
-
-    // 2) Decide un prefijo por defecto si por alguna razón es null
+    // Obtiene el usuario para decidir el icono de perfil
+    final usuario = context.watch<AuthUserNotifier>().usuario;
     final genero = usuario?.genero ?? kGeneroHombreMayus;
     final iconPrefix =
         genero == kGeneroHombreMayus ? 'perfil_usuario_h' : 'perfil_usuario_m';
 
     return Theme(
+      // Personaliza efectos de splash/highlight en toda la barra
       data: actualTheme.copyWith(
-        // Usa el splash circular clásico, o NoSplash.splashFactory para eliminarlo
-        splashFactory: NoSplash.splashFactory, // o NoSplash.splashFactory
-        // Color del fogonazo: aquí un 20% de tu secondary
+        splashFactory: NoSplash.splashFactory,
         splashColor: actualTheme.colorScheme.onSurface.withAlpha(
           (0.60 * 255).round(),
         ),
-        // Quita el highlight si no lo quieres ver
         highlightColor: Colors.transparent,
       ),
       child: Scaffold(
-        body: child,
+        body: child, // Muestra el contenido de la pestaña activa
         bottomNavigationBar: Column(
-          mainAxisSize:
-              MainAxisSize.min, // Solo ocupa lo necesario (divider + bar)
+          mainAxisSize: MainAxisSize.min,
           children: [
+            // Divider encima de la BottomNavigationBar
             Divider(
-              height: 1, // altura total del Divider
-              thickness: 1, // grosor de la línea
+              height: 1,
+              thickness: 1,
               color: actualTheme.colorScheme.onSurface.withAlpha(
                 (0.40 * 255).round(),
               ),
             ),
             BottomNavigationBar(
-              currentIndex: currentIndex,
+              currentIndex: index,
               onTap: (i) => _onTap(context, i),
               type: BottomNavigationBarType.fixed,
               enableFeedback: false,
-              showSelectedLabels: false, // quita el label activo
-              showUnselectedLabels: false, // quita los labels inactivos
+              showSelectedLabels: false,
+              showUnselectedLabels: false,
               backgroundColor: actualTheme.colorScheme.primary,
               selectedItemColor: actualTheme.colorScheme.secondary,
               unselectedItemColor: actualTheme.colorScheme.onSurface.withAlpha(
                 (0.60 * 255).round(),
               ),
               items: [
+                // Home
                 BottomNavigationBarItem(
                   icon: Image.asset(
                     'assets/icons/casa.png',
@@ -121,6 +120,7 @@ class MainScaffold extends StatelessWidget {
                   ),
                   label: '',
                 ),
+                // Routines
                 BottomNavigationBarItem(
                   icon: Image.asset(
                     'assets/icons/pesa.png',
@@ -136,6 +136,7 @@ class MainScaffold extends StatelessWidget {
                   ),
                   label: '',
                 ),
+                // Trainer
                 BottomNavigationBarItem(
                   icon: Image.asset(
                     'assets/icons/entrenador_per.png',
@@ -151,6 +152,7 @@ class MainScaffold extends StatelessWidget {
                   ),
                   label: '',
                 ),
+                // Profile (icono varía por género)
                 BottomNavigationBarItem(
                   icon: Image.asset(
                     'assets/icons/$iconPrefix.png',
