@@ -2,42 +2,41 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:track_fit_app/notifiers/hydration_notifier.dart';
 
-// Widget que muestra el nivel de hidratación y botones para añadir agua
+// Widget que muestra el progreso de hidratación y permite añadir agua al registro
 class HydrationWidget extends StatelessWidget {
   const HydrationWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Obtenemos el estado de hidratación mediante Provider
+    // Obtenemos el HydrationNotifier
     final hydration = context.watch<HydrationNotifier>();
 
-    // Constantes de capacidad total y tamaños de incrementos
-    const int kCapacidadTotalMl = 8000; // 8 litros diarios
-    const int kCantidadAguaVaso = 250; // 250 ml por vaso
-    const int kCantidadAguaBotella = 1000; // 1 litro por botella
+    const int kCapacidadTotalMl = 8000;
+    const int kCantidadAguaVaso = 250;
+    const int kCantidadAguaBotella = 1000;
 
-    // Dimensiones para el dibujo del vaso y disposición de botones
+    // Constantes para el vaso y botones
     const double vasoWidth = 40.0;
     const double vasoHeight = 90.0;
-    const double textSpace = 24.0; // espacio para etiquetas de litros
+    const double textSpace = 24.0;
     const double espacioEntreBotones = 10;
 
     final theme = Theme.of(context);
 
-    // 1) Mientras se carga el registro de hidratación:
+    // 1) Si todavía está cargando los datos iniciales:
     if (hydration.isHydrationLoading) {
       return SizedBox(
-        height: vasoHeight - 4,
+        height: 86,
         child: Center(
           child: CircularProgressIndicator(color: theme.colorScheme.secondary),
         ),
       );
     }
 
-    // 2) Si ocurre un error al cargar o crear el registro:
+    // 2) Si hubo error al leer/crear el registro:
     if (hydration.hydrationError != null) {
       return SizedBox(
-        height: vasoHeight - 4,
+        height: 86,
         child: Center(
           child: Text(
             hydration.hydrationError!,
@@ -47,21 +46,20 @@ class HydrationWidget extends StatelessWidget {
       );
     }
 
-    // 3) Ya tenemos mlBebidos actualizado
+    // 3) Ya tenemos mlBebidos cargado en el notifier
     final mlBebidos = hydration.mlBebidos;
-    // Normalizamos el nivel entre 0.0 y 1.0 para el porcentaje de llenado
     final nivel = (mlBebidos / kCapacidadTotalMl).clamp(0.0, 1.0);
 
     return SizedBox(
-      height: vasoHeight + 28, // altura total incluyendo botones
+      height: vasoHeight + 28, // aprox. 86 px en total
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // 3.1) Columna de botones para añadir agua
+          // 3.1) Botones a la izquierda, alineados verticalmente
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Botón para sumar 250 ml
+              // Botón +250 ml
               GestureDetector(
                 onTap: () {
                   hydration.addWater(context, kCantidadAguaVaso);
@@ -89,20 +87,18 @@ class HydrationWidget extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 4),
-              // Etiqueta del botón de vaso
               Text(
                 '+250ml',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.tertiary,
+                  color: Theme.of(context).colorScheme.tertiary,
                 ),
               ),
 
               const SizedBox(height: espacioEntreBotones),
 
-              // Botón para sumar 1000 ml
+              // Botón +1000 ml
               GestureDetector(
                 onTap: () {
                   hydration.addWater(context, kCantidadAguaBotella);
@@ -130,14 +126,12 @@ class HydrationWidget extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 4),
-              // Etiqueta del botón de botella
               Text(
                 '+1000ml',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.tertiary,
+                  color: Theme.of(context).colorScheme.tertiary,
                 ),
               ),
             ],
@@ -145,12 +139,12 @@ class HydrationWidget extends StatelessWidget {
 
           const SizedBox(width: 30),
 
-          // 3.2) Dibujo del vaso con nivel de agua y marcas
+          // 3.2) Vaso con espacio extra a la derecha para texto
           SizedBox(
             width: vasoWidth + textSpace,
             height: vasoHeight,
             child: CustomPaint(
-              size: Size(vasoWidth + textSpace, vasoHeight),
+              size: const Size(vasoWidth + textSpace, vasoHeight),
               painter: _GlassPainter(
                 nivel: nivel,
                 vasoWidth: vasoWidth,
@@ -164,11 +158,11 @@ class HydrationWidget extends StatelessWidget {
   }
 }
 
-// Pintor personalizado que dibuja el vaso, el agua y las marcas de litros
+// Copia exactamente el mismo GlassPainter que tenías antes:
 class _GlassPainter extends CustomPainter {
-  final double nivel; // Proporción de llenado (0.0–1.0)
-  final double vasoWidth; // Ancho interior del vaso
-  final double textSpace; // Espacio para etiquetas a la derecha
+  final double nivel; // 0.0–1.0, porcentaje de llenado visual
+  final double vasoWidth; // ancho interior del vaso
+  final double textSpace; // espacio reservado para texto a la derecha
 
   _GlassPainter({
     required this.nivel,
@@ -181,26 +175,23 @@ class _GlassPainter extends CustomPainter {
     final double glassW = vasoWidth;
     final double glassH = size.height;
 
-    // Paint para contorno del vaso
     final paintOutline =
         Paint()
           ..color = Colors.grey.shade400
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2;
 
-    // Paint para el agua
     final paintWater =
         Paint()
           ..color = const Color(0xFF007AFF)
           ..style = PaintingStyle.fill;
 
-    // Paint para marcas de nivel
     final paintMark =
         Paint()
           ..color = Colors.grey.shade400
           ..strokeWidth = 1;
 
-    // 1) Definición del Path en forma de trapezoide invertido
+    // 1) Definir el Path del vaso (trapezoide invertido)
     final Path vasoPath =
         Path()
           ..moveTo(0, 0)
@@ -209,7 +200,7 @@ class _GlassPainter extends CustomPainter {
           ..lineTo(glassW * 0.2, glassH)
           ..close();
 
-    // 2) Dibuja el rectángulo de agua dentro del Path del vaso
+    // 2) Pintar el agua dentro del trapezoide
     canvas.save();
     canvas.clipPath(vasoPath);
     final double aguaHeight = glassH * nivel;
@@ -222,7 +213,7 @@ class _GlassPainter extends CustomPainter {
     canvas.drawRect(aguaRect, paintWater);
     canvas.restore();
 
-    // 3) Dibuja marcas y etiquetas "2L", "4L", "6L"
+    // 3) Dibujar marcas cortas y etiquetas (“6 L”, “4 L”, “2 L”)
     const int numMarcas = 3;
     const double longitudMarca = 6.0;
     const double offsetInterno = 4.0;
@@ -234,39 +225,37 @@ class _GlassPainter extends CustomPainter {
     );
 
     for (int i = 1; i <= numMarcas; i++) {
-      final double frac = i / (numMarcas + 1);
+      final double frac = i / (numMarcas + 1); // 0.25, 0.50, 0.75
       final double y = glassH * frac;
 
-      // Calcula posición horizontal de la marca según ancho trapezoide
       final double xRightEdge = glassW - (glassW * 0.2 * frac);
       final double xMarkStart = xRightEdge - offsetInterno;
 
-      // Dibuja línea de la marca
+      // Dibujar la línea corta
       canvas.drawLine(
         Offset(xMarkStart, y),
         Offset(xMarkStart - longitudMarca, y),
         paintMark,
       );
 
-      // Etiqueta de litros en orden inverso: 6L,4L,2L
-      final String textoLitros = '${(numMarcas + 1 - i) * 2}L';
+      // Etiqueta en orden inverso: (numMarcas + 1 - i) * 2 L
+      final String textoLitros = '${(numMarcas + 1 - i) * 2} L';
       final textSpan = TextSpan(text: textoLitros, style: textoStyle);
       final tp = TextPainter(text: textSpan, textDirection: TextDirection.ltr);
       tp.layout();
 
-      // Pinta texto justo afuera del vaso
+      // Dibujar el texto fuera del vaso, a la derecha
       final double textoX = glassW + textoOffsetX;
       final double textoY = y - (tp.height / 2);
       tp.paint(canvas, Offset(textoX, textoY));
     }
 
-    // 4) Dibuja el contorno del vaso encima de todo
+    // 4) Dibujar contorno del vaso
     canvas.drawPath(vasoPath, paintOutline);
   }
 
   @override
   bool shouldRepaint(covariant _GlassPainter oldPainter) {
-    // Repinta solo si cambia el nivel de agua
     return oldPainter.nivel != nivel;
   }
 }
