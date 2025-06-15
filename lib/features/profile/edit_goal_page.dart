@@ -180,6 +180,29 @@ class _EditGoalPageState extends State<EditGoalPage> {
 
   // Confirma al usuario si desea cancelar la edición y descartar cambios
   Future<void> _confirmarCancelarEdicion() async {
+    final actualTheme = Theme.of(context);
+
+    // Estilo para el botón “No”
+    final noStyle = TextButton.styleFrom(
+      foregroundColor: actualTheme.colorScheme.secondary, // texto claro sobre fondo
+      backgroundColor: actualTheme.colorScheme.primary, // fondo
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      textStyle: actualTheme.textTheme.labelLarge?.copyWith(
+        fontSize: 12,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+    );
+    // Estilo para el botón “Sí, cancelar”
+    final yesStyle = TextButton.styleFrom(
+      foregroundColor: actualTheme.colorScheme.onError, // texto claro
+      backgroundColor: actualTheme.colorScheme.error, // fondo rojo
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      textStyle: actualTheme.textTheme.labelLarge?.copyWith(
+        fontSize: 12,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+    );
+
     final confirm = await showDialog<bool>(
       context: context,
       builder:
@@ -189,10 +212,12 @@ class _EditGoalPageState extends State<EditGoalPage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
+                style: noStyle,
                 child: const Text('No'),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
+                style: yesStyle,
                 child: const Text('Sí, cancelar'),
               ),
             ],

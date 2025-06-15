@@ -24,15 +24,26 @@ class UserSettingsPage extends StatelessWidget {
             title: const Text('Cerrar sesión'),
             content: const Text('¿Estás seguro de que deseas cerrar sesión?'),
             actions: [
-              CustomButton(
-                text: 'Cancelar',
-                actualTheme: actualTheme,
-                onPressed: () => context.pop(false), // No cerrar
-              ),
-              CustomButton(
-                text: 'Cerrar sesión',
-                actualTheme: actualTheme,
-                onPressed: () => context.pop(true), // Confirmar
+              Row(
+                children: [
+                  Flexible(
+                    fit: FlexFit.loose,
+                    child: CustomButton(
+                      text: 'Volver',
+                      actualTheme: actualTheme,
+                      onPressed: () => context.pop(false),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Flexible(
+                    fit: FlexFit.loose,
+                    child: CustomButton(
+                      text: 'Salir',
+                      actualTheme: actualTheme,
+                      onPressed: () => context.pop(true),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
