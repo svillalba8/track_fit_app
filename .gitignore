@@ -46,6 +46,7 @@ app.*.map.json
 
 # Secretos de entorno
 .env
+.env.*
 
 # Flutter plugin registrant (autogenerado)
 linux/flutter/generated_plugin_registrant.cc
